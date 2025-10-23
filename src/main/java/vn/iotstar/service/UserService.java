@@ -1,12 +1,13 @@
 package vn.iotstar.service;
 
-import vn.iotstar.entity.User;
-import vn.iotstar.repository.UserRepository;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.Optional;
+import vn.iotstar.entity.User;
+import vn.iotstar.repository.UserRepository;
 
 @Service
 public class UserService {
@@ -33,7 +34,7 @@ public class UserService {
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
-            return passwordService.verifyPassword(rawPassword, user.getHashedPassword(), user.getSalt());
+            return passwordService.verifyPassword(rawPassword, user.getHashedPassword());
         }
         return false;
     }
