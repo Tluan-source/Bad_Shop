@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head}">
+    <title>Trang chủ - Badminton Marketplace</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    
+    <!-- Hero Section -->
+    <section class="hero-section bg-light py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    <h1 class="display-4 fw-bold">Badminton Marketplace</h1>
+                    <p class="lead">Hệ thống mua bán dụng cụ cầu lông chuyên nghiệp - Nơi hội tụ đam mê</p>
+                    <a th:href="@{/products}" class="btn btn-primary btn-lg">Mua sắm ngay</a>
+                </div>
+                <div class="col-md-6">
+                    <img th:src="@{/images/hero-badminton.jpg}" alt="Badminton" class="img-fluid rounded">
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Featured Products -->
+    <section class="featured-products py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Sản phẩm nổi bật</h2>
+            <div class="row">
+                <div th:each="product : ${topProducts}" class="col-md-3 mb-4">
+                    <div class="card h-100">
+                        <img th:src="${product.listImages}" class="card-img-top" alt="Product Image" style="height: 200px; object-fit: cover;">
+                        <div class="card-body">
+                            <h5 class="card-title" th:text="${product.name}"></h5>
+                            <p class="card-text">
+                                <span class="text-danger fw-bold" th:text="${#numbers.formatCurrency(product.promotionalPrice ?: product.price)}"></span>
+                                <span th:if="${product.promotionalPrice}" class="text-muted text-decoration-line-through ms-2" th:text="${#numbers.formatCurrency(product.price)}"></span>
+                            </p>
+                            <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-outline-primary">Xem chi tiết</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Features Section -->
+    <section class="features bg-light py-5">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-4">
+                    <i class="fas fa-shipping-fast fa-3x text-primary mb-3"></i>
+                    <h4>Giao hàng nhanh</h4>
+                    <p>Giao hàng toàn quốc với chi phí hợp lý</p>
+                </div>
+                <div class="col-md-4">
+                    <i class="fas fa-shield-alt fa-3x text-primary mb-3"></i>
+                    <h4>Bảo mật tuyệt đối</h4>
+                    <p>Thông tin được mã hóa và bảo vệ an toàn</p>
+                </div>
+                <div class="col-md-4">
+                    <i class="fas fa-headset fa-3x text-primary mb-3"></i>
+                    <h4>Hỗ trợ 24/7</h4>
+                    <p>Đội ngũ hỗ trợ luôn sẵn sàng giúp đỡ</p>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

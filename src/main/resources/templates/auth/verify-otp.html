@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head}">
+    <title>Xác thực OTP</title>
+</head>
+<body>
+<div th:replace="~{fragments/header :: header}"></div>
+<div class="container mt-5">
+    <h3>Xác thực mã OTP</h3>
+    <p>Chúng tôi đã gửi mã OTP tới email của bạn. Vui lòng nhập mã để kích hoạt tài khoản.</p>
+    <form th:action="@{/verify-otp}" method="post">
+        <input type="hidden" name="userId" th:value="${userId}" />
+        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+        <div class="mb-3">
+            <label for="code" class="form-label">Mã OTP</label>
+            <input type="text" id="code" name="code" class="form-control" required />
+        </div>
+        <div>
+            <button type="submit" class="btn btn-primary">Xác thực</button>
+        </div>
+        <div class="mt-3 text-danger" th:if="${error}" th:text="${error}"></div>
+    </form>
+</div>
+<div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

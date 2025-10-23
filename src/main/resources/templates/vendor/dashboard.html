@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head}">
+    <title>Vendor Dashboard - Badminton Marketplace</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-2 bg-light sidebar">
+                <div class="position-sticky pt-3">
+                    <h5 class="text-center mb-3"><i class="fas fa-store"></i> Vendor Panel</h5>
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#"><i class="fas fa-store-alt"></i> Cửa hàng của tôi</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#"><i class="fas fa-box"></i> Quản lý sản phẩm</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#"><i class="fas fa-plus-circle"></i> Thêm sản phẩm</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#"><i class="fas fa-shopping-cart"></i> Đơn hàng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#"><i class="fas fa-star"></i> Đánh giá</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#"><i class="fas fa-chart-bar"></i> Báo cáo bán hàng</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#"><i class="fas fa-wallet"></i> Ví điện tử</a>
+                        </li>
+                                                <li class="nav-item">
+                            <form th:action="@{/logout}" method="post" class="d-inline">
+                                <button type="submit" class="nav-link btn btn-link text-danger w-100 text-start" style="text-decoration: none;">
+                                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                                </button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Main content -->
+            <div class="col-md-10">
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> Chào mừng <strong sec:authentication="name">Vendor</strong> đến với trang quản lý cửa hàng!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <h2>Dashboard - Tổng quan cửa hàng</h2>
+
+                <!-- Statistics Cards -->
+                <div class="row mt-4">
+                    <div class="col-md-3">
+                        <div class="card text-white bg-success mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title">Sản phẩm</h5>
+                                        <h2>45</h2>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-box fa-3x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-warning mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title">Đơn chờ xử lý</h5>
+                                        <h2>12</h2>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-clock fa-3x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-info mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title">Doanh thu tháng</h5>
+                                        <h2>25M</h2>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-dollar-sign fa-3x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card text-white bg-primary mb-3">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between">
+                                    <div>
+                                        <h5 class="card-title">Đánh giá TB</h5>
+                                        <h2>4.8 ⭐</h2>
+                                    </div>
+                                    <div>
+                                        <i class="fas fa-star fa-3x"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Orders -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-shopping-cart"></i> Đơn hàng gần đây</h5>
+                    </div>
+                    <div class="card-body">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Mã đơn</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Số lượng</th>
+                                    <th>Tổng tiền</th>
+                                    <th>Trạng thái</th>
+                                    <th>Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>#ORD001</td>
+                                    <td>Vợt Yonex Astrox 100ZZ</td>
+                                    <td>1</td>
+                                    <td>4,990,000 VNĐ</td>
+                                    <td><span class="badge bg-warning">Chờ xử lý</span></td>
+                                    <td><button class="btn btn-sm btn-primary">Xử lý</button></td>
+                                </tr>
+                                <tr>
+                                    <td>#ORD002</td>
+                                    <td>Quả Cầu Yonex Aerosensa 50</td>
+                                    <td>10</td>
+                                    <td>1,650,000 VNĐ</td>
+                                    <td><span class="badge bg-info">Đang chuẩn bị</span></td>
+                                    <td><button class="btn btn-sm btn-success">Giao hàng</button></td>
+                                </tr>
+                                <tr>
+                                    <td>#ORD003</td>
+                                    <td>Giày Yonex PC 65Z2</td>
+                                    <td>1</td>
+                                    <td>1,990,000 VNĐ</td>
+                                    <td><span class="badge bg-success">Hoàn thành</span></td>
+                                    <td><button class="btn btn-sm btn-secondary" disabled>Đã giao</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Top Products -->
+                <div class="card mt-4">
+                    <div class="card-header">
+                        <h5><i class="fas fa-fire"></i> Sản phẩm bán chạy</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6>Vợt Yonex Astrox 100ZZ</h6>
+                                        <p class="text-muted mb-1">Đã bán: 23</p>
+                                        <p class="text-success fw-bold">4,990,000 VNĐ</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6>Quả Cầu Yonex Aerosensa 50</h6>
+                                        <p class="text-muted mb-1">Đã bán: 145</p>
+                                        <p class="text-success fw-bold">165,000 VNĐ</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6>Giày Yonex PC 65Z2</h6>
+                                        <p class="text-muted mb-1">Đã bán: 12</p>
+                                        <p class="text-success fw-bold">1,990,000 VNĐ</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
