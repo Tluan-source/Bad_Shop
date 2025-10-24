@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head}">
+    <title>Chi tiết người dùng - Admin</title>
+</head>
+<body class="admin-page">
+    <div th:replace="~{fragments/header-admin :: header-admin}"></div>
+
+    <div class="container-fluid mt-4 px-4">
+        <div class="admin-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3><i class="fas fa-user-circle text-primary me-2"></i>Chi tiết người dùng</h3>
+                <a th:href="@{/admin/users}" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại danh sách
+                </a>
+            </div>
+
+            <div class="row">
+                <!-- Left Column - User Info -->
+                <div class="col-lg-4">
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-body text-center">
+                            <i class="fas fa-user-circle fa-5x mb-3"
+                               th:classappend="${user.role != null and user.role.name() == 'ADMIN' ? 'text-danger' : 
+                                               (user.role != null and user.role.name() == 'VENDOR' ? 'text-success' : 'text-primary')}"></i>
+                            <h4 th:text="${user.fullName}">Tên người dùng</h4>
+                            <p class="text-muted mb-2" th:text="${user.email}">email@example.com</p>
+                            
+                            <div class="mb-3">
+                                <span class="badge-admin"
+                                      th:classappend="${user.role != null and user.role.name() == 'ADMIN' ? 'bg-danger' : 
+                                                       (user.role != null and user.role.name() == 'VENDOR' ? 'bg-success' : 
+                                                       (user.role != null and user.role.name() == 'SHIPPER' ? 'bg-warning' : 'bg-primary'))}"
+                                      th:text="${user.role != null and user.role.name() == 'ADMIN' ? 'Admin' :
+                                               (user.role != null and user.role.name() == 'VENDOR' ? 'Vendor' :
+                                               (user.role != null and user.role.name() == 'SHIPPER' ? 'Shipper' : 'Customer'))}">
+                                    Customer
+                                </span>
+                                <span class="badge-admin ms-2"
+                                      th:classappend="${user.status != null and user.status.name() == 'ACTIVE' ? 'bg-success' : 
+                                                       (user.status != null and user.status.name() == 'BANNED' ? 'bg-dark' : 'bg-danger')}"
+                                      th:text="${user.status != null and user.status.name() == 'ACTIVE' ? 'Active' : 
+                                               (user.status != null and user.status.name() == 'BANNED' ? 'Banned' : 'Inactive')}">
+                                    Active
+                                </span>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <form th:action="@{/admin/users/{id}/toggle-status(id=${user.id})}" 
+                                      method="post"
+                                      th:if="${user.status == null or user.status.name() != 'BANNED'}">
+                                    <button type="submit" class="btn w-100"
+                                            th:classappend="${user.status != null and user.status.name() == 'ACTIVE' ? 'btn-warning' : 'btn-success'}">
+                                        <i class="fas" th:classappend="${user.status != null and user.status.name() == 'ACTIVE' ? 'fa-lock' : 'fa-unlock'}"></i>
+                                        <span th:text="${user.status != null and user.status.name() == 'ACTIVE' ? ' Khóa tài khoản' : ' Mở khóa tài khoản'}"></span>
+                                    </button>
+                                </form>
+                                <button class="btn btn-danger w-100" 
+                                        th:attr="data-user-name=${user.fullName}, data-user-id=${user.id}"
+                                        onclick="confirmDelete(this.getAttribute('data-user-name'), this.getAttribute('data-user-id'))">
+                                    <i class="fas fa-trash me-2"></i>Xóa người dùng
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Stats -->
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Thống kê nhanh</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                                <div>
+                                    <i class="fas fa-store text-success me-2"></i>
+                                    <strong>Cửa hàng</strong>
+                                </div>
+                                <span class="badge bg-success" th:text="${storeCount}">0</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                                <div>
+                                    <i class="fas fa-shopping-bag text-info me-2"></i>
+                                    <strong>Đơn hàng</strong>
+                                </div>
+                                <span class="badge bg-info" th:text="${orderCount}">0</span>
+                            </div>
+                            <div class="d-flex justify-content-between mb-3 pb-3 border-bottom">
+                                <div>
+                                    <i class="fas fa-shopping-cart text-warning me-2"></i>
+                                    <strong>Giỏ hàng</strong>
+                                </div>
+                                <span class="badge bg-warning" th:text="${cartItemCount}">0</span>
+                            </div>
+                            <div class="d-flex justify-content-between">
+                                <div>
+                                    <i class="fas fa-coins text-primary me-2"></i>
+                                    <strong>Điểm tích lũy</strong>
+                                </div>
+                                <span class="badge bg-primary" th:text="${user.point != null ? user.point : 0}">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Detailed Info -->
+                <div class="col-lg-8">
+                    <!-- Personal Information -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0"><i class="fas fa-id-card me-2"></i>Thông tin cá nhân</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">ID người dùng</label>
+                                    <p class="mb-0 fw-bold" th:text="${user.id}">U123456789</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Họ và tên</label>
+                                    <p class="mb-0 fw-bold" th:text="${user.fullName}">Nguyễn Văn A</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Email</label>
+                                    <p class="mb-0" th:text="${user.email}">email@example.com</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Số điện thoại</label>
+                                    <p class="mb-0" th:text="${user.phone != null ? user.phone : 'Chưa cập nhật'}">0123456789</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Vai trò</label>
+                                    <p class="mb-0">
+                                        <span class="badge-admin"
+                                              th:classappend="${user.role != null and user.role.name() == 'ADMIN' ? 'bg-danger' : 
+                                                               (user.role != null and user.role.name() == 'VENDOR' ? 'bg-success' : 
+                                                               (user.role != null and user.role.name() == 'SHIPPER' ? 'bg-warning' : 'bg-primary'))}"
+                                              th:text="${user.role != null and user.role.name() == 'ADMIN' ? 'Admin' :
+                                                       (user.role != null and user.role.name() == 'VENDOR' ? 'Vendor' :
+                                                       (user.role != null and user.role.name() == 'SHIPPER' ? 'Shipper' : 'Customer'))}">
+                                            Customer
+                                        </span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Trạng thái</label>
+                                    <p class="mb-0">
+                                        <span class="badge-admin"
+                                              th:classappend="${user.status != null and user.status.name() == 'ACTIVE' ? 'bg-success' : 
+                                                               (user.status != null and user.status.name() == 'BANNED' ? 'bg-dark' : 'bg-danger')}"
+                                              th:text="${user.status != null and user.status.name() == 'ACTIVE' ? 'Hoạt động' : 
+                                                       (user.status != null and user.status.name() == 'BANNED' ? 'Bị cấm' : 'Không hoạt động')}">
+                                            Active
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Account Details -->
+                    <div class="card shadow-sm mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="fas fa-wallet me-2"></i>Thông tin tài khoản</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Ví điện tử</label>
+                                    <p class="mb-0 fw-bold text-success">
+                                        <i class="fas fa-dollar-sign me-1"></i>
+                                        <span th:text="${user.eWallet != null ? #numbers.formatDecimal(user.eWallet, 0, 'COMMA', 0, 'POINT') + ' VNĐ' : '0 VNĐ'}">0 VNĐ</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Điểm tích lũy</label>
+                                    <p class="mb-0 fw-bold text-warning">
+                                        <i class="fas fa-star me-1"></i>
+                                        <span th:text="${user.point != null ? user.point + ' điểm' : '0 điểm'}">0 điểm</span>
+                                    </p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Ngày tạo tài khoản</label>
+                                    <p class="mb-0" th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm:ss') : 'N/A'}">20/10/2024</p>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label class="text-muted small">Cập nhật lần cuối</label>
+                                    <p class="mb-0" th:text="${user.updatedAt != null ? #temporals.format(user.updatedAt, 'dd/MM/yyyy HH:mm:ss') : 'N/A'}">20/10/2024</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Stores List (if vendor) -->
+                    <div class="card shadow-sm mb-4" th:if="${user.stores != null and !user.stores.isEmpty()}">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0"><i class="fas fa-store me-2"></i>Cửa hàng sở hữu</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="list-group">
+                                <div class="list-group-item" th:each="store : ${user.stores}">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1" th:text="${store.name}">Tên cửa hàng</h6>
+                                            <p class="mb-0 text-muted small" th:text="${store.bio}">Mô tả</p>
+                                        </div>
+                                        <span class="badge-admin" 
+                                              th:classappend="${store.isActive != null and store.isActive ? 'bg-success' : 'bg-danger'}"
+                                              th:text="${store.isActive != null and store.isActive ? 'Active' : 'Inactive'}">Active</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recent Orders -->
+                    <div class="card shadow-sm" th:if="${user.orders != null and !user.orders.isEmpty()}">
+                        <div class="card-header bg-warning text-dark">
+                            <h6 class="mb-0"><i class="fas fa-shopping-bag me-2"></i>Đơn hàng gần đây</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã đơn</th>
+                                            <th>Ngày đặt</th>
+                                            <th>Tổng tiền</th>
+                                            <th>Trạng thái</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="order, iterStat : ${user.orders}" th:if="${iterStat.index < 5}">
+                                            <td th:text="${order.id}">ORD001</td>
+                                            <td th:text="${order.createdAt != null ? #temporals.format(order.createdAt, 'dd/MM/yyyy') : 'N/A'}">20/10/2024</td>
+                                            <td th:text="${order.price != null ? #numbers.formatDecimal(order.price, 0, 'COMMA', 0, 'POINT') + ' VNĐ' : '0 VNĐ'}">100,000 VNĐ</td>
+                                            <td>
+                                                <span class="badge bg-secondary" th:text="${order.status}">Pending</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer-admin :: footer-admin}"></div>
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+    
+    <script>
+        function confirmDelete(userName, userId) {
+            if (confirm('Bạn có chắc chắn muốn xóa người dùng "' + userName + '"?\n\nLưu ý: Hành động này không thể hoàn tác!')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/admin/users/' + userId + '/delete';
+                
+                // Add CSRF token
+                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_csrf';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

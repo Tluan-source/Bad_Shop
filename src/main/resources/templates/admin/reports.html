@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head}">
+    <title>Báo cáo - Admin</title>
+</head>
+<body class="admin-page">
+    <div th:replace="~{fragments/header-admin :: header-admin}"></div>
+
+    <div class="container-fluid mt-4 px-4">
+        <div class="admin-content">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3><i class="fas fa-chart-line text-primary me-2"></i>Báo cáo & Thống kê</h3>
+                <div>
+                    <select class="form-select d-inline-block me-2" style="width: auto;">
+                        <option selected>7 ngày qua</option>
+                        <option>30 ngày qua</option>
+                        <option>3 tháng qua</option>
+                        <option>Năm nay</option>
+                        <option>Tùy chỉnh</option>
+                    </select>
+                    <button class="btn btn-admin-primary">
+                        <i class="fas fa-download me-2"></i>Xuất báo cáo
+                    </button>
+                </div>
+            </div>
+
+            <!-- Revenue Chart -->
+            <div class="chart-container mb-4">
+                <h5 class="mb-3"><i class="fas fa-chart-area text-success me-2"></i>Biểu đồ doanh thu</h5>
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-line fa-5x text-muted mb-3"></i>
+                    <p class="text-muted">Biểu đồ doanh thu theo thời gian sẽ hiển thị ở đây</p>
+                    <small class="text-muted">Cần tích hợp thư viện Chart.js hoặc tương tự</small>
+                </div>
+            </div>
+
+            <!-- Statistics Grid -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <h5 class="mb-3"><i class="fas fa-shopping-cart text-primary me-2"></i>Top sản phẩm bán chạy</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th>Số lượng bán</th>
+                                        <th>Doanh thu</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-shuttlecock text-primary me-2"></i>
+                                                <strong>Vợt Yonex Astrox 88D</strong>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge-admin bg-primary">245</span></td>
+                                        <td><strong>122,500,000 VNĐ</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-running text-success me-2"></i>
+                                                <strong>Giày Victor SH-A920</strong>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge-admin bg-success">189</span></td>
+                                        <td><strong>75,600,000 VNĐ</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-tshirt text-info me-2"></i>
+                                                <strong>Áo Lining Championship</strong>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge-admin bg-info">156</span></td>
+                                        <td><strong>31,200,000 VNĐ</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-box text-warning me-2"></i>
+                                                <strong>Túi vợt Yonex BA92012M</strong>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge-admin bg-warning">134</span></td>
+                                        <td><strong>26,800,000 VNĐ</strong></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-shuttlecock text-danger me-2"></i>
+                                                <strong>Quả cầu Yonex AS-50</strong>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge-admin bg-danger">298</span></td>
+                                        <td><strong>23,840,000 VNĐ</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <h5 class="mb-3"><i class="fas fa-store text-success me-2"></i>Top cửa hàng xuất sắc</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Cửa hàng</th>
+                                        <th>Đơn hàng</th>
+                                        <th>Doanh thu</th>
+                                        <th>Rating</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-store text-primary me-2"></i>
+                                                <strong>Cửa hàng ABC</strong>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge-admin bg-primary">156</span></td>
+                                        <td><strong>85,600,000 VNĐ</strong></td>
+                                        <td><span class="text-warning">★ 4.9</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-store text-success me-2"></i>
+                                                <strong>Shop Thể Thao XYZ</strong>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge-admin bg-success">134</span></td>
+                                        <td><strong>67,200,000 VNĐ</strong></td>
+                                        <td><span class="text-warning">★ 4.8</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-store text-info me-2"></i>
+                                                <strong>Badminton Pro Shop</strong>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge-admin bg-info">98</span></td>
+                                        <td><strong>52,400,000 VNĐ</strong></td>
+                                        <td><span class="text-warning">★ 4.7</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-store text-warning me-2"></i>
+                                                <strong>Sport Center</strong>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge-admin bg-warning">87</span></td>
+                                        <td><strong>43,500,000 VNĐ</strong></td>
+                                        <td><span class="text-warning">★ 4.6</span></td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-store text-danger me-2"></i>
+                                                <strong>Elite Badminton</strong>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge-admin bg-danger">76</span></td>
+                                        <td><strong>38,000,000 VNĐ</strong></td>
+                                        <td><span class="text-warning">★ 4.8</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Stats -->
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="chart-container text-center">
+                        <i class="fas fa-users fa-3x text-primary mb-3"></i>
+                        <h5>Người dùng mới</h5>
+                        <h2 class="text-primary mb-2">+234</h2>
+                        <p class="text-muted">7 ngày qua</p>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-primary" style="width: 75%"></div>
+                        </div>
+                        <small class="text-muted">Tăng 15% so với tuần trước</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="chart-container text-center">
+                        <i class="fas fa-shopping-bag fa-3x text-success mb-3"></i>
+                        <h5>Đơn hàng mới</h5>
+                        <h2 class="text-success mb-2">+567</h2>
+                        <p class="text-muted">7 ngày qua</p>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-success" style="width: 85%"></div>
+                        </div>
+                        <small class="text-muted">Tăng 22% so với tuần trước</small>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="chart-container text-center">
+                        <i class="fas fa-dollar-sign fa-3x text-warning mb-3"></i>
+                        <h5>Doanh thu</h5>
+                        <h2 class="text-warning mb-2">+125M</h2>
+                        <p class="text-muted">7 ngày qua</p>
+                        <div class="progress" style="height: 10px;">
+                            <div class="progress-bar bg-warning" style="width: 90%"></div>
+                        </div>
+                        <small class="text-muted">Tăng 18% so với tuần trước</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer-admin :: footer-admin}"></div>
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</body>
+</html>

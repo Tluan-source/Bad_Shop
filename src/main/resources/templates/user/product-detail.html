@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head}">
+    <title>Chi tiết sản phẩm - Badminton Marketplace</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header-user :: header-user}"></div>
+
+    <section class="py-5">
+        <div class="container">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+                    <li class="breadcrumb-item"><a th:href="@{/products}">Sản phẩm</a></li>
+                    <li class="breadcrumb-item active" aria-current="page" th:text="${product.name}"></li>
+                </ol>
+            </nav>
+
+            <div class="row">
+                <!-- Product Images -->
+                <div class="col-md-5">
+                    <div class="card">
+                        <img th:src="${product.listImages}" class="card-img-top" alt="Product Image" style="width: 100%; height: 400px; object-fit: cover;">
+                    </div>
+                </div>
+
+                <!-- Product Details -->
+                <div class="col-md-7">
+                    <h2 th:text="${product.name}"></h2>
+                    <hr>
+                    
+                    <div class="mb-3">
+                        <span class="badge bg-warning text-dark">
+                            <i class="fas fa-star"></i>
+                            <span th:text="${product.rating}"></span>
+                        </span>
+                        <span class="text-muted ms-2">
+                            <i class="fas fa-box me-1"></i>
+                            Đã bán: <span th:text="${product.sold}"></span>
+                        </span>
+                    </div>
+
+                    <div class="mb-3">
+                        <h3 class="text-danger">
+                            <span th:text="${#numbers.formatCurrency(product.promotionalPrice ?: product.price)}"></span>
+                        </h3>
+                        <span th:if="${product.promotionalPrice}" class="text-muted text-decoration-line-through" th:text="${#numbers.formatCurrency(product.price)}"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Danh mục:</strong>
+                        <a th:href="@{/categories/{id}(id=${product.category.id})}" class="text-decoration-none">
+                            <span class="badge bg-secondary" th:text="${product.category.name}"></span>
+                        </a>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Cửa hàng:</strong>
+                        <a th:href="@{/stores/{id}(id=${product.store.id})}" class="text-decoration-none">
+                            <i class="fas fa-store text-primary me-1"></i>
+                            <span th:text="${product.store.name}"></span>
+                        </a>
+                    </div>
+
+                    <div class="mb-3">
+                        <strong>Tình trạng:</strong>
+                        <span th:if="${product.quantity > 0}" class="text-success">
+                            <i class="fas fa-check-circle"></i> Còn hàng (<span th:text="${product.quantity}"></span> sản phẩm)
+                        </span>
+                        <span th:unless="${product.quantity > 0}" class="text-danger">
+                            <i class="fas fa-times-circle"></i> Hết hàng
+                        </span>
+                    </div>
+
+                    <div class="mb-4">
+                        <strong>Mô tả:</strong>
+                        <p class="text-muted mt-2" th:text="${product.description}"></p>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a th:href="@{/login}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-shopping-cart me-2"></i>Đăng nhập để mua hàng
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Related Products -->
+            <div class="mt-5">
+                <h3 class="mb-4">Sản phẩm khác từ cửa hàng</h3>
+                <div class="row" id="related-products">
+                    <div class="col-12 text-center">
+                        <p class="text-muted">Đang tải...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <div th:replace="~{fragments/footer-user :: footer-user}"></div>
+    
+    <script th:inline="javascript">
+        // Load related products from same store
+        const storeId = /*[[${product.store.id}]]*/ '';
+        const currentProductId = /*[[${product.id}]]*/ '';
+        
+        // This is a placeholder - in a real app, you'd fetch from an API
+        // For now, we'll just show a message
+        document.getElementById('related-products').innerHTML = 
+            '<div class="col-12 text-center"><p class="text-muted">Xem thêm sản phẩm tại <a href="/stores/' + storeId + '">cửa hàng</a></p></div>';
+    </script>
+</body>
+</html>

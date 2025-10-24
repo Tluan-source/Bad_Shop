@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head}">
+    <title>Quản lý cửa hàng - Admin</title>
+</head>
+<body class="admin-page">
+    <div th:replace="~{fragments/header-admin :: header-admin}"></div>
+
+    <div class="container-fluid mt-4 px-4">
+        <div class="admin-content">
+            <!-- Flash Messages -->
+            <div th:if="${message}" class="alert alert-dismissible fade show" 
+                 th:classappend="${'alert-' + messageType}" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <span th:text="${message}">Message</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3><i class="fas fa-store text-primary me-2"></i>Quản lý cửa hàng</h3>
+                <div>
+                    <input type="text" class="admin-search me-2" placeholder="Tìm kiếm cửa hàng...">
+                    <button class="btn btn-admin-primary" data-bs-toggle="modal" data-bs-target="#addStoreModal">
+                        <i class="fas fa-plus me-2"></i>Thêm cửa hàng
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="mini-stat-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-store text-white bg-success p-3 rounded-circle me-3"></i>
+                            <div>
+                                <h6 class="text-muted mb-1">Tổng cửa hàng</h6>
+                                <h4 class="mb-0" th:text="${totalStores != null ? totalStores : 0}">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mini-stat-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle text-white bg-primary p-3 rounded-circle me-3"></i>
+                            <div>
+                                <h6 class="text-muted mb-1">Đang hoạt động</h6>
+                                <h4 class="mb-0" th:text="${activeStores != null ? activeStores : 0}">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mini-stat-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-ban text-white bg-danger p-3 rounded-circle me-3"></i>
+                            <div>
+                                <h6 class="text-muted mb-1">Không hoạt động</h6>
+                                <h4 class="mb-0" th:text="${inactiveStores != null ? inactiveStores : 0}">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div th:if="${stores == null or stores.isEmpty()}" class="col-12">
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-store fa-3x mb-3 d-block"></i>
+                        <p>Chưa có cửa hàng nào trong hệ thống</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4" th:each="store : ${stores}" th:if="${store != null}">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-store text-primary me-2"></i>
+                                    <span th:text="${store.name != null ? store.name : 'N/A'}">Cửa hàng</span>
+                                </h5>
+                                <span class="badge-admin" 
+                                      th:classappend="${store.isActive != null and store.isActive ? 'bg-success' : 'bg-danger'}"
+                                      th:text="${store.isActive != null and store.isActive ? 'Active' : 'Inactive'}">Active</span>
+                            </div>
+                            <p class="text-muted mb-3" th:text="${store.bio != null ? store.bio : 'Chưa có mô tả'}">Mô tả cửa hàng</p>
+                            <div class="mb-2">
+                                <small class="text-muted"><i class="fas fa-user me-1"></i>Chủ sở hữu:</small>
+                                <strong class="ms-2" th:text="${store.owner != null and store.owner.fullName != null ? store.owner.fullName : 'N/A'}">Tên chủ</strong>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted"><i class="fas fa-box me-1"></i>Sản phẩm:</small>
+                                <strong class="ms-2" th:text="${store.products != null ? store.products.size() : 0}">0</strong>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted"><i class="fas fa-star me-1"></i>Đánh giá:</small>
+                                <strong class="ms-2 text-warning" th:text="${store.rating != null ? store.rating + '/5' : '0/5'}">0/5</strong>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-info flex-fill">
+                                    <i class="fas fa-eye me-1"></i>Chi tiết
+                                </button>
+                                <form th:action="@{/admin/stores/{id}/toggle-status(id=${store.id})}" 
+                                      method="post" class="flex-fill">
+                                    <button type="submit" class="btn btn-sm btn-warning w-100"
+                                            th:title="${store.isActive != null and store.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}">
+                                        <i class="fas" th:classappend="${store.isActive != null and store.isActive ? 'fa-ban' : 'fa-check'}"></i>
+                                        <span th:text="${store.isActive != null and store.isActive ? ' Khóa' : ' Mở'}"></span>
+                                    </button>
+                                </form>
+                                <button class="btn btn-sm btn-danger" 
+                                        th:attr="data-store-name=${store.name}, data-store-id=${store.id}"
+                                        onclick="confirmDeleteStore(this.getAttribute('data-store-name'), this.getAttribute('data-store-id'))">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="mt-4" th:if="${stores != null and !stores.isEmpty()}">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link" href="#">Trước</a>
+                    </li>
+                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
+                    <li class="page-item"><a class="page-link" href="#">2</a></li>
+                    <li class="page-item"><a class="page-link" href="#">3</a></li>
+                    <li class="page-item">
+                        <a class="page-link" href="#">Sau</a>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Add Store Modal -->
+    <div class="modal fade" id="addStoreModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-store me-2"></i>Thêm cửa hàng mới
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/stores/create}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-store me-1"></i>Tên cửa hàng *</label>
+                            <input type="text" name="name" class="form-control" 
+                                   placeholder="Nhập tên cửa hàng" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-user me-1"></i>Chủ cửa hàng *</label>
+                            <select name="ownerId" class="form-select" required>
+                                <option value="">-- Chọn chủ cửa hàng --</option>
+                                <option th:each="vendor : ${vendors}" 
+                                        th:value="${vendor.id}" 
+                                        th:text="${vendor.fullName + ' (' + vendor.email + ')'}">
+                                    Vendor Name
+                                </option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-link me-1"></i>Slug (URL) *</label>
+                            <input type="text" name="slug" class="form-control" 
+                                   placeholder="vd: cua-hang-cau-long" required>
+                            <small class="text-muted">Slug sẽ được dùng trong URL</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-align-left me-1"></i>Mô tả cửa hàng</label>
+                            <textarea name="bio" class="form-control" rows="3" 
+                                      placeholder="Mô tả chi tiết về cửa hàng"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Hủy
+                        </button>
+                        <button type="submit" class="btn btn-success">
+                            <i class="fas fa-save me-2"></i>Tạo cửa hàng
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer-admin :: footer-admin}"></div>
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+    
+    <script>
+        function confirmDeleteStore(storeName, storeId) {
+            if (confirm('Bạn có chắc chắn muốn xóa cửa hàng "' + storeName + '"?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/admin/stores/' + storeId + '/delete';
+                
+                // Add CSRF token
+                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_csrf';
+                csrfInput.value = csrfToken;
+                form.appendChild(csrfInput);
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

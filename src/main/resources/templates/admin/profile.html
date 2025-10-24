@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head}">
+    <title>Thông tin Admin - Admin</title>
+</head>
+<body class="admin-page">
+    <div th:replace="~{fragments/header-admin :: header-admin}"></div>
+
+    <div class="container-fluid mt-4 px-4">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="admin-content text-center">
+                    <div class="mb-4">
+                        <div class="rounded-circle bg-gradient-animated d-inline-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                            <i class="fas fa-user-shield fa-5x text-white"></i>
+                        </div>
+                    </div>
+                    <h4 sec:authentication="name">Admin</h4>
+                    <p class="text-muted">Quản trị viên hệ thống</p>
+                    <span class="badge-admin bg-danger mb-3">ADMIN</span>
+                    
+                    <div class="mt-4">
+                        <button class="btn btn-admin-primary w-100 mb-2">
+                            <i class="fas fa-camera me-2"></i>Thay đổi ảnh đại diện
+                        </button>
+                        <button class="btn btn-outline-secondary w-100">
+                            <i class="fas fa-key me-2"></i>Đổi mật khẩu
+                        </button>
+                    </div>
+
+                    <div class="mt-4 pt-4 border-top">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Ngày tham gia:</span>
+                            <strong>01/01/2024</strong>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted">Lần đăng nhập cuối:</span>
+                            <strong>Hôm nay</strong>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted">Trạng thái:</span>
+                            <span class="badge-admin bg-success">Online</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-8">
+                <div class="admin-content">
+                    <h4 class="mb-4"><i class="fas fa-user-edit text-primary me-2"></i>Thông tin cá nhân</h4>
+                    
+                    <form>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Họ và tên</label>
+                                <input type="text" class="form-control" value="Admin System">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Email</label>
+                                <input type="email" class="form-control" value="admin@badminton.com">
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Số điện thoại</label>
+                                <input type="tel" class="form-control" value="0123456789">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label">Ngày sinh</label>
+                                <input type="date" class="form-control" value="1990-01-01">
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Địa chỉ</label>
+                            <input type="text" class="form-control" value="227 Nguyễn Văn Cừ, Q.5, TP.HCM">
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label">Bio</label>
+                            <textarea class="form-control" rows="3">Quản trị viên hệ thống Badminton Marketplace. Đảm bảo hệ thống hoạt động ổn định và an toàn.</textarea>
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-admin-primary">
+                                <i class="fas fa-save me-2"></i>Lưu thay đổi
+                            </button>
+                            <button type="reset" class="btn btn-secondary">
+                                <i class="fas fa-undo me-2"></i>Hủy
+                            </button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="admin-content mt-4">
+                    <h4 class="mb-4"><i class="fas fa-shield-alt text-success me-2"></i>Bảo mật tài khoản</h4>
+                    
+                    <div class="d-flex justify-content-between align-items-center p-3 mb-3 border rounded">
+                        <div>
+                            <h6 class="mb-1">Xác thực hai yếu tố (2FA)</h6>
+                            <small class="text-muted">Tăng cường bảo mật tài khoản</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="2fa" checked>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center p-3 mb-3 border rounded">
+                        <div>
+                            <h6 class="mb-1">Thông báo qua email</h6>
+                            <small class="text-muted">Nhận thông báo về hoạt động hệ thống</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="emailNotif" checked>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center p-3 border rounded">
+                        <div>
+                            <h6 class="mb-1">Đăng nhập từ thiết bị mới</h6>
+                            <small class="text-muted">Yêu cầu xác nhận khi đăng nhập từ thiết bị mới</small>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" id="newDevice" checked>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="admin-content mt-4">
+                    <h4 class="mb-4"><i class="fas fa-history text-info me-2"></i>Lịch sử hoạt động gần đây</h4>
+                    
+                    <div class="timeline">
+                        <div class="d-flex mb-3">
+                            <i class="fas fa-circle text-success me-3 mt-1" style="font-size: 0.5rem;"></i>
+                            <div>
+                                <strong>Đăng nhập thành công</strong>
+                                <br><small class="text-muted">Hôm nay lúc 09:30 - IP: 192.168.1.1</small>
+                            </div>
+                        </div>
+                        <div class="d-flex mb-3">
+                            <i class="fas fa-circle text-primary me-3 mt-1" style="font-size: 0.5rem;"></i>
+                            <div>
+                                <strong>Cập nhật thông tin người dùng</strong>
+                                <br><small class="text-muted">Hôm qua lúc 15:20</small>
+                            </div>
+                        </div>
+                        <div class="d-flex mb-3">
+                            <i class="fas fa-circle text-warning me-3 mt-1" style="font-size: 0.5rem;"></i>
+                            <div>
+                                <strong>Thêm cửa hàng mới</strong>
+                                <br><small class="text-muted">2 ngày trước lúc 11:45</small>
+                            </div>
+                        </div>
+                        <div class="d-flex">
+                            <i class="fas fa-circle text-info me-3 mt-1" style="font-size: 0.5rem;"></i>
+                            <div>
+                                <strong>Xuất báo cáo thống kê</strong>
+                                <br><small class="text-muted">3 ngày trước lúc 14:00</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer-admin :: footer-admin}"></div>
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+</body>
+</html>

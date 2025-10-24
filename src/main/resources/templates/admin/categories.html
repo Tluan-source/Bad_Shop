@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head}">
+    <title>Quản lý danh mục - Admin</title>
+</head>
+<body class="admin-page">
+    <div th:replace="~{fragments/header-admin :: header-admin}"></div>
+
+    <div class="container-fluid mt-4 px-4">
+        <div class="admin-content">
+            <!-- Flash Messages -->
+            <div th:if="${message}" class="alert alert-dismissible fade show" 
+                 th:classappend="${'alert-' + messageType}" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <span th:text="${message}">Message</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3><i class="fas fa-tags text-primary me-2"></i>Quản lý danh mục sản phẩm</h3>
+                <button class="btn btn-admin-primary" data-bs-toggle="modal" data-bs-target="#addCategoryModal">
+                    <i class="fas fa-plus me-2"></i>Thêm danh mục mới
+                </button>
+            </div>
+
+            <div class="row g-4">
+                <div th:if="${categories == null or categories.isEmpty()}" class="col-12">
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-tags fa-3x mb-3 d-block"></i>
+                        <p>Chưa có danh mục nào trong hệ thống</p>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-4" th:each="category : ${categories}" th:if="${category != null}">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body text-center">
+                            <i class="fas fa-tags fa-4x text-primary mb-3"></i>
+                            <h5 class="mb-3" th:text="${category.name != null ? category.name : 'N/A'}">Danh mục</h5>
+                            <p class="text-muted" th:text="${category.description != null ? category.description : 'Chưa có mô tả'}">Mô tả</p>
+                            <div class="d-flex justify-content-around mb-3">
+                                <div>
+                                    <small class="text-muted">Sản phẩm</small>
+                                    <h5 class="mb-0" th:text="${category.products != null ? category.products.size() : 0}">0</h5>
+                                </div>
+                                <div>
+                                    <small class="text-muted">Trạng thái</small>
+                                    <h5 class="mb-0">
+                                        <span class="badge-admin" 
+                                              th:classappend="${category.isActive != null and category.isActive ? 'bg-success' : 'bg-danger'}"
+                                              th:text="${category.isActive != null and category.isActive ? 'Active' : 'Inactive'}">Active</span>
+                                    </h5>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-warning flex-fill" 
+                                        data-bs-toggle="modal" 
+                                        th:data-bs-target="'#editCategoryModal' + ${category.id}">
+                                    <i class="fas fa-edit me-1"></i>Sửa
+                                </button>
+                                <form th:action="@{/admin/categories/{id}/toggle-status(id=${category.id})}" 
+                                      method="post" class="flex-fill">
+                                    <button type="submit" class="btn btn-sm btn-info w-100">
+                                        <i class="fas" th:classappend="${category.isActive != null and category.isActive ? 'fa-ban' : 'fa-check'}"></i>
+                                    </button>
+                                </form>
+                                <button class="btn btn-sm btn-danger" 
+                                        th:attr="data-category-name=${category.name}, data-category-id=${category.id}"
+                                        onclick="confirmDeleteCategory(this.getAttribute('data-category-name'), this.getAttribute('data-category-id'))">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Edit Category Modal -->
+                    <div class="modal fade" th:id="'editCategoryModal' + ${category.id}" tabindex="-1">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header bg-warning text-white">
+                                    <h5 class="modal-title">
+                                        <i class="fas fa-edit me-2"></i>Chỉnh sửa danh mục
+                                    </h5>
+                                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                </div>
+                                <form th:action="@{/admin/categories/{id}/update(id=${category.id})}" method="post">
+                                    <div class="modal-body">
+                                        <div class="mb-3">
+                                            <label class="form-label">Tên danh mục</label>
+                                            <input type="text" name="name" class="form-control" 
+                                                   th:value="${category.name}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Slug</label>
+                                            <input type="text" name="slug" class="form-control" 
+                                                   th:value="${category.slug}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label">Mô tả</label>
+                                            <textarea name="description" class="form-control" rows="3" 
+                                                      th:text="${category.description}"></textarea>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                                        <button type="submit" class="btn btn-warning">
+                                            <i class="fas fa-save me-2"></i>Cập nhật
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div class="modal fade" id="addCategoryModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>Thêm danh mục mới
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/categories/create}" method="post">
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label">Tên danh mục</label>
+                            <input type="text" name="name" class="form-control" 
+                                   placeholder="Nhập tên danh mục" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Slug</label>
+                            <input type="text" name="slug" class="form-control" 
+                                   placeholder="vd: vot-cau-long" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Mô tả</label>
+                            <textarea name="description" class="form-control" rows="3" 
+                                      placeholder="Mô tả chi tiết về danh mục"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Lưu danh mục
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer-admin :: footer-admin}"></div>
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+    
+    <script>
+        function confirmDeleteCategory(categoryName, categoryId) {
+            if (confirm('Bạn có chắc chắn muốn xóa danh mục "' + categoryName + '"?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/admin/categories/' + categoryId + '/delete';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>
