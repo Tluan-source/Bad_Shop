@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head}">
+    <title>Store Info - Badminton Marketplace</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div th:replace="~{vendor/fragments/sidebar :: sidebar('store')}"></div>
+
+            <!-- Main content -->
+            <div class="col-md-10">
+                <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-store-alt"></i> Thông tin cửa hàng</h2>
+                    <a th:href="@{/vendor/store/edit}" class="btn btn-primary">
+                        <i class="fas fa-edit"></i> Chỉnh sửa
+                    </a>
+                </div>
+
+                <!-- Store Information Card -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h5><i class="fas fa-info-circle"></i> Chi tiết cửa hàng</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Tên cửa hàng:</strong></p>
+                                <p th:text="${store.name}" class="text-muted">Store Name</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Email chủ shop:</strong></p>
+                                <p th:text="${store.ownerEmail}" class="text-muted">email@example.com</p>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <p><strong>Tên chủ shop:</strong></p>
+                                <p th:text="${store.ownerName}" class="text-muted">Owner Name</p>
+                            </div>
+                            <div class="col-md-6">
+                                <p><strong>Trạng thái:</strong></p>
+                                <p>
+                                    <span th:if="${store.isActive}" class="badge bg-success">Đang hoạt động</span>
+                                    <span th:unless="${store.isActive}" class="badge bg-danger">Tạm ngừng</span>
+                                </p>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <p><strong>Địa chỉ:</strong></p>
+                                <p th:text="${store.address}" class="text-muted">Address</p>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-12">
+                                <p><strong>Mô tả:</strong></p>
+                                <p th:text="${store.description}" class="text-muted">Description</p>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <div class="col-md-4">
+                                <p><strong>Ngày tham gia:</strong></p>
+                                <p th:text="${#temporals.format(store.createdAt, 'dd/MM/yyyy HH:mm')}" class="text-muted">01/01/2024</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Store Statistics -->
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card text-white bg-success mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-box"></i> Tổng sản phẩm</h5>
+                                <h2 th:text="${store.totalProducts}">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-info mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-shopping-cart"></i> Tổng đơn hàng</h5>
+                                <h2 th:text="${store.totalOrders}">0</h2>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-warning mb-3">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-dollar-sign"></i> Doanh thu tháng</h5>
+                                <h2 th:text="${#numbers.formatDecimal(store.monthlyRevenue / 1000000, 0, 0)} + 'M'">0M</h2>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

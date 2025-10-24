@@ -9,44 +9,7 @@
     <div class="container-fluid mt-4">
         <div class="row">
             <!-- Sidebar -->
-            <div class="col-md-2 bg-light sidebar">
-                <div class="position-sticky pt-3">
-                    <h5 class="text-center mb-3"><i class="fas fa-store"></i> Vendor Panel</h5>
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-store-alt"></i> Cửa hàng của tôi</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-box"></i> Quản lý sản phẩm</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-plus-circle"></i> Thêm sản phẩm</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-shopping-cart"></i> Đơn hàng</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-star"></i> Đánh giá</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-chart-bar"></i> Báo cáo bán hàng</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-wallet"></i> Ví điện tử</a>
-                        </li>
-                                                <li class="nav-item">
-                            <form th:action="@{/logout}" method="post" class="d-inline">
-                                <button type="submit" class="nav-link btn btn-link text-danger w-100 text-start" style="text-decoration: none;">
-                                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
-                </div>
-            </div>
+            <div th:replace="~{vendor/fragments/sidebar :: sidebar('dashboard')}"></div>
 
             <!-- Main content -->
             <div class="col-md-10">
@@ -95,7 +58,7 @@
                                 <div class="d-flex justify-content-between">
                                     <div>
                                         <h5 class="card-title">Doanh thu tháng</h5>
-                                        <h2>25M</h2>
+                                        <h2 th:text="${#numbers.formatDecimal(stats.monthRevenue / 1000000, 0, 0)} + 'M'">0M</h2>
                                     </div>
                                     <div>
                                         <i class="fas fa-dollar-sign fa-3x"></i>
@@ -109,11 +72,11 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-between">
                                     <div>
-                                        <h5 class="card-title">Đánh giá TB</h5>
-                                        <h2>4.8 ⭐</h2>
+                                        <h5 class="card-title">Doanh thu tổng</h5>
+                                        <h2 th:text="${#numbers.formatDecimal(stats.totalRevenue / 1000000, 0, 0)} + 'M'">0M</h2>
                                     </div>
                                     <div>
-                                        <i class="fas fa-star fa-3x"></i>
+                                        <i class="fas fa-chart-line fa-3x"></i>
                                     </div>
                                 </div>
                             </div>
@@ -139,29 +102,24 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>#ORD001</td>
-                                    <td>Vợt Yonex Astrox 100ZZ</td>
-                                    <td>1</td>
-                                    <td>4,990,000 VNĐ</td>
-                                    <td><span class="badge bg-warning">Chờ xử lý</span></td>
-                                    <td><button class="btn btn-sm btn-primary">Xử lý</button></td>
+                                <tr th:if="${#lists.isEmpty(recentOrders)}">
+                                    <td colspan="6" class="text-center text-muted">Chưa có đơn hàng nào</td>
                                 </tr>
-                                <tr>
-                                    <td>#ORD002</td>
-                                    <td>Quả Cầu Yonex Aerosensa 50</td>
-                                    <td>10</td>
-                                    <td>1,650,000 VNĐ</td>
-                                    <td><span class="badge bg-info">Đang chuẩn bị</span></td>
-                                    <td><button class="btn btn-sm btn-success">Giao hàng</button></td>
-                                </tr>
-                                <tr>
-                                    <td>#ORD003</td>
-                                    <td>Giày Yonex PC 65Z2</td>
-                                    <td>1</td>
-                                    <td>1,990,000 VNĐ</td>
-                                    <td><span class="badge bg-success">Hoàn thành</span></td>
-                                    <td><button class="btn btn-sm btn-secondary" disabled>Đã giao</button></td>
+                                <tr th:each="order : ${recentOrders}">
+                                    <td th:text="${order.orderId}">#ORD001</td>
+                                    <td th:text="${order.customerName}">Customer</td>
+                                    <td th:text="${#lists.size(order.items)}">1</td>
+                                    <td th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</td>
+                                    <td>
+                                        <span th:if="${order.status == 'PENDING'}" class="badge bg-warning">Chờ xử lý</span>
+                                        <span th:if="${order.status == 'PROCESSING'}" class="badge bg-info">Đang xử lý</span>
+                                        <span th:if="${order.status == 'SHIPPED'}" class="badge bg-primary">Đang giao</span>
+                                        <span th:if="${order.status == 'DELIVERED'}" class="badge bg-success">Hoàn thành</span>
+                                        <span th:if="${order.status == 'CANCELLED'}" class="badge bg-danger">Đã hủy</span>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/vendor/orders/{id}(id=${order.orderId})}" class="btn btn-sm btn-primary">Xem</a>
+                                    </td>
                                 </tr>
                             </tbody>
                         </table>
@@ -174,31 +132,16 @@
                         <h5><i class="fas fa-fire"></i> Sản phẩm bán chạy</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-4">
+                        <div th:if="${#lists.isEmpty(topProducts)}" class="text-center text-muted py-3">
+                            Chưa có sản phẩm bán chạy
+                        </div>
+                        <div class="row" th:unless="${#lists.isEmpty(topProducts)}">
+                            <div class="col-md-4" th:each="product : ${topProducts}">
                                 <div class="card">
                                     <div class="card-body">
-                                        <h6>Vợt Yonex Astrox 100ZZ</h6>
-                                        <p class="text-muted mb-1">Đã bán: 23</p>
-                                        <p class="text-success fw-bold">4,990,000 VNĐ</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6>Quả Cầu Yonex Aerosensa 50</h6>
-                                        <p class="text-muted mb-1">Đã bán: 145</p>
-                                        <p class="text-success fw-bold">165,000 VNĐ</p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-4">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6>Giày Yonex PC 65Z2</h6>
-                                        <p class="text-muted mb-1">Đã bán: 12</p>
-                                        <p class="text-success fw-bold">1,990,000 VNĐ</p>
+                                        <h6 th:text="${product.name}">Product Name</h6>
+                                        <p class="text-muted mb-1">Đã bán: <span th:text="${product.soldCount}">0</span></p>
+                                        <p class="text-success fw-bold" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</p>
                                     </div>
                                 </div>
                             </div>
