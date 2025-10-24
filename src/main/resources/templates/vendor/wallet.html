@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head}">
+    <title>Wallet - Badminton Marketplace</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div th:replace="~{vendor/fragments/sidebar :: sidebar('wallet')}"></div>
+
+            <!-- Main content -->
+            <div class="col-md-10">
+                <h2 class="mb-4"><i class="fas fa-wallet"></i> Quản lý ví điện tử</h2>
+
+                <!-- Wallet Balance Card -->
+                <div class="row mb-4">
+                    <div class="col-md-4">
+                        <div class="card text-white bg-success">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-money-bill-wave"></i> Số dư khả dụng</h5>
+                                <h2 th:text="${wallet != null ? #numbers.formatDecimal(wallet.balance, 0, 'COMMA', 0, 'POINT') + ' VNĐ' : '0 VNĐ'}">0 VNĐ</h2>
+                                <small>Có thể rút tiền</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-warning">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-clock"></i> Số dư đang chờ</h5>
+                                <h2 th:text="${pendingBalance != null ? #numbers.formatDecimal(pendingBalance, 0, 'COMMA', 0, 'POINT') + ' VNĐ' : '0 VNĐ'}">0 VNĐ</h2>
+                                <small>Từ đơn hàng đang xử lý</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card text-white bg-info">
+                            <div class="card-body">
+                                <h5 class="card-title"><i class="fas fa-chart-line"></i> Tổng thu nhập</h5>
+                                <h2 th:text="${totalIncome != null ? #numbers.formatDecimal(totalIncome, 0, 'COMMA', 0, 'POINT') + ' VNĐ' : '0 VNĐ'}">0 VNĐ</h2>
+                                <small>Tất cả thời gian</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Withdraw Button -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5><i class="fas fa-hand-holding-usd"></i> Rút tiền</h5>
+                                <p class="text-muted mb-0">Rút tiền về tài khoản ngân hàng của bạn</p>
+                            </div>
+                            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#withdrawModal">
+                                <i class="fas fa-money-check-alt"></i> Yêu cầu rút tiền
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transaction History -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5><i class="fas fa-history"></i> Lịch sử giao dịch</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Lưu ý:</strong> Chức năng ví điện tử đang được phát triển. 
+                            Hiện tại hệ thống đang tự động tính toán doanh thu từ các đơn hàng đã hoàn thành.
+                        </div>
+
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-receipt fa-4x mb-3"></i>
+                            <p>Lịch sử giao dịch sẽ được hiển thị tại đây</p>
+                            <small>Bao gồm: Thu nhập từ đơn hàng, yêu cầu rút tiền, hoa hồng hệ thống</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Withdraw Modal -->
+    <div class="modal fade" id="withdrawModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Yêu cầu rút tiền</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> 
+                        Chức năng rút tiền đang được phát triển. Vui lòng liên hệ Admin để được hỗ trợ.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Số dư khả dụng:</label>
+                        <p class="h4 text-success" th:text="${wallet != null ? #numbers.formatDecimal(wallet.balance, 0, 'COMMA', 0, 'POINT') + ' VNĐ' : '0 VNĐ'}">0 VNĐ</p>
+                    </div>
+                    <div class="mb-3">
+                        <label for="withdrawAmount" class="form-label">Số tiền muốn rút:</label>
+                        <input type="number" class="form-control" id="withdrawAmount" 
+                               placeholder="Nhập số tiền" min="100000" step="10000" disabled>
+                        <small class="text-muted">Tối thiểu 100,000 VNĐ</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="bankAccount" class="form-label">Tài khoản ngân hàng:</label>
+                        <input type="text" class="form-control" id="bankAccount" 
+                               placeholder="Số tài khoản" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label for="bankName" class="form-label">Ngân hàng:</label>
+                        <input type="text" class="form-control" id="bankName" 
+                               placeholder="Tên ngân hàng" disabled>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+                    <button type="button" class="btn btn-primary" disabled>Gửi yêu cầu</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

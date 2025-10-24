@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head}">
+    <title>Edit Store - Badminton Marketplace</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div th:replace="~{vendor/fragments/sidebar :: sidebar('store')}"></div>
+
+            <!-- Main content -->
+            <div class="col-md-10">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-edit"></i> Chỉnh sửa thông tin cửa hàng</h2>
+                    <a th:href="@{/vendor/store}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+
+                <!-- Edit Store Form -->
+                <div class="card">
+                    <div class="card-body">
+                        <form th:action="@{/vendor/store/update}" method="post" th:object="${store}">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Tên cửa hàng <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="name" th:field="*{name}" 
+                                       th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" th:field="*{email}" 
+                                       th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                <input type="tel" class="form-control" id="phone" th:field="*{phone}" 
+                                       th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid' : ''" required>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Địa chỉ <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="address" rows="2" th:field="*{address}" 
+                                          th:classappend="${#fields.hasErrors('address')} ? 'is-invalid' : ''" required></textarea>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Mô tả cửa hàng</label>
+                                <textarea class="form-control" id="description" rows="4" th:field="*{description}" 
+                                          th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"></textarea>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+                                <small class="form-text text-muted">Tối đa 500 ký tự</small>
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a th:href="@{/vendor/store}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Hủy
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> Lưu thay đổi
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <!-- Vendor Sidebar Fragment -->
+    <div th:fragment="sidebar(active)" class="col-md-2 bg-light sidebar">
+        <div class="position-sticky pt-3">
+            <h5 class="text-center mb-3">
+                <i class="fas fa-store"></i> Quản lý cửa hàng
+            </h5>
+            
+            <ul class="nav flex-column">
+                    <!-- Dashboard -->
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${active == 'dashboard' ? 'active' : ''}" 
+                           th:href="@{/vendor/dashboard}">
+                            <i class="fas fa-tachometer-alt"></i> Tổng quan
+                        </a>
+                    </li>
+                    
+                    <!-- Store Management Section -->
+                    <li class="nav-item mt-3">
+                        <h6 class="text-muted px-3 mb-2"><small>QUẢN LÝ SHOP</small></h6>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${active == 'store' ? 'active' : ''}" 
+                           th:href="@{/vendor/store}">
+                            <i class="fas fa-store-alt"></i> Thông tin shop
+                        </a>
+                    </li>
+                    
+                    <!-- Product Management Section -->
+                    <li class="nav-item mt-3">
+                        <h6 class="text-muted px-3 mb-2"><small>SẢN PHẨM</small></h6>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${active == 'products' ? 'active' : ''}" 
+                           th:href="@{/vendor/products}">
+                            <i class="fas fa-box"></i> Danh sách sản phẩm
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${active == 'products-new' ? 'active' : ''}" 
+                           th:href="@{/vendor/products/new}">
+                            <i class="fas fa-plus-circle"></i> Thêm sản phẩm
+                        </a>
+                    </li>
+                    
+                    <!-- Order Management Section -->
+                    <li class="nav-item mt-3">
+                        <h6 class="text-muted px-3 mb-2"><small>BÁN HÀNG</small></h6>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${active == 'orders' ? 'active' : ''}" 
+                           th:href="@{/vendor/orders}">
+                            <i class="fas fa-shopping-cart"></i> Quản lý đơn hàng
+                        </a>
+                    </li>
+                    
+                    <!-- Finance & Reports Section -->
+                    <li class="nav-item mt-3">
+                        <h6 class="text-muted px-3 mb-2"><small>TÀI CHÍNH & BÁO CÁO</small></h6>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${active == 'analytics' ? 'active' : ''}" 
+                           th:href="@{/vendor/analytics}">
+                            <i class="fas fa-chart-line"></i> Thống kê doanh thu
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:classappend="${active == 'wallet' ? 'active' : ''}" 
+                           th:href="@{/vendor/wallet}">
+                            <i class="fas fa-wallet"></i> Ví điện tử
+                        </a>
+                    </li>
+                    
+                    <!-- Settings & Logout -->
+                    <li class="nav-item mt-4 pt-3 border-top">
+                        <form th:action="@{/logout}" method="post" class="d-inline w-100">
+                            <button type="submit" class="nav-link btn btn-link text-danger w-100 text-start" 
+                                    style="text-decoration: none;">
+                                <i class="fas fa-sign-out-alt"></i> Đăng xuất
+                            </button>
+                        </form>
+                    </li>
+                </ul>
+        </div>
+    </div>
+</body>
+</html>

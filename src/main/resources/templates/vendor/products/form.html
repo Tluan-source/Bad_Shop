@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head}">
+    <title>Product Form - Badminton Marketplace</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div th:replace="~{vendor/fragments/sidebar :: sidebar('products')}"></div>
+
+            <!-- Main content -->
+            <div class="col-md-10">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>
+                        <i th:class="${isEdit ? 'fas fa-edit' : 'fas fa-plus'}"></i> 
+                        <span th:text="${isEdit ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}">Product Form</span>
+                    </h2>
+                    <a th:href="@{/vendor/products}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+
+                <!-- Product Form -->
+                <div class="card">
+                    <div class="card-body">
+                        <!-- Thông báo cho user -->
+                        <div class="alert alert-info" th:if="${!isEdit}">
+                            <i class="fas fa-info-circle"></i> 
+                            <strong>Lưu ý:</strong> Sản phẩm sẽ được gửi đến admin để duyệt. 
+                            Sản phẩm chỉ hiển thị trên hệ thống sau khi được admin phê duyệt.
+                        </div>
+                        
+                        <form th:action="@{${isEdit ? '/vendor/products/' + product.id + '/update' : '/vendor/products/create'}}" 
+                              method="post" th:object="${productDTO}">
+                            
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div class="mb-3">
+                                        <label for="name" class="form-label">Tên sản phẩm <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control" id="name" th:field="*{name}" 
+                                               th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''" required>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="description" class="form-label">Mô tả sản phẩm <span class="text-danger">*</span></label>
+                                        <textarea class="form-control" id="description" rows="4" th:field="*{description}" 
+                                                  th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''" required></textarea>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="categoryId" class="form-label">Danh mục <span class="text-danger">*</span></label>
+                                                <select class="form-select" id="categoryId" th:field="*{categoryId}" 
+                                                        th:classappend="${#fields.hasErrors('categoryId')} ? 'is-invalid' : ''" required>
+                                                    <option value="">-- Chọn danh mục --</option>
+                                                    <option th:each="category : ${categories}" 
+                                                            th:value="${category.id}" 
+                                                            th:text="${category.name}">Category</option>
+                                                </select>
+                                                <div class="invalid-feedback" th:if="${#fields.hasErrors('categoryId')}" th:errors="*{categoryId}"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="imageUrls" class="form-label">URL hình ảnh sản phẩm (có thể thêm nhiều URL, mỗi URL một dòng)</label>
+                                <textarea class="form-control" id="imageUrls" rows="3" name="imageUrlsText"
+                                          placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
+                                <small class="text-muted">Nhập URL hình ảnh, mỗi URL một dòng</small>
+                            </div>
+
+                            <hr>
+
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="price" class="form-label">Giá bán <span class="text-danger">*</span></label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="price" th:field="*{price}" 
+                                                   th:classappend="${#fields.hasErrors('price')} ? 'is-invalid' : ''" 
+                                                   step="1000" min="0" required>
+                                            <span class="input-group-text">VNĐ</span>
+                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('price')}" th:errors="*{price}"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="promotionalPrice" class="form-label">Giá khuyến mãi</label>
+                                        <div class="input-group">
+                                            <input type="number" class="form-control" id="promotionalPrice" th:field="*{promotionalPrice}" 
+                                                   th:classappend="${#fields.hasErrors('promotionalPrice')} ? 'is-invalid' : ''" 
+                                                   step="1000" min="0">
+                                            <span class="input-group-text">VNĐ</span>
+                                            <div class="invalid-feedback" th:if="${#fields.hasErrors('promotionalPrice')}" th:errors="*{promotionalPrice}"></div>
+                                        </div>
+                                        <small class="text-muted">Để trống nếu không có khuyến mãi</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-4">
+                                    <div class="mb-3">
+                                        <label for="quantity" class="form-label">Số lượng <span class="text-danger">*</span></label>
+                                        <input type="number" class="form-control" id="quantity" th:field="*{quantity}" 
+                                               th:classappend="${#fields.hasErrors('quantity')} ? 'is-invalid' : ''" 
+                                               min="0" required>
+                                        <div class="invalid-feedback" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3 form-check">
+                                <input type="checkbox" class="form-check-input" id="isSelling" th:field="*{isSelling}">
+                                <label class="form-check-label" for="isSelling">
+                                    Mở bán ngay khi được duyệt
+                                </label>
+                            </div>
+
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle"></i> Sản phẩm sẽ cần được Admin duyệt trước khi hiển thị trên hệ thống
+                            </div>
+
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <a th:href="@{/vendor/products}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Hủy
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> <span th:text="${isEdit ? 'Cập nhật' : 'Thêm sản phẩm'}">Save</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

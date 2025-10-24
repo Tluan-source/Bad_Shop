@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head}">
+    <title>Products Management - Badminton Marketplace</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div th:replace="~{vendor/fragments/sidebar :: sidebar('products')}"></div>
+
+            <!-- Main content -->
+            <div class="col-md-10">
+                <div th:if="${success}" class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-box"></i> Quản lý sản phẩm</h2>
+                    <a th:href="@{/vendor/products/new}" class="btn btn-primary">
+                        <i class="fas fa-plus"></i> Thêm sản phẩm mới
+                    </a>
+                </div>
+
+                <!-- Search and Filter -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form th:action="@{/vendor/products}" method="get" class="row g-3">
+                            <div class="col-md-6">
+                                <input type="text" name="search" class="form-control" placeholder="Tìm kiếm sản phẩm..." 
+                                       th:value="${param.search}">
+                            </div>
+                            <div class="col-md-3">
+                                <select name="isSelling" class="form-select">
+                                    <option value="">Tất cả trạng thái</option>
+                                    <option value="true" th:selected="${param.isSelling == 'true'}">Đang bán</option>
+                                    <option value="false" th:selected="${param.isSelling == 'false'}">Ngừng bán</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search"></i> Tìm kiếm
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="card">
+                    <div class="card-body">
+                        <div th:if="${products.empty}" class="text-center text-muted py-5">
+                            <i class="fas fa-box-open fa-4x mb-3"></i>
+                            <p>Chưa có sản phẩm nào</p>
+                            <a th:href="@{/vendor/products/new}" class="btn btn-primary">Thêm sản phẩm đầu tiên</a>
+                        </div>
+
+                        <div th:unless="${products.empty}">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Hình ảnh</th>
+                                        <th>Tên sản phẩm</th>
+                                        <th>Giá</th>
+                                        <th>Tồn kho</th>
+                                        <th>Đã bán</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="product : ${products}">
+                                        <td>
+                                            <img th:if="${product.listImages != null and product.listImages != '[]'}" 
+                                                 th:src="${product.listImages}" 
+                                                 alt="Product Image" style="width: 60px; height: 60px; object-fit: cover;">
+                                            <div th:unless="${product.listImages != null and product.listImages != '[]'}" 
+                                                 style="width: 60px; height: 60px; background: #e9ecef; display: flex; align-items: center; justify-content: center;">
+                                                <i class="fas fa-image text-muted"></i>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div th:text="${product.name}">Product Name</div>
+                                            <small class="text-muted" th:text="${product.categoryName}">Category</small>
+                                        </td>
+                                        <td th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</td>
+                                        <td>
+                                            <span th:text="${product.quantity}">0</span>
+                                            <span th:if="${product.stockStatus == 'Hết hàng'}" class="badge bg-danger ms-1">Hết hàng</span>
+                                            <span th:if="${product.stockStatus == 'Sắp hết'}" class="badge bg-warning ms-1">Sắp hết</span>
+                                        </td>
+                                        <td th:text="${product.sold}">0</td>
+                                        <td>
+                                            <span th:if="${product.isActive and product.isSelling}" class="badge bg-success">Đang bán</span>
+                                            <span th:if="${!product.isActive}" class="badge bg-danger">Chưa duyệt</span>
+                                            <span th:if="${product.isActive and !product.isSelling}" class="badge bg-secondary">Ngừng bán</span>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a th:href="@{/vendor/products/{id}/edit(id=${product.id})}" class="btn btn-info" title="Sửa">
+                                                    <i class="fas fa-edit"></i>
+                                                </a>
+                                                <form th:action="@{/vendor/products/{id}/toggle-selling(id=${product.id})}" method="post" style="display: inline;">
+                                                    <button type="submit" class="btn btn-warning" 
+                                                            th:title="${product.isSelling ? 'Ngừng bán' : 'Mở bán'}">
+                                                        <i th:class="${product.isSelling ? 'fas fa-pause' : 'fas fa-play'}"></i>
+                                                    </button>
+                                                </form>
+                                                <form th:action="@{/vendor/products/{id}/delete(id=${product.id})}" method="post" 
+                                                      style="display: inline;" onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này?');">
+                                                    <button type="submit" class="btn btn-danger" title="Xóa">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <!-- Pagination -->
+                            <nav th:if="${products.totalPages > 1}">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item" th:classappend="${products.first} ? 'disabled'">
+                                        <a class="page-link" th:href="@{/vendor/products(page=${products.number - 1}, search=${param.search}, isSelling=${param.isSelling})}">
+                                            Trước
+                                        </a>
+                                    </li>
+                                    <li class="page-item" th:each="i : ${#numbers.sequence(0, products.totalPages - 1)}" 
+                                        th:classappend="${i == products.number} ? 'active'">
+                                        <a class="page-link" th:href="@{/vendor/products(page=${i}, search=${param.search}, isSelling=${param.isSelling})}" 
+                                           th:text="${i + 1}">1</a>
+                                    </li>
+                                    <li class="page-item" th:classappend="${products.last} ? 'disabled'">
+                                        <a class="page-link" th:href="@{/vendor/products(page=${products.number + 1}, search=${param.search}, isSelling=${param.isSelling})}">
+                                            Sau
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>
