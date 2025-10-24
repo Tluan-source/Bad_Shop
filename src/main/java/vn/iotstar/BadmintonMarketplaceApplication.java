@@ -9,5 +9,4 @@ public class BadmintonMarketplaceApplication {
 	public static void main(String[] args) {
 		SpringApplication.run(BadmintonMarketplaceApplication.class, args);
 	}
-
 }
