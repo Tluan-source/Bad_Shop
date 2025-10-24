@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Vendor Header</title>
+</head>
+<body>
+<header th:fragment="header-vendor">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" th:href="@{/vendor/dashboard}">
+                <i class="fas fa-store fa-lg me-2"></i>
+                <span><strong>VENDOR</strong> Dashboard</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarVendor">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarVendor">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/vendor/dashboard}">
+                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/vendor/store}">
+                            <i class="fas fa-store-alt me-1"></i>Cửa hàng của tôi
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/vendor/products}">
+                            <i class="fas fa-box-open me-1"></i>Sản phẩm
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/vendor/orders}">
+                            <i class="fas fa-shopping-bag me-1"></i>Đơn hàng
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/vendor/revenue}">
+                            <i class="fas fa-dollar-sign me-1"></i>Doanh thu
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/vendor/wallet}">
+                            <i class="fas fa-wallet me-1"></i>Ví tiền
+                        </a>
+                    </li>
+                </ul>
+
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/}">
+                            <i class="fas fa-home me-1"></i>Về trang chủ
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="vendorDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-tie me-2"></i>
+                            <span sec:authentication="name">Vendor</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="vendorDropdown" style="min-width: 280px;">
+                            <li class="px-3 py-2">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="rounded-circle bg-light p-2 me-2">
+                                        <i class="fas fa-store fa-2x text-success"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold" sec:authentication="name">Vendor</h6>
+                                        <small class="text-muted">Nhà cung cấp</small>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item py-2" th:href="@{/vendor/profile}">
+                                    <i class="fas fa-id-card me-2 text-primary"></i>
+                                    <span>Xem thông tin chi tiết</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2" th:href="@{/vendor/settings}">
+                                    <i class="fas fa-cog me-2 text-secondary"></i>
+                                    <span>Cài đặt</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="px-2">
+                                    <button type="submit" class="dropdown-item py-2 text-danger">
+                                        <i class="fas fa-sign-out-alt me-2"></i>
+                                        <span>Đăng xuất</span>
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+</body>
+</html>
