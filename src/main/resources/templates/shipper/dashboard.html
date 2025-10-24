@@ -4,236 +4,195 @@
     <title>Shipper Dashboard - Badminton Marketplace</title>
 </head>
 <body>
-    <div th:replace="~{fragments/header :: header}"></div>
+    <div th:replace="~{fragments/header-shipper :: header-shipper}"></div>
 
     <div class="container-fluid mt-4">
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-2 bg-light sidebar">
-                <div class="position-sticky pt-3">
-                    <h5 class="text-center mb-3"><i class="fas fa-shipping-fast"></i> Shipper Panel</h5>
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-tasks"></i> Đơn hàng cần giao</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-truck"></i> Đang giao hàng</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-check-circle"></i> Đã giao hàng</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-times-circle"></i> Giao thất bại</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-chart-line"></i> Thống kê giao hàng</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-wallet"></i> Thu nhập</a>
-                        </li>
-                                                <li class="nav-item">
-                            <form th:action="@{/logout}" method="post" class="d-inline">
-                                <button type="submit" class="nav-link btn btn-link text-danger w-100 text-start" style="text-decoration: none;">
-                                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
+        <!-- Main content -->
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> Chào mừng <strong sec:authentication="name">Shipper</strong> đến với trang quản lý giao hàng!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <h2>Dashboard - Tổng quan giao hàng</h2>
+
+        <!-- Statistics Cards -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-warning mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Cần giao</h5>
+                                <h2>8</h2>
+                            </div>
+                            <div>
+                                <i class="fas fa-box fa-3x"></i>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Main content -->
-            <div class="col-md-10">
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle"></i> Chào mừng <strong sec:authentication="name">Shipper</strong> đến với trang quản lý giao hàng!
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-
-                <h2>Dashboard - Tổng quan giao hàng</h2>
-
-                <!-- Statistics Cards -->
-                <div class="row mt-4">
-                    <div class="col-md-3">
-                        <div class="card text-white bg-warning mb-3">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h5 class="card-title">Cần giao</h5>
-                                        <h2>8</h2>
-                                    </div>
-                                    <div>
-                                        <i class="fas fa-box fa-3x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-info mb-3">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h5 class="card-title">Đang giao</h5>
-                                        <h2>5</h2>
-                                    </div>
-                                    <div>
-                                        <i class="fas fa-truck fa-3x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-success mb-3">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h5 class="card-title">Đã giao</h5>
-                                        <h2>127</h2>
-                                    </div>
-                                    <div>
-                                        <i class="fas fa-check-circle fa-3x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-primary mb-3">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h5 class="card-title">Thu nhập tháng</h5>
-                                        <h2>3.8M</h2>
-                                    </div>
-                                    <div>
-                                        <i class="fas fa-dollar-sign fa-3x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pending Deliveries -->
-                <div class="card mt-4">
-                    <div class="card-header bg-warning text-white">
-                        <h5><i class="fas fa-tasks"></i> Đơn hàng cần giao hôm nay</h5>
-                    </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-info mb-3">
                     <div class="card-body">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Mã đơn</th>
-                                    <th>Địa chỉ giao hàng</th>
-                                    <th>SĐT người nhận</th>
-                                    <th>COD</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>#ORD101</td>
-                                    <td>123 Nguyễn Huệ, Q.1, TP.HCM</td>
-                                    <td>0901234567</td>
-                                    <td>4,990,000 VNĐ</td>
-                                    <td><span class="badge bg-warning">Chờ lấy hàng</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary">Nhận đơn</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>#ORD102</td>
-                                    <td>456 Lê Lợi, Q.3, TP.HCM</td>
-                                    <td>0912345678</td>
-                                    <td>1,650,000 VNĐ</td>
-                                    <td><span class="badge bg-warning">Chờ lấy hàng</span></td>
-                                    <td>
-                                        <button class="btn btn-sm btn-primary">Nhận đơn</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Đang giao</h5>
+                                <h2>5</h2>
+                            </div>
+                            <div>
+                                <i class="fas fa-truck fa-3x"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Active Deliveries -->
-                <div class="card mt-4">
-                    <div class="card-header bg-info text-white">
-                        <h5><i class="fas fa-truck"></i> Đơn hàng đang giao</h5>
-                    </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-success mb-3">
                     <div class="card-body">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Mã đơn</th>
-                                    <th>Địa chỉ</th>
-                                    <th>SĐT</th>
-                                    <th>COD</th>
-                                    <th>Thời gian nhận</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>#ORD098</td>
-                                    <td>789 Võ Văn Tần, Q.3, TP.HCM</td>
-                                    <td>0923456789</td>
-                                    <td>1,990,000 VNĐ</td>
-                                    <td>10:30 AM</td>
-                                    <td>
-                                        <button class="btn btn-sm btn-success">Giao thành công</button>
-                                        <button class="btn btn-sm btn-danger">Giao thất bại</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Đã giao</h5>
+                                <h2>127</h2>
+                            </div>
+                            <div>
+                                <i class="fas fa-check-circle fa-3x"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
-
-                <!-- Recent Success Deliveries -->
-                <div class="card mt-4">
-                    <div class="card-header bg-success text-white">
-                        <h5><i class="fas fa-check-circle"></i> Giao hàng thành công gần đây</h5>
-                    </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-primary mb-3">
                     <div class="card-body">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Mã đơn</th>
-                                    <th>Địa chỉ</th>
-                                    <th>COD</th>
-                                    <th>Thu nhập</th>
-                                    <th>Thời gian</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>#ORD095</td>
-                                    <td>321 Cách Mạng Tháng 8, Q.10</td>
-                                    <td>3,500,000 VNĐ</td>
-                                    <td class="text-success fw-bold">35,000 VNĐ</td>
-                                    <td>9:15 AM</td>
-                                </tr>
-                                <tr>
-                                    <td>#ORD094</td>
-                                    <td>654 Hai Bà Trưng, Q.1</td>
-                                    <td>165,000 VNĐ</td>
-                                    <td class="text-success fw-bold">20,000 VNĐ</td>
-                                    <td>8:45 AM</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Thu nhập tháng</h5>
+                                <h2>3.8M</h2>
+                            </div>
+                            <div>
+                                <i class="fas fa-dollar-sign fa-3x"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Pending Deliveries -->
+        <div class="card mt-4">
+            <div class="card-header bg-warning text-white">
+                <h5><i class="fas fa-tasks"></i> Đơn hàng cần giao hôm nay</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Địa chỉ giao hàng</th>
+                            <th>SĐT người nhận</th>
+                            <th>COD</th>
+                            <th>Trạng thái</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#ORD101</td>
+                            <td>123 Nguyễn Huệ, Q.1, TP.HCM</td>
+                            <td>0901234567</td>
+                            <td>4,990,000 VNĐ</td>
+                            <td><span class="badge bg-warning">Chờ lấy hàng</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary">Nhận đơn</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>#ORD102</td>
+                            <td>456 Lê Lợi, Q.3, TP.HCM</td>
+                            <td>0912345678</td>
+                            <td>1,650,000 VNĐ</td>
+                            <td><span class="badge bg-warning">Chờ lấy hàng</span></td>
+                            <td>
+                                <button class="btn btn-sm btn-primary">Nhận đơn</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Active Deliveries -->
+        <div class="card mt-4">
+            <div class="card-header bg-info text-white">
+                <h5><i class="fas fa-truck"></i> Đơn hàng đang giao</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Địa chỉ</th>
+                            <th>SĐT</th>
+                            <th>COD</th>
+                            <th>Thời gian nhận</th>
+                            <th>Thao tác</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#ORD098</td>
+                            <td>789 Võ Văn Tần, Q.3, TP.HCM</td>
+                            <td>0923456789</td>
+                            <td>1,990,000 VNĐ</td>
+                            <td>10:30 AM</td>
+                            <td>
+                                <button class="btn btn-sm btn-success">Giao thành công</button>
+                                <button class="btn btn-sm btn-danger">Giao thất bại</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent Success Deliveries -->
+        <div class="card mt-4">
+            <div class="card-header bg-success text-white">
+                <h5><i class="fas fa-check-circle"></i> Giao hàng thành công gần đây</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Địa chỉ</th>
+                            <th>COD</th>
+                            <th>Thu nhập</th>
+                            <th>Thời gian</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#ORD095</td>
+                            <td>321 Cách Mạng Tháng 8, Q.10</td>
+                            <td>3,500,000 VNĐ</td>
+                            <td class="text-success fw-bold">35,000 VNĐ</td>
+                            <td>9:15 AM</td>
+                        </tr>
+                        <tr>
+                            <td>#ORD094</td>
+                            <td>654 Hai Bà Trưng, Q.1</td>
+                            <td>165,000 VNĐ</td>
+                            <td class="text-success fw-bold">20,000 VNĐ</td>
+                            <td>8:45 AM</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{fragments/footer-shipper :: footer-shipper}"></div>
 </body>
 </html>

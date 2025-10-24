@@ -49,54 +49,84 @@
     color: #ffc107;
 }
 
-/* Dropdown menu styles */
+/* Enhanced Dropdown Menu Styles */
 .dropdown-menu {
-    border-radius: 8px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     border: none;
-    margin-top: 0.5rem;
+    border-radius: 10px;
+    padding: 0;
+    margin-top: 10px;
 }
 
-.dropdown-header {
-    font-size: 0.9rem;
-    color: var(--primary-color);
-    font-weight: 600;
-    padding: 0.75rem 1rem;
+.dropdown-menu .dropdown-item {
+    padding: 10px 15px;
+    transition: all 0.2s ease;
+    border-radius: 5px;
+    margin: 2px 5px;
 }
 
-.dropdown-item {
-    padding: 0.6rem 1rem;
-    transition: all 0.3s ease;
+.dropdown-menu .dropdown-item:hover {
+    background-color: #f8f9fa;
+    transform: translateX(5px);
 }
 
-.dropdown-item:hover {
-    background-color: #f0f4ff;
-    padding-left: 1.5rem;
-}
-
-.dropdown-item i {
+.dropdown-menu .dropdown-item i {
     width: 20px;
     text-align: center;
 }
 
-.dropdown-item.text-danger:hover {
-    background-color: #ffe5e5;
-    color: #dc3545 !important;
+/* User Info in Dropdown */
+.dropdown-menu .rounded-circle {
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.dropdown-item button {
-    background: none;
-    border: none;
+/* Dropdown Divider */
+.dropdown-divider {
+    margin: 8px 0;
+    opacity: 0.1;
+}
+
+/* Smooth dropdown animation */
+.dropdown-menu {
+    animation: dropdownFadeIn 0.3s ease;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Navbar dropdown toggle */
+.nav-item.dropdown .nav-link.dropdown-toggle {
+    padding: 8px 15px;
+    border-radius: 20px;
+    transition: background-color 0.2s ease;
+}
+
+.nav-item.dropdown .nav-link.dropdown-toggle:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Logout button styling */
+.dropdown-menu form button[type="submit"] {
     width: 100%;
     text-align: left;
-    padding: 0;
-    font: inherit;
-    color: inherit;
+    border: none;
+    background: transparent;
     cursor: pointer;
 }
 
-.nav-link .fas.fa-user-circle {
-    font-size: 1.2rem;
+.dropdown-menu form button[type="submit"]:hover {
+    background-color: #fee;
 }
 
 /* Responsive adjustments */

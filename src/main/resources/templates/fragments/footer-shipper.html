@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Shipper Footer</title>
+</head>
+<body>
+<footer th:fragment="footer-shipper" class="bg-dark text-light mt-5 py-4">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-4">
+                <h5><i class="fas fa-shipping-fast text-info"></i> Shipper Dashboard</h5>
+                <p>Hệ thống quản lý giao hàng thông minh</p>
+                <p class="small text-muted">Giao hàng nhanh - Thu nhập cao</p>
+            </div>
+            <div class="col-md-4">
+                <h5>Công cụ giao hàng</h5>
+                <ul class="list-unstyled">
+                    <li><a href="#" th:href="@{/shipper/orders/pending}" class="text-light"><i class="fas fa-clock me-2"></i>Đơn chờ lấy</a></li>
+                    <li><a href="#" th:href="@{/shipper/orders/delivering}" class="text-light"><i class="fas fa-truck me-2"></i>Đơn đang giao</a></li>
+                    <li><a href="#" th:href="@{/shipper/income}" class="text-light"><i class="fas fa-coins me-2"></i>Thu nhập</a></li>
+                    <li><a href="#" th:href="@{/shipper/support}" class="text-light"><i class="fas fa-headset me-2"></i>Hỗ trợ shipper</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4">
+                <h5>Liên hệ hỗ trợ</h5>
+                <p><i class="fas fa-envelope me-2"></i>shipper@badminton.com</p>
+                <p><i class="fas fa-phone me-2"></i>Hotline: 1900 9999</p>
+                <p><i class="fas fa-book me-2"></i><a href="#" class="text-light">Hướng dẫn giao hàng</a></p>
+            </div>
+        </div>
+        <hr class="bg-light">
+        <div class="text-center">
+            <p class="mb-0">&copy; 2024 Badminton Marketplace - Shipper Portal | Đối tác vận chuyển</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Custom JS -->
+<script th:src="@{/js/main.js}"></script>
+</body>
+</html>
