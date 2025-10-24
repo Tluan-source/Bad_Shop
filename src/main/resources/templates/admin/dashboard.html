@@ -4,169 +4,125 @@
     <title>Admin Dashboard - Badminton Marketplace</title>
 </head>
 <body>
-    <div th:replace="~{fragments/header :: header}"></div>
+    <div th:replace="~{fragments/header-admin :: header-admin}"></div>
 
     <div class="container-fluid mt-4">
-        <div class="row">
-            <!-- Sidebar -->
-            <div class="col-md-2 bg-light sidebar">
-                <div class="position-sticky pt-3">
-                    <h5 class="text-center mb-3"><i class="fas fa-user-shield"></i> Admin Panel</h5>
-                    <ul class="nav flex-column">
-                        <li class="nav-item">
-                            <a class="nav-link active" href="#"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-users"></i> Quản lý người dùng</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-box"></i> Quản lý sản phẩm</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-store"></i> Quản lý cửa hàng</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-shopping-cart"></i> Quản lý đơn hàng</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-tags"></i> Quản lý danh mục</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-ticket-alt"></i> Quản lý voucher</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link" href="#"><i class="fas fa-chart-line"></i> Báo cáo thống kê</a>
+        <!-- Main content -->
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="fas fa-check-circle"></i> Chào mừng <strong sec:authentication="name">Admin</strong> đến với trang quản trị!
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
 
-                        <li class="nav-item">
-                            <form th:action="@{/logout}" method="post" class="d-inline">
-                                <button type="submit" class="nav-link btn btn-link text-danger w-100 text-start" style="text-decoration: none;">
-                                    <i class="fas fa-sign-out-alt"></i> Đăng xuất
-                                </button>
-                            </form>
-                        </li>
-                    </ul>
+        <h2>Dashboard - Tổng quan hệ thống</h2>
+
+        <!-- Statistics Cards -->
+        <div class="row mt-4">
+            <div class="col-md-3">
+                <div class="card text-white bg-primary mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Người dùng</h5>
+                                <h2>1,234</h2>
+                            </div>
+                            <div>
+                                <i class="fas fa-users fa-3x"></i>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-
-            <!-- Main content -->
-            <div class="col-md-10">
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle"></i> Chào mừng <strong sec:authentication="name">Admin</strong> đến với trang quản trị!
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-
-                <h2>Dashboard - Tổng quan hệ thống</h2>
-
-                <!-- Statistics Cards -->
-                <div class="row mt-4">
-                    <div class="col-md-3">
-                        <div class="card text-white bg-primary mb-3">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h5 class="card-title">Người dùng</h5>
-                                        <h2>1,234</h2>
-                                    </div>
-                                    <div>
-                                        <i class="fas fa-users fa-3x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-success mb-3">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h5 class="card-title">Sản phẩm</h5>
-                                        <h2>567</h2>
-                                    </div>
-                                    <div>
-                                        <i class="fas fa-box fa-3x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-warning mb-3">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h5 class="card-title">Đơn hàng</h5>
-                                        <h2>890</h2>
-                                    </div>
-                                    <div>
-                                        <i class="fas fa-shopping-cart fa-3x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-info mb-3">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between">
-                                    <div>
-                                        <h5 class="card-title">Doanh thu</h5>
-                                        <h2>50M</h2>
-                                    </div>
-                                    <div>
-                                        <i class="fas fa-dollar-sign fa-3x"></i>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Recent Orders -->
-                <div class="card mt-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-shopping-cart"></i> Đơn hàng gần đây</h5>
-                    </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-success mb-3">
                     <div class="card-body">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Mã đơn</th>
-                                    <th>Khách hàng</th>
-                                    <th>Tổng tiền</th>
-                                    <th>Trạng thái</th>
-                                    <th>Ngày đặt</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>#ORD001</td>
-                                    <td>Nguyễn Văn A</td>
-                                    <td>5,500,000 VNĐ</td>
-                                    <td><span class="badge bg-success">Hoàn thành</span></td>
-                                    <td>23/10/2025</td>
-                                </tr>
-                                <tr>
-                                    <td>#ORD002</td>
-                                    <td>Trần Thị B</td>
-                                    <td>3,200,000 VNĐ</td>
-                                    <td><span class="badge bg-warning">Đang xử lý</span></td>
-                                    <td>23/10/2025</td>
-                                </tr>
-                                <tr>
-                                    <td>#ORD003</td>
-                                    <td>Lê Văn C</td>
-                                    <td>1,800,000 VNĐ</td>
-                                    <td><span class="badge bg-info">Đang giao</span></td>
-                                    <td>22/10/2025</td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Sản phẩm</h5>
+                                <h2>567</h2>
+                            </div>
+                            <div>
+                                <i class="fas fa-box fa-3x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-warning mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Đơn hàng</h5>
+                                <h2>890</h2>
+                            </div>
+                            <div>
+                                <i class="fas fa-shopping-cart fa-3x"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card text-white bg-info mb-3">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <h5 class="card-title">Doanh thu</h5>
+                                <h2>50M</h2>
+                            </div>
+                            <div>
+                                <i class="fas fa-dollar-sign fa-3x"></i>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- Recent Orders -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5><i class="fas fa-shopping-cart"></i> Đơn hàng gần đây</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Mã đơn</th>
+                            <th>Khách hàng</th>
+                            <th>Tổng tiền</th>
+                            <th>Trạng thái</th>
+                            <th>Ngày đặt</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#ORD001</td>
+                            <td>Nguyễn Văn A</td>
+                            <td>5,500,000 VNĐ</td>
+                            <td><span class="badge bg-success">Hoàn thành</span></td>
+                            <td>23/10/2025</td>
+                        </tr>
+                        <tr>
+                            <td>#ORD002</td>
+                            <td>Trần Thị B</td>
+                            <td>3,200,000 VNĐ</td>
+                            <td><span class="badge bg-warning">Đang xử lý</span></td>
+                            <td>23/10/2025</td>
+                        </tr>
+                        <tr>
+                            <td>#ORD003</td>
+                            <td>Lê Văn C</td>
+                            <td>1,800,000 VNĐ</td>
+                            <td><span class="badge bg-info">Đang giao</span></td>
+                            <td>22/10/2025</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
-    <div th:replace="~{fragments/footer :: footer}"></div>
+    <div th:replace="~{fragments/footer-admin :: footer-admin}"></div>
 </body>
 </html>

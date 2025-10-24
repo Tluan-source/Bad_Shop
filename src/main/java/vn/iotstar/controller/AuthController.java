@@ -6,6 +6,8 @@ import vn.iotstar.service.UserService;
 import vn.iotstar.service.OtpService;
 import vn.iotstar.service.PasswordService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,11 +29,58 @@ public class AuthController {
 
     @GetMapping("/login")
     public String login() {
+        // Kiểm tra xem user đã đăng nhập chưa
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser")) {
+            // Lấy thông tin user để xác định role
+            String username = auth.getName();
+            var userOpt = userService.findByEmail(username);
+            
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                // Redirect dựa trên role
+                switch (user.getRole()) {
+                    case ADMIN:
+                        return "redirect:/admin/dashboard";
+                    case VENDOR:
+                        return "redirect:/vendor/dashboard";
+                    case SHIPPER:
+                        return "redirect:/shipper/dashboard";
+                    case USER:
+                        return "redirect:/";
+                    default:
+                        return "redirect:/";
+                }
+            }
+        }
         return "auth/login";
     }
 
     @GetMapping("/register")
     public String register(Model model) {
+        // Kiểm tra xem user đã đăng nhập chưa
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.isAuthenticated() && !auth.getPrincipal().equals("anonymousUser")) {
+            String username = auth.getName();
+            var userOpt = userService.findByEmail(username);
+            
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                // Redirect dựa trên role
+                switch (user.getRole()) {
+                    case ADMIN:
+                        return "redirect:/admin/dashboard";
+                    case VENDOR:
+                        return "redirect:/vendor/dashboard";
+                    case SHIPPER:
+                        return "redirect:/shipper/dashboard";
+                    case USER:
+                        return "redirect:/";
+                    default:
+                        return "redirect:/";
+                }
+            }
+        }
         model.addAttribute("user", new User());
         return "auth/register";
     }
