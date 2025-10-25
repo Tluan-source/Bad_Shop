@@ -46,7 +46,7 @@
                             </div>
 
                             <div class="d-grid gap-2">
-                                <form th:action="@{/admin/users/{id}/toggle-status(id=${user.id})}" 
+                                <form th:action="@{/admin/users/{id}/toggle-status(id=${user.id})}"
                                       method="post"
                                       th:if="${user.status == null or user.status.name() != 'BANNED'}">
                                     <button type="submit" class="btn w-100"
@@ -60,6 +60,36 @@
                                         onclick="confirmDelete(this.getAttribute('data-user-name'), this.getAttribute('data-user-id'))">
                                     <i class="fas fa-trash me-2"></i>Xóa người dùng
                                 </button>
+
+                                <!-- New: Admin role actions (edit / remove) -->
+                                <div th:if="${user.role != null and user.role.name() == 'ADMIN'}">
+                                    <button type="button" class="btn btn-outline-primary w-100 mt-2" onclick="toggleChangeRoleForm()">
+                                        <i class="fas fa-user-edit me-2"></i>Chỉnh sửa vai trò
+                                    </button>
+
+                                    <button type="button" class="btn btn-outline-danger w-100 mt-2" th:onclick="'confirmRemoveAdminRole(\'' + ${user.fullName} + '\', \' ' + ${user.id} + '\')'">
+                                        <i class="fas fa-user-slash me-2"></i>Gỡ vai trò Admin
+                                    </button>
+
+                                    <!-- Inline change-role form (hidden by default) -->
+                                    <div id="changeRoleContainer" style="display:none;" class="mt-3">
+                                        <form th:action="@{/admin/users/{id}/change-role(id=${user.id})}" method="post" id="changeRoleForm">
+                                            <div class="mb-2">
+                                                <label class="form-label small">Chọn vai trò mới</label>
+                                                <select name="role" class="form-select">
+                                                    <option value="USER">Customer</option>
+                                                    <option value="VENDOR">Vendor</option>
+                                                    <option value="SHIPPER">Shipper</option>
+                                                    <option value="ADMIN">Admin</option>
+                                                </select>
+                                            </div>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-success" onclick="submitChangeRole()">Lưu</button>
+                                                <button type="button" class="btn btn-secondary" onclick="toggleChangeRoleForm()">Hủy</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -268,6 +298,58 @@
                 document.body.appendChild(form);
                 form.submit();
             }
+        }
+
+        // New JS: toggle inline change-role form
+        function toggleChangeRoleForm() {
+            const container = document.getElementById('changeRoleContainer');
+            if (!container) return;
+            container.style.display = container.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Submit the change-role form, attach CSRF token if present
+        function submitChangeRole() {
+            const form = document.getElementById('changeRoleForm');
+            if (!form) return;
+
+            // attach CSRF if meta exists
+            const csrfMeta = document.querySelector('meta[name="_csrf"]');
+            if (csrfMeta) {
+                const token = csrfMeta.getAttribute('content');
+                let existing = form.querySelector('input[name="_csrf"]');
+                if (!existing) {
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_csrf';
+                    csrfInput.value = token;
+                    form.appendChild(csrfInput);
+                } else {
+                    existing.value = token;
+                }
+            }
+
+            form.submit();
+        }
+
+        // Confirm and submit remove-admin-role action
+        function confirmRemoveAdminRole(userName, userId) {
+            if (!confirm('Bạn có chắc chắn muốn gỡ vai trò ADMIN của "' + userName + '"?')) return;
+
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '/admin/users/' + userId + '/remove-admin-role';
+
+            const csrfMeta = document.querySelector('meta[name="_csrf"]');
+            if (csrfMeta) {
+                const csrfInput = document.createElement('input');
+                csrfInput.type = 'hidden';
+                csrfInput.name = '_csrf';
+                csrfInput.value = csrfMeta.getAttribute('content');
+                form.appendChild(csrfInput);
+            }
+
+            document.body.appendChild(form);
+            form.submit();
         }
     </script>
 </body>

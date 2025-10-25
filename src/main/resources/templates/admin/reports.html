@@ -24,13 +24,39 @@
                 </div>
             </div>
 
-            <!-- Revenue Chart -->
-            <div class="chart-container mb-4">
-                <h5 class="mb-3"><i class="fas fa-chart-area text-success me-2"></i>Biểu đồ doanh thu</h5>
-                <div class="text-center py-5">
-                    <i class="fas fa-chart-line fa-5x text-muted mb-3"></i>
-                    <p class="text-muted">Biểu đồ doanh thu theo thời gian sẽ hiển thị ở đây</p>
-                    <small class="text-muted">Cần tích hợp thư viện Chart.js hoặc tương tự</small>
+            <!-- Statistics Summary -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="chart-container text-center">
+                        <i class="fas fa-shopping-bag fa-3x text-primary mb-3"></i>
+                        <h5>Tổng đơn hàng</h5>
+                        <h2 class="text-primary mb-2" th:text="${totalOrders}">0</h2>
+                        <small class="text-muted">Tất cả đơn hàng</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="chart-container text-center">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h5>Đơn hoàn thành</h5>
+                        <h2 class="text-success mb-2" th:text="${completedOrders}">0</h2>
+                        <small class="text-muted">Đã giao thành công</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="chart-container text-center">
+                        <i class="fas fa-times-circle fa-3x text-danger mb-3"></i>
+                        <h5>Đơn hủy</h5>
+                        <h2 class="text-danger mb-2" th:text="${cancelledOrders}">0</h2>
+                        <small class="text-muted">Đã bị hủy</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="chart-container text-center">
+                        <i class="fas fa-dollar-sign fa-3x text-warning mb-3"></i>
+                        <h5>Tổng doanh thu</h5>
+                        <h2 class="text-warning mb-2" th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</h2>
+                        <small class="text-muted">Từ đơn hoàn thành</small>
+                    </div>
                 </div>
             </div>
 
@@ -49,55 +75,25 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-shuttlecock text-primary me-2"></i>
-                                                <strong>Vợt Yonex Astrox 88D</strong>
-                                            </div>
+                                    <tr th:if="${topProducts == null or topProducts.isEmpty()}">
+                                        <td colspan="3" class="text-center text-muted py-4">
+                                            <i class="fas fa-inbox fa-3x mb-2"></i>
+                                            <p>Chưa có dữ liệu bán hàng</p>
                                         </td>
-                                        <td><span class="badge-admin bg-primary">245</span></td>
-                                        <td><strong>122,500,000 VNĐ</strong></td>
                                     </tr>
-                                    <tr>
+                                    <tr th:each="item, iterStat : ${topProducts}">
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <i class="fas fa-running text-success me-2"></i>
-                                                <strong>Giày Victor SH-A920</strong>
+                                                <i class="fas fa-box text-primary me-2"></i>
+                                                <strong th:text="${item.product.name}">Tên sản phẩm</strong>
                                             </div>
                                         </td>
-                                        <td><span class="badge-admin bg-success">189</span></td>
-                                        <td><strong>75,600,000 VNĐ</strong></td>
-                                    </tr>
-                                    <tr>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-tshirt text-info me-2"></i>
-                                                <strong>Áo Lining Championship</strong>
-                                            </div>
+                                            <span class="badge-admin" 
+                                                  th:classappend="${iterStat.index == 0} ? 'bg-primary' : (${iterStat.index == 1} ? 'bg-success' : (${iterStat.index == 2} ? 'bg-info' : 'bg-secondary'))"
+                                                  th:text="${item.quantity}">0</span>
                                         </td>
-                                        <td><span class="badge-admin bg-info">156</span></td>
-                                        <td><strong>31,200,000 VNĐ</strong></td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-box text-warning me-2"></i>
-                                                <strong>Túi vợt Yonex BA92012M</strong>
-                                            </div>
-                                        </td>
-                                        <td><span class="badge-admin bg-warning">134</span></td>
-                                        <td><strong>26,800,000 VNĐ</strong></td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-shuttlecock text-danger me-2"></i>
-                                                <strong>Quả cầu Yonex AS-50</strong>
-                                            </div>
-                                        </td>
-                                        <td><span class="badge-admin bg-danger">298</span></td>
-                                        <td><strong>23,840,000 VNĐ</strong></td>
+                                        <td><strong th:text="${#numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</strong></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -113,66 +109,33 @@
                                 <thead>
                                     <tr>
                                         <th>Cửa hàng</th>
-                                        <th>Đơn hàng</th>
+                                        <th>Số lượng bán</th>
                                         <th>Doanh thu</th>
                                         <th>Rating</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-store text-primary me-2"></i>
-                                                <strong>Cửa hàng ABC</strong>
-                                            </div>
+                                    <tr th:if="${topStores == null or topStores.isEmpty()}">
+                                        <td colspan="4" class="text-center text-muted py-4">
+                                            <i class="fas fa-store-slash fa-3x mb-2"></i>
+                                            <p>Chưa có dữ liệu cửa hàng</p>
                                         </td>
-                                        <td><span class="badge-admin bg-primary">156</span></td>
-                                        <td><strong>85,600,000 VNĐ</strong></td>
-                                        <td><span class="text-warning">★ 4.9</span></td>
                                     </tr>
-                                    <tr>
+                                    <tr th:each="item, iterStat : ${topStores}">
                                         <td>
                                             <div class="d-flex align-items-center">
-                                                <i class="fas fa-store text-success me-2"></i>
-                                                <strong>Shop Thể Thao XYZ</strong>
+                                                <i class="fas fa-store me-2"
+                                                   th:classappend="${iterStat.index == 0} ? 'text-primary' : (${iterStat.index == 1} ? 'text-success' : 'text-info')"></i>
+                                                <strong th:text="${item.store.name}">Tên cửa hàng</strong>
                                             </div>
                                         </td>
-                                        <td><span class="badge-admin bg-success">134</span></td>
-                                        <td><strong>67,200,000 VNĐ</strong></td>
-                                        <td><span class="text-warning">★ 4.8</span></td>
-                                    </tr>
-                                    <tr>
                                         <td>
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-store text-info me-2"></i>
-                                                <strong>Badminton Pro Shop</strong>
-                                            </div>
+                                            <span class="badge-admin" 
+                                                  th:classappend="${iterStat.index == 0} ? 'bg-primary' : (${iterStat.index == 1} ? 'bg-success' : (${iterStat.index == 2} ? 'bg-info' : 'bg-secondary'))"
+                                                  th:text="${item.quantity}">0</span>
                                         </td>
-                                        <td><span class="badge-admin bg-info">98</span></td>
-                                        <td><strong>52,400,000 VNĐ</strong></td>
-                                        <td><span class="text-warning">★ 4.7</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-store text-warning me-2"></i>
-                                                <strong>Sport Center</strong>
-                                            </div>
-                                        </td>
-                                        <td><span class="badge-admin bg-warning">87</span></td>
-                                        <td><strong>43,500,000 VNĐ</strong></td>
-                                        <td><span class="text-warning">★ 4.6</span></td>
-                                    </tr>
-                                    <tr>
-                                        <td>
-                                            <div class="d-flex align-items-center">
-                                                <i class="fas fa-store text-danger me-2"></i>
-                                                <strong>Elite Badminton</strong>
-                                            </div>
-                                        </td>
-                                        <td><span class="badge-admin bg-danger">76</span></td>
-                                        <td><strong>38,000,000 VNĐ</strong></td>
-                                        <td><span class="text-warning">★ 4.8</span></td>
+                                        <td><strong th:text="${#numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</strong></td>
+                                        <td><span class="text-warning">★ <span th:text="${item.store.rating}">0.0</span></span></td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -181,42 +144,50 @@
                 </div>
             </div>
 
-            <!-- Additional Stats -->
+            <!-- Category Sales Statistics -->
             <div class="row g-4">
-                <div class="col-md-4">
-                    <div class="chart-container text-center">
-                        <i class="fas fa-users fa-3x text-primary mb-3"></i>
-                        <h5>Người dùng mới</h5>
-                        <h2 class="text-primary mb-2">+234</h2>
-                        <p class="text-muted">7 ngày qua</p>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-primary" style="width: 75%"></div>
+                <div class="col-12">
+                    <div class="chart-container">
+                        <h5 class="mb-3"><i class="fas fa-tags text-info me-2"></i>Thống kê theo danh mục</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Danh mục</th>
+                                        <th>Số lượng bán</th>
+                                        <th>Doanh thu</th>
+                                        <th>Tỷ trọng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${categorySales == null or categorySales.isEmpty()}">
+                                        <td colspan="4" class="text-center text-muted py-4">
+                                            <i class="fas fa-tags fa-3x mb-2"></i>
+                                            <p>Chưa có dữ liệu theo danh mục</p>
+                                        </td>
+                                    </tr>
+                                    <tr th:each="item : ${categorySales}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-folder text-primary me-2"></i>
+                                                <strong th:text="${item.category.name}">Tên danh mục</strong>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge-admin bg-primary" th:text="${item.quantity}">0</span></td>
+                                        <td><strong th:text="${#numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</strong></td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar bg-info" 
+                                                     th:style="'width: ' + ${totalRevenue > 0 ? (item.revenue / totalRevenue * 100) : 0} + '%'"
+                                                     th:text="${totalRevenue > 0 ? #numbers.formatDecimal((item.revenue / totalRevenue * 100), 1, 'POINT', 1, 'POINT') : '0'} + '%'">
+                                                    0%
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
                         </div>
-                        <small class="text-muted">Tăng 15% so với tuần trước</small>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="chart-container text-center">
-                        <i class="fas fa-shopping-bag fa-3x text-success mb-3"></i>
-                        <h5>Đơn hàng mới</h5>
-                        <h2 class="text-success mb-2">+567</h2>
-                        <p class="text-muted">7 ngày qua</p>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-success" style="width: 85%"></div>
-                        </div>
-                        <small class="text-muted">Tăng 22% so với tuần trước</small>
-                    </div>
-                </div>
-                <div class="col-md-4">
-                    <div class="chart-container text-center">
-                        <i class="fas fa-dollar-sign fa-3x text-warning mb-3"></i>
-                        <h5>Doanh thu</h5>
-                        <h2 class="text-warning mb-2">+125M</h2>
-                        <p class="text-muted">7 ngày qua</p>
-                        <div class="progress" style="height: 10px;">
-                            <div class="progress-bar bg-warning" style="width: 90%"></div>
-                        </div>
-                        <small class="text-muted">Tăng 18% so với tuần trước</small>
                     </div>
                 </div>
             </div>

@@ -3,16 +3,21 @@ package vn.iotstar.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import vn.iotstar.entity.Order;
+import vn.iotstar.entity.OrderItem;
+import vn.iotstar.entity.Product;
+import vn.iotstar.entity.Store;
+import vn.iotstar.entity.Category;
 import vn.iotstar.repository.OrderRepository;
+import vn.iotstar.repository.OrderItemRepository;
 import vn.iotstar.repository.ProductRepository;
 import vn.iotstar.repository.StoreRepository;
 import vn.iotstar.repository.UserRepository;
+import vn.iotstar.repository.CategoryRepository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class AdminService {
@@ -28,6 +33,12 @@ public class AdminService {
     
     @Autowired
     private StoreRepository storeRepository;
+    
+    @Autowired
+    private OrderItemRepository orderItemRepository;
+    
+    @Autowired
+    private CategoryRepository categoryRepository;
     
     /**
      * Get dashboard statistics
@@ -114,5 +125,197 @@ public class AdminService {
         stats.put("revenue", revenue);
         
         return stats;
+    }
+    
+    /**
+     * Get report statistics
+     */
+    public Map<String, Object> getReportStats() {
+        Map<String, Object> stats = new HashMap<>();
+        
+        // Get top selling products
+        List<Map<String, Object>> topProducts = getTopSellingProducts(5);
+        stats.put("topProducts", topProducts);
+        
+        // Get sales by category
+        List<Map<String, Object>> categorySales = getSalesByCategory();
+        stats.put("categorySales", categorySales);
+        
+        // Get top stores by revenue
+        List<Map<String, Object>> topStores = getTopStoresByRevenue(5);
+        stats.put("topStores", topStores);
+        
+        // Get all stores (for admin to see their managed stores)
+        List<Store> allStores = storeRepository.findAll();
+        stats.put("allStores", allStores);
+        
+        // Get order statistics
+        List<Order> allOrders = orderRepository.findAll();
+        long totalOrders = allOrders.size();
+        long completedOrders = allOrders.stream()
+            .filter(o -> o.getStatus() == Order.OrderStatus.DELIVERED)
+            .count();
+        long cancelledOrders = allOrders.stream()
+            .filter(o -> o.getStatus() == Order.OrderStatus.CANCELLED)
+            .count();
+        
+        stats.put("totalOrders", totalOrders);
+        stats.put("completedOrders", completedOrders);
+        stats.put("cancelledOrders", cancelledOrders);
+        
+        // Calculate total revenue (only from DELIVERED orders)
+        BigDecimal totalRevenue = allOrders.stream()
+            .filter(o -> o.getStatus() == Order.OrderStatus.DELIVERED)
+            .map(Order::getAmountFromUser)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        stats.put("totalRevenue", totalRevenue);
+        
+        return stats;
+    }
+    
+    /**
+     * Get top selling products (from all orders, not just DELIVERED)
+     */
+    public List<Map<String, Object>> getTopSellingProducts(int limit) {
+        List<OrderItem> allOrderItems = orderItemRepository.findAll();
+        
+        if (allOrderItems.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // Group by product and sum quantities (all orders except CANCELLED)
+        Map<Product, Integer> productSales = allOrderItems.stream()
+            .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
+            .collect(Collectors.groupingBy(
+                OrderItem::getProduct,
+                Collectors.summingInt(OrderItem::getQuantity)
+            ));
+        
+        // Calculate revenue for each product
+        Map<Product, BigDecimal> productRevenue = allOrderItems.stream()
+            .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
+            .collect(Collectors.groupingBy(
+                OrderItem::getProduct,
+                Collectors.reducing(
+                    BigDecimal.ZERO,
+                    OrderItem::getTotal,
+                    BigDecimal::add
+                )
+            ));
+        
+        // Sort by quantity and create result list
+        return productSales.entrySet().stream()
+            .sorted(Map.Entry.<Product, Integer>comparingByValue().reversed())
+            .limit(limit)
+            .map(entry -> {
+                Map<String, Object> item = new HashMap<>();
+                Product product = entry.getKey();
+                item.put("product", product);
+                item.put("quantity", entry.getValue());
+                item.put("revenue", productRevenue.getOrDefault(product, BigDecimal.ZERO));
+                return item;
+            })
+            .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get sales statistics by category (from all orders except CANCELLED)
+     */
+    public List<Map<String, Object>> getSalesByCategory() {
+        List<OrderItem> allOrderItems = orderItemRepository.findAll();
+        
+        if (allOrderItems.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // Group by category
+        Map<Category, Integer> categorySales = allOrderItems.stream()
+            .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
+            .filter(item -> item.getProduct().getCategory() != null)
+            .collect(Collectors.groupingBy(
+                item -> item.getProduct().getCategory(),
+                Collectors.summingInt(OrderItem::getQuantity)
+            ));
+        
+        // Calculate revenue by category
+        Map<Category, BigDecimal> categoryRevenue = allOrderItems.stream()
+            .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
+            .filter(item -> item.getProduct().getCategory() != null)
+            .collect(Collectors.groupingBy(
+                item -> item.getProduct().getCategory(),
+                Collectors.reducing(
+                    BigDecimal.ZERO,
+                    OrderItem::getTotal,
+                    BigDecimal::add
+                )
+            ));
+        
+        return categorySales.entrySet().stream()
+            .sorted(Map.Entry.<Category, Integer>comparingByValue().reversed())
+            .map(entry -> {
+                Map<String, Object> item = new HashMap<>();
+                Category category = entry.getKey();
+                item.put("category", category);
+                item.put("quantity", entry.getValue());
+                item.put("revenue", categoryRevenue.getOrDefault(category, BigDecimal.ZERO));
+                return item;
+            })
+            .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get top stores by revenue (from all orders except CANCELLED)
+     */
+    public List<Map<String, Object>> getTopStoresByRevenue(int limit) {
+        List<OrderItem> allOrderItems = orderItemRepository.findAll();
+        
+        if (allOrderItems.isEmpty()) {
+            // If no orders, return all stores with zero stats
+            return storeRepository.findAll().stream()
+                .limit(limit)
+                .map(store -> {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("store", store);
+                    item.put("quantity", 0);
+                    item.put("revenue", BigDecimal.ZERO);
+                    return item;
+                })
+                .collect(Collectors.toList());
+        }
+        
+        // Group by store
+        Map<Store, Integer> storeSales = allOrderItems.stream()
+            .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
+            .collect(Collectors.groupingBy(
+                item -> item.getProduct().getStore(),
+                Collectors.summingInt(OrderItem::getQuantity)
+            ));
+        
+        // Calculate revenue by store
+        Map<Store, BigDecimal> storeRevenue = allOrderItems.stream()
+            .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
+            .collect(Collectors.groupingBy(
+                item -> item.getProduct().getStore(),
+                Collectors.reducing(
+                    BigDecimal.ZERO,
+                    OrderItem::getTotal,
+                    BigDecimal::add
+                )
+            ));
+        
+        // Get all stores and include those without sales
+        List<Store> allStores = storeRepository.findAll();
+        
+        return allStores.stream()
+            .map(store -> {
+                Map<String, Object> item = new HashMap<>();
+                item.put("store", store);
+                item.put("quantity", storeSales.getOrDefault(store, 0));
+                item.put("revenue", storeRevenue.getOrDefault(store, BigDecimal.ZERO));
+                return item;
+            })
+            .sorted((a, b) -> ((BigDecimal)b.get("revenue")).compareTo((BigDecimal)a.get("revenue")))
+            .limit(limit)
+            .collect(Collectors.toList());
     }
 }

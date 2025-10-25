@@ -7,23 +7,39 @@
     <div th:replace="~{fragments/header-admin :: header-admin}"></div>
 
     <div class="container-fluid mt-4 px-4">
+        <!-- Flash message (reuse pattern) -->
+        <div th:if="${message}" class="alert alert-dismissible fade show" th:classappend="${messageType == 'danger' ? ' alert-danger' : (messageType == 'warning' ? ' alert-warning' : (messageType == 'success' ? ' alert-success' : ' alert-info'))}">
+            <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
         <div class="row g-4">
             <div class="col-md-4">
                 <div class="admin-content text-center">
                     <div class="mb-4">
-                        <div class="rounded-circle bg-gradient-animated d-inline-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
-                            <i class="fas fa-user-shield fa-5x text-white"></i>
+                        <div class="rounded-circle overflow-hidden d-inline-block" style="width: 150px; height: 150px;">
+                            <img th:src="${user != null and user.avatar != null} ? @{${user.avatar}} : @{/images/default-avatar.png}"
+                                 alt="avatar" style="width:150px;height:150px;object-fit:cover;" />
                         </div>
                     </div>
-                    <h4 sec:authentication="name">Admin</h4>
-                    <p class="text-muted">Quản trị viên hệ thống</p>
+                    <h4 th:text="${user != null ? user.fullName : 'Admin'}">Admin</h4>
+                    <p class="text-muted" th:text="${user != null ? user.email : 'Quản trị viên hệ thống'}">Quản trị viên hệ thống</p>
                     <span class="badge-admin bg-danger mb-3">ADMIN</span>
                     
                     <div class="mt-4">
-                        <button class="btn btn-admin-primary w-100 mb-2">
-                            <i class="fas fa-camera me-2"></i>Thay đổi ảnh đại diện
-                        </button>
-                        <button class="btn btn-outline-secondary w-100">
+                        <!-- Upload avatar form -->
+                        <form th:action="@{/admin/profile/upload-avatar}" method="post" enctype="multipart/form-data">
+                            <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                            <div class="mb-2">
+                                <input type="file" name="avatar" accept="image/*" class="form-control" />
+                            </div>
+                            <button type="submit" class="btn btn-admin-primary w-100 mb-2">
+                                <i class="fas fa-camera me-2"></i>Thay đổi ảnh đại diện
+                            </button>
+                        </form>
+
+                        <!-- Trigger change password collapse -->
+                        <button class="btn btn-outline-secondary w-100" data-bs-toggle="collapse" data-bs-target="#changePasswordBox">
                             <i class="fas fa-key me-2"></i>Đổi mật khẩu
                         </button>
                     </div>
@@ -31,7 +47,7 @@
                     <div class="mt-4 pt-4 border-top">
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Ngày tham gia:</span>
-                            <strong>01/01/2024</strong>
+                            <strong th:text="${user != null and user.createdAt != null} ? ${#temporals.format(user.createdAt, 'dd/MM/yyyy')} : 'N/A'">01/01/2024</strong>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Lần đăng nhập cuối:</span>
@@ -49,37 +65,38 @@
                 <div class="admin-content">
                     <h4 class="mb-4"><i class="fas fa-user-edit text-primary me-2"></i>Thông tin cá nhân</h4>
                     
-                    <form>
+                    <form th:action="@{/admin/profile/update}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Họ và tên</label>
-                                <input type="text" class="form-control" value="Admin System">
+                                <input type="text" name="fullName" class="form-control" th:value="${user != null ? user.fullName : ''}" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Email</label>
-                                <input type="email" class="form-control" value="admin@badminton.com">
+                                <input type="email" name="email" class="form-control" th:value="${user != null ? user.email : ''}" required>
                             </div>
                         </div>
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Số điện thoại</label>
-                                <input type="tel" class="form-control" value="0123456789">
+                                <input type="tel" name="phone" class="form-control" th:value="${user != null ? user.phone : ''}">
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label">Ngày sinh</label>
-                                <input type="date" class="form-control" value="1990-01-01">
+                                <input type="date" name="birthday" class="form-control" th:value="${user != null and user.birthday != null} ? ${user.birthday} : ''">
                             </div>
                         </div>
 
                         <div class="mb-3">
                             <label class="form-label">Địa chỉ</label>
-                            <input type="text" class="form-control" value="227 Nguyễn Văn Cừ, Q.5, TP.HCM">
+                            <input type="text" name="address" class="form-control" th:value="${user != null ? user.addresses : ''}">
                         </div>
 
                         <div class="mb-4">
                             <label class="form-label">Bio</label>
-                            <textarea class="form-control" rows="3">Quản trị viên hệ thống Badminton Marketplace. Đảm bảo hệ thống hoạt động ổn định và an toàn.</textarea>
+                            <textarea name="bio" class="form-control" rows="3" th:text="${user != null ? user.bio : ''}">Quản trị viên hệ thống Badminton Marketplace. Đảm bảo hệ thống hoạt động ổn định và an toàn.</textarea>
                         </div>
 
                         <div class="d-flex gap-2">
@@ -93,38 +110,30 @@
                     </form>
                 </div>
 
-                <div class="admin-content mt-4">
+                <div class="admin-content mt-4 collapse" id="changePasswordBox">
                     <h4 class="mb-4"><i class="fas fa-shield-alt text-success me-2"></i>Bảo mật tài khoản</h4>
                     
-                    <div class="d-flex justify-content-between align-items-center p-3 mb-3 border rounded">
-                        <div>
-                            <h6 class="mb-1">Xác thực hai yếu tố (2FA)</h6>
-                            <small class="text-muted">Tăng cường bảo mật tài khoản</small>
+                    <form th:action="@{/admin/profile/change-password}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+                        <div class="mb-3">
+                            <label class="form-label">Mật khẩu hiện tại</label>
+                            <input type="password" name="currentPassword" class="form-control" required>
                         </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="2fa" checked>
+                        <div class="mb-3">
+                            <label class="form-label">Mật khẩu mới</label>
+                            <input type="password" name="newPassword" class="form-control" required>
                         </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center p-3 mb-3 border rounded">
-                        <div>
-                            <h6 class="mb-1">Thông báo qua email</h6>
-                            <small class="text-muted">Nhận thông báo về hoạt động hệ thống</small>
+                        <div class="mb-3">
+                            <label class="form-label">Xác nhận mật khẩu mới</label>
+                            <input type="password" name="confirmPassword" class="form-control" required>
                         </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="emailNotif" checked>
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-key me-2"></i>Đổi mật khẩu
+                            </button>
+                            <button type="button" class="btn btn-secondary" data-bs-toggle="collapse" data-bs-target="#changePasswordBox">Hủy</button>
                         </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center p-3 border rounded">
-                        <div>
-                            <h6 class="mb-1">Đăng nhập từ thiết bị mới</h6>
-                            <small class="text-muted">Yêu cầu xác nhận khi đăng nhập từ thiết bị mới</small>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" id="newDevice" checked>
-                        </div>
-                    </div>
+                    </form>
                 </div>
 
                 <div class="admin-content mt-4">

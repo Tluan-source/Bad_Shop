@@ -47,6 +47,15 @@ public class User {
     @Column(name = "e_wallet", precision = 15, scale = 2)
     private BigDecimal eWallet = BigDecimal.ZERO;
     
+    @Column(name = "avatar")
+    private String avatar;
+
+    // New: birthday and bio for profile
+    private java.time.LocalDate birthday;
+
+    @Column(columnDefinition = "NVARCHAR(MAX)")
+    private String bio;
+    
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;

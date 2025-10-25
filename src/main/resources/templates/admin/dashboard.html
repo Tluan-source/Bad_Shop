@@ -167,7 +167,7 @@
                     <tbody>
                         <tr th:each="order : ${recentOrders}">
                             <td><strong th:text="${order.id}">#ORD001</strong></td>
-                            <td th:text="${order.user.name}">Nguyễn Văn A</td>
+                            <td th:text="${order.user.fullName}">Nguyễn Văn A</td>
                             <td th:text="${order.store.name}">Cửa hàng ABC</td>
                             <td><strong th:text="${#numbers.formatCurrency(order.amountFromUser)}">5,500,000 VNĐ</strong></td>
                             <td>

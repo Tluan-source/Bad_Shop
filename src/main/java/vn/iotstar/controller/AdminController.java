@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.multipart.MultipartFile;
 import vn.iotstar.entity.Order;
 import vn.iotstar.entity.User;
 import vn.iotstar.entity.Store;
@@ -19,11 +20,18 @@ import vn.iotstar.repository.UserRepository;
 import vn.iotstar.repository.StoreRepository;
 import vn.iotstar.repository.CategoryRepository;
 import vn.iotstar.repository.OrderRepository;
+import vn.iotstar.service.PasswordService;
 
+import java.io.File;
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.math.BigDecimal;
 
 @Controller
 @RequestMapping("/admin")
@@ -43,6 +51,9 @@ public class AdminController {
     
     @Autowired
     private OrderRepository orderRepository;
+
+    @Autowired
+    private PasswordService passwordService;
     
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication authentication) {
@@ -159,11 +170,14 @@ public class AdminController {
         long processingCount = orders.stream().filter(o -> o.getStatus() == Order.OrderStatus.PROCESSING).count();
         long shippedCount = orders.stream().filter(o -> o.getStatus() == Order.OrderStatus.SHIPPED).count();
         long deliveredCount = orders.stream().filter(o -> o.getStatus() == Order.OrderStatus.DELIVERED).count();
+        long cancelledCount = orders.stream().filter(o -> o.getStatus() == Order.OrderStatus.CANCELLED).count();
         
         model.addAttribute("totalOrders", orders.size());
         model.addAttribute("pendingCount", pendingCount);
+        model.addAttribute("processingCount", processingCount);
         model.addAttribute("shippedCount", shippedCount);
         model.addAttribute("deliveredCount", deliveredCount);
+        model.addAttribute("cancelledCount", cancelledCount);
         
         return "admin/orders";
     }
@@ -177,137 +191,217 @@ public class AdminController {
     @GetMapping("/reports")
     public String reports(Model model, Authentication authentication) {
         model.addAttribute("username", authentication.getName());
+        
+        // Get report statistics from database
+        Map<String, Object> reportStats = adminService.getReportStats();
+        model.addAttribute("topProducts", reportStats.get("topProducts"));
+        model.addAttribute("categorySales", reportStats.get("categorySales"));
+        model.addAttribute("topStores", reportStats.get("topStores"));
+        model.addAttribute("totalOrders", reportStats.get("totalOrders"));
+        model.addAttribute("completedOrders", reportStats.get("completedOrders"));
+        model.addAttribute("cancelledOrders", reportStats.get("cancelledOrders"));
+        model.addAttribute("totalRevenue", reportStats.get("totalRevenue"));
+        
         return "admin/reports";
     }
     
     @GetMapping("/profile")
     public String profile(Model model, Authentication authentication) {
         model.addAttribute("username", authentication.getName());
+
+        // Load current user by email (authentication name assumed to be email)
+        String email = authentication != null ? authentication.getName() : null;
+        if (email != null) {
+            userRepository.findByEmail(email).ifPresent(u -> model.addAttribute("user", u));
+        }
+
         return "admin/profile";
     }
-    
-    @GetMapping("/settings")
-    public String settings(Model model, Authentication authentication) {
-        model.addAttribute("username", authentication.getName());
-        return "admin/settings";
-    }
-    
-    // ==================== USER CRUD ====================
-    
+
     /**
-     * Create new user
+     * Update profile information
      */
-    @PostMapping("/users/create")
-    public String createUser(
+    @PostMapping("/profile/update")
+    public String updateProfile(
             @RequestParam String fullName,
             @RequestParam String email,
-            @RequestParam String phone,
-            @RequestParam String password,
-            @RequestParam String role,
-            RedirectAttributes redirectAttributes) {
-        try {
-            // Check if email already exists
-            if (userRepository.findByEmail(email).isPresent()) {
-                redirectAttributes.addFlashAttribute("message", "Email đã tồn tại!");
-                redirectAttributes.addFlashAttribute("messageType", "danger");
-                return "redirect:/admin/users";
-            }
-            
-            User user = new User();
-            user.setId("U" + System.currentTimeMillis());
-            user.setFullName(fullName);
-            user.setEmail(email);
-            user.setPhone(phone);
-            
-            // Hash password
-            user.setSalt(java.util.UUID.randomUUID().toString());
-            user.setHashedPassword(org.springframework.security.crypto.bcrypt.BCrypt.hashpw(password, org.springframework.security.crypto.bcrypt.BCrypt.gensalt()));
-            
-            user.setRole(User.UserRole.valueOf(role));
-            user.setStatus(User.UserStatus.ACTIVE);
-            
-            userRepository.save(user);
-            
-            redirectAttributes.addFlashAttribute("message", "Đã thêm người dùng thành công!");
-            redirectAttributes.addFlashAttribute("messageType", "success");
-        } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "Lỗi khi thêm người dùng: " + e.getMessage());
+            @RequestParam(required = false) String phone,
+            @RequestParam(required = false) String birthday,
+            @RequestParam(required = false) String address,
+            @RequestParam(required = false) String bio,
+            RedirectAttributes redirectAttributes,
+            Authentication authentication) {
+        String authEmail = authentication != null ? authentication.getName() : null;
+        if (authEmail == null) {
+            redirectAttributes.addFlashAttribute("message", "Người dùng chưa xác thực.");
             redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/admin/profile";
         }
-        return "redirect:/admin/users";
-    }
-    
-    /**
-     * Toggle user status (Active/Inactive)
-     */
-    @PostMapping("/users/{id}/toggle-status")
-    public String toggleUserStatus(@PathVariable String id, RedirectAttributes redirectAttributes) {
-        Optional<User> userOpt = userRepository.findById(id);
-        if (userOpt.isPresent()) {
-            User user = userOpt.get();
-            if (user.getStatus() == User.UserStatus.ACTIVE) {
-                user.setStatus(User.UserStatus.INACTIVE);
-                redirectAttributes.addFlashAttribute("message", "Đã khóa người dùng thành công!");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-            } else {
-                user.setStatus(User.UserStatus.ACTIVE);
-                redirectAttributes.addFlashAttribute("message", "Đã kích hoạt người dùng thành công!");
-                redirectAttributes.addFlashAttribute("messageType", "success");
+
+        Optional<User> userOpt = userRepository.findByEmail(authEmail);
+        if (!userOpt.isPresent()) {
+            redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/admin/profile";
+        }
+
+        User user = userOpt.get();
+
+        // Validate email uniqueness if changed
+        if (!user.getEmail().equals(email) && userRepository.existsByEmail(email)) {
+            redirectAttributes.addFlashAttribute("message", "Email đã được sử dụng bởi người dùng khác.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/admin/profile";
+        }
+
+        // Validate phone uniqueness if provided and changed
+        if (phone != null && !phone.isBlank()) {
+            if (user.getPhone() == null || !user.getPhone().equals(phone)) {
+                if (userRepository.existsByPhone(phone)) {
+                    redirectAttributes.addFlashAttribute("message", "Số điện thoại đã được sử dụng bởi người khác.");
+                    redirectAttributes.addFlashAttribute("messageType", "danger");
+                    return "redirect:/admin/profile";
+                }
             }
-            userRepository.save(user);
+        }
+
+        user.setFullName(fullName);
+        user.setEmail(email);
+        user.setPhone((phone != null && !phone.isBlank()) ? phone : null);
+        user.setAddresses((address != null && !address.isBlank()) ? address : null);
+        if (birthday != null && !birthday.isBlank()) {
+            try {
+                user.setBirthday(LocalDate.parse(birthday));
+            } catch (Exception ex) {
+                // ignore parse error
+            }
         } else {
-            redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng!");
-            redirectAttributes.addFlashAttribute("messageType", "danger");
+            user.setBirthday(null);
         }
-        return "redirect:/admin/users";
+        user.setBio(bio);
+
+        userRepository.save(user);
+
+        redirectAttributes.addFlashAttribute("message", "Đã cập nhật thông tin cá nhân thành công.");
+        redirectAttributes.addFlashAttribute("messageType", "success");
+        return "redirect:/admin/profile";
     }
-    
+
     /**
-     * Delete user
+     * Change password
      */
-    @PostMapping("/users/{id}/delete")
-    public String deleteUser(@PathVariable String id, RedirectAttributes redirectAttributes) {
+    @PostMapping("/profile/change-password")
+    public String changePassword(
+            @RequestParam String currentPassword,
+            @RequestParam String newPassword,
+            @RequestParam String confirmPassword,
+            RedirectAttributes redirectAttributes,
+            Authentication authentication) {
+        String authEmail = authentication != null ? authentication.getName() : null;
+        if (authEmail == null) {
+            redirectAttributes.addFlashAttribute("message", "Người dùng chưa xác thực.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/admin/profile";
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(authEmail);
+        if (!userOpt.isPresent()) {
+            redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/admin/profile";
+        }
+
+        User user = userOpt.get();
+
+        if (!passwordService.verifyPassword(currentPassword, user.getHashedPassword())) {
+            redirectAttributes.addFlashAttribute("message", "Mật khẩu hiện tại không chính xác.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/admin/profile";
+        }
+
+        if (newPassword == null || newPassword.length() < 6) {
+            redirectAttributes.addFlashAttribute("message", "Mật khẩu mới phải có ít nhất 6 ký tự.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/admin/profile";
+        }
+
+        if (!newPassword.equals(confirmPassword)) {
+            redirectAttributes.addFlashAttribute("message", "Mật khẩu xác nhận không khớp.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/admin/profile";
+        }
+
+        user.setHashedPassword(passwordService.hashPassword(newPassword));
+        userRepository.save(user);
+
+        redirectAttributes.addFlashAttribute("message", "Đổi mật khẩu thành công.");
+        redirectAttributes.addFlashAttribute("messageType", "success");
+        return "redirect:/admin/profile";
+    }
+
+    /**
+     * Upload avatar
+     */
+    @PostMapping("/profile/upload-avatar")
+    public String uploadAvatar(@RequestParam("avatar") MultipartFile avatar,
+                               RedirectAttributes redirectAttributes,
+                               Authentication authentication) {
+        String authEmail = authentication != null ? authentication.getName() : null;
+        if (authEmail == null) {
+            redirectAttributes.addFlashAttribute("message", "Người dùng chưa xác thực.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/admin/profile";
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(authEmail);
+        if (!userOpt.isPresent()) {
+            redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/admin/profile";
+        }
+
+        User user = userOpt.get();
+
+        if (avatar == null || avatar.isEmpty()) {
+            redirectAttributes.addFlashAttribute("message", "Vui lòng chọn tệp ảnh.");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/admin/profile";
+        }
+
         try {
-            Optional<User> userOpt = userRepository.findById(id);
-            if (!userOpt.isPresent()) {
-                redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng!");
-                redirectAttributes.addFlashAttribute("messageType", "danger");
-                return "redirect:/admin/users";
+            // Use system temp directory or a dedicated upload folder outside the project
+            String userHome = System.getProperty("user.home");
+            String uploadsDir = userHome + File.separator + "bad-shop-uploads" + File.separator + "avatars";
+            Path uploadPath = Paths.get(uploadsDir);
+            if (!Files.exists(uploadPath)) {
+                Files.createDirectories(uploadPath);
             }
-            
-            User user = userOpt.get();
-            
-            // Check if user owns any stores
-            if (user.getStores() != null && !user.getStores().isEmpty()) {
-                redirectAttributes.addFlashAttribute("message", 
-                    "Không thể xóa người dùng này vì đang sở hữu " + user.getStores().size() + " cửa hàng! Vui lòng xóa hoặc chuyển quyền sở hữu cửa hàng trước.");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/admin/users";
+
+            String original = avatar.getOriginalFilename();
+            String ext = "";
+            if (original != null && original.contains(".")) {
+                ext = original.substring(original.lastIndexOf('.'));
             }
-            
-            // Check if user has orders
-            if (user.getOrders() != null && !user.getOrders().isEmpty()) {
-                redirectAttributes.addFlashAttribute("message", 
-                    "Không thể xóa người dùng này vì có " + user.getOrders().size() + " đơn hàng liên quan! Hãy xem xét vô hiệu hóa tài khoản thay vì xóa.");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/admin/users";
-            }
-            
-            userRepository.deleteById(id);
-            redirectAttributes.addFlashAttribute("message", "Đã xóa người dùng '" + user.getFullName() + "' thành công!");
+            String filename = user.getId() + "_" + System.currentTimeMillis() + ext;
+
+            Path filePath = uploadPath.resolve(filename);
+            avatar.transferTo(filePath.toFile());
+
+            // Set avatar URL path for serving (we'll need a controller to serve this)
+            user.setAvatar("/uploads/avatars/" + filename);
+            userRepository.save(user);
+
+            redirectAttributes.addFlashAttribute("message", "Đã cập nhật ảnh đại diện thành công.");
             redirectAttributes.addFlashAttribute("messageType", "success");
-        } catch (Exception e) {
-            e.printStackTrace();
-            redirectAttributes.addFlashAttribute("message", 
-                "Không thể xóa người dùng: " + e.getMessage() + ". Người dùng này có thể đang có dữ liệu liên quan trong hệ thống.");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            redirectAttributes.addFlashAttribute("message", "Lỗi khi tải ảnh lên: " + ex.getMessage());
             redirectAttributes.addFlashAttribute("messageType", "danger");
         }
-        return "redirect:/admin/users";
+
+        return "redirect:/admin/profile";
     }
-    
-    /**
-     * View user details
-     */
+
     @GetMapping("/users/{id}/details")
     public String userDetails(@PathVariable String id, Model model, Authentication authentication) {
         model.addAttribute("username", authentication.getName());
@@ -337,6 +431,44 @@ public class AdminController {
     }
     
     // ==================== STORE CRUD ====================
+    
+    /**
+     * View store details
+     */
+    @GetMapping("/stores/{id}/details")
+    public String storeDetails(@PathVariable String id, Model model, Authentication authentication) {
+        model.addAttribute("username", authentication.getName());
+        
+        Optional<Store> storeOpt = storeRepository.findById(id);
+        if (!storeOpt.isPresent()) {
+            model.addAttribute("error", "Không tìm thấy cửa hàng!");
+            return "redirect:/admin/stores";
+        }
+        
+        Store store = storeOpt.get();
+        model.addAttribute("store", store);
+        
+        // Get store's products
+        int productCount = store.getProducts() != null ? store.getProducts().size() : 0;
+        model.addAttribute("productCount", productCount);
+        model.addAttribute("products", store.getProducts());
+        
+        // Get store's orders
+        int orderCount = store.getOrders() != null ? store.getOrders().size() : 0;
+        model.addAttribute("orderCount", orderCount);
+        
+        // Calculate total revenue
+        BigDecimal totalRevenue = BigDecimal.ZERO;
+        if (store.getOrders() != null) {
+            totalRevenue = store.getOrders().stream()
+                .filter(order -> order.getStatus() == Order.OrderStatus.DELIVERED)
+                .map(Order::getAmountFromStore)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        }
+        model.addAttribute("totalRevenue", totalRevenue);
+        
+        return "admin/store-details";
+    }
     
     /**
      * Create new store
@@ -557,5 +689,108 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("messageType", "danger");
         }
         return "redirect:/admin/orders";
+    }
+
+    /**
+     * Change user role
+     */
+    @PostMapping("/users/{id}/change-role")
+    public String changeUserRole(
+            @PathVariable String id,
+            @RequestParam String role,
+            RedirectAttributes redirectAttributes,
+            Authentication authentication) {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (!userOpt.isPresent()) {
+            redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng!");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/admin/users";
+        }
+
+        User user = userOpt.get();
+
+        // Prevent changing role to an invalid value
+        User.UserRole newRole;
+        try {
+            newRole = User.UserRole.valueOf(role);
+        } catch (IllegalArgumentException ex) {
+            redirectAttributes.addFlashAttribute("message", "Vai trò không hợp lệ: " + role);
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/admin/users";
+        }
+
+        // Prevent demoting the last admin
+        if (user.getRole() == User.UserRole.ADMIN && newRole != User.UserRole.ADMIN) {
+            long adminCount = userRepository.findAll().stream()
+                    .filter(u -> u != null && u.getRole() == User.UserRole.ADMIN)
+                    .count();
+            if (adminCount <= 1) {
+                redirectAttributes.addFlashAttribute("message", "Không thể gỡ quyền ADMIN: hệ thống chỉ còn một ADMIN duy nhất.");
+                redirectAttributes.addFlashAttribute("messageType", "warning");
+                return "redirect:/admin/users";
+            }
+
+            // Prevent self-demotion
+            if (authentication != null && authentication.getName() != null && authentication.getName().equals(user.getEmail())) {
+                redirectAttributes.addFlashAttribute("message", "Bạn không thể tự gỡ quyền ADMIN của chính mình.");
+                redirectAttributes.addFlashAttribute("messageType", "warning");
+                return "redirect:/admin/users";
+            }
+        }
+
+        user.setRole(newRole);
+        userRepository.save(user);
+
+        redirectAttributes.addFlashAttribute("message", "Đã cập nhật vai trò cho người dùng thành công!");
+        redirectAttributes.addFlashAttribute("messageType", "success");
+        return "redirect:/admin/users";
+    }
+
+    /**
+     * Remove ADMIN role (set to USER)
+     */
+    @PostMapping("/users/{id}/remove-admin-role")
+    public String removeAdminRole(
+            @PathVariable String id,
+            RedirectAttributes redirectAttributes,
+            Authentication authentication) {
+        Optional<User> userOpt = userRepository.findById(id);
+        if (!userOpt.isPresent()) {
+            redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng!");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            return "redirect:/admin/users";
+        }
+
+        User user = userOpt.get();
+
+        if (user.getRole() != User.UserRole.ADMIN) {
+            redirectAttributes.addFlashAttribute("message", "Người dùng không có quyền ADMIN.");
+            redirectAttributes.addFlashAttribute("messageType", "info");
+            return "redirect:/admin/users";
+        }
+
+        // Prevent removing last admin
+        long adminCount = userRepository.findAll().stream()
+                .filter(u -> u != null && u.getRole() == User.UserRole.ADMIN)
+                .count();
+        if (adminCount <= 1) {
+            redirectAttributes.addFlashAttribute("message", "Không thể gỡ quyền ADMIN: hệ thống chỉ còn một ADMIN duy nhất.");
+            redirectAttributes.addFlashAttribute("messageType", "warning");
+            return "redirect:/admin/users";
+        }
+
+        // Prevent self-removal
+        if (authentication != null && authentication.getName() != null && authentication.getName().equals(user.getEmail())) {
+            redirectAttributes.addFlashAttribute("message", "Bạn không thể tự gỡ quyền ADMIN của chính mình.");
+            redirectAttributes.addFlashAttribute("messageType", "warning");
+            return "redirect:/admin/users";
+        }
+
+        user.setRole(User.UserRole.USER);
+        userRepository.save(user);
+
+        redirectAttributes.addFlashAttribute("message", "Đã gỡ vai trò ADMIN của người dùng thành công.");
+        redirectAttributes.addFlashAttribute("messageType", "success");
+        return "redirect:/admin/users";
     }
 }
