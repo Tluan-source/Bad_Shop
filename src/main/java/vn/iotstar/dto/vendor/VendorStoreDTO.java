@@ -32,6 +32,7 @@ public class VendorStoreDTO {
     private String ownerId;
     private String ownerName;
     private String ownerEmail;
+    private String ownerPhone;
     
     // Commission info
     private String commissionId;

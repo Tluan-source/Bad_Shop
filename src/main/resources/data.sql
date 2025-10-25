@@ -220,6 +220,170 @@ WHEN NOT MATCHED THEN
     INSERT (id, name, slug, description, price, promotional_price, quantity, sold, is_active, is_selling, list_images, category_id, store_id, style_value_ids, rating, view_count)
     VALUES ('P8', N'Túi Vợt Yonex BAG92031W', 'yonex-bag-92031w', N'Túi đựng vợt cao cấp', 890000.00, 0.00, 40, 15, 1, 1, NULL, 'C4', 'S1', NULL, 4.4, 45);
 
+-- =============================================
+-- STYLES (Loại thuộc tính sản phẩm)
+-- =============================================
+MERGE INTO styles AS target
+USING (SELECT 'ST001' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, category_ids, is_deleted)
+    VALUES ('ST001', N'Màu sắc', '["C1","C3","C4"]', 0);
+
+MERGE INTO styles AS target
+USING (SELECT 'ST002' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, category_ids, is_deleted)
+    VALUES ('ST002', N'Kích thước giày', '["C3"]', 0);
+
+MERGE INTO styles AS target
+USING (SELECT 'ST003' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, category_ids, is_deleted)
+    VALUES ('ST003', N'Trọng lượng vợt', '["C1"]', 0);
+
+MERGE INTO styles AS target
+USING (SELECT 'ST004' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, category_ids, is_deleted)
+    VALUES ('ST004', N'Độ căng dây', '["C1"]', 0);
+
+-- =============================================
+-- STYLE VALUES (Giá trị cụ thể)
+-- =============================================
+-- Màu sắc (ST001)
+MERGE INTO style_values AS target
+USING (SELECT 'SV001' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV001', N'Đỏ', 'ST001', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV002' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV002', N'Xanh dương', 'ST001', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV003' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV003', N'Vàng', 'ST001', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV004' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV004', N'Đen', 'ST001', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV005' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV005', N'Trắng', 'ST001', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV006' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV006', N'Xanh lá', 'ST001', 0);
+
+-- Kích thước giày (ST002)
+MERGE INTO style_values AS target
+USING (SELECT 'SV007' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV007', N'39', 'ST002', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV008' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV008', N'40', 'ST002', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV009' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV009', N'41', 'ST002', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV010' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV010', N'42', 'ST002', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV011' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV011', N'43', 'ST002', 0);
+
+-- Trọng lượng vợt (ST003)
+MERGE INTO style_values AS target
+USING (SELECT 'SV012' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV012', N'5U (75-79g)', 'ST003', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV013' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV013', N'4U (80-84g)', 'ST003', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV014' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV014', N'3U (85-89g)', 'ST003', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV015' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV015', N'2U (90-94g)', 'ST003', 0);
+
+-- Độ căng dây (ST004)
+MERGE INTO style_values AS target
+USING (SELECT 'SV016' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV016', N'24-26 lbs', 'ST004', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV017' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV017', N'27-29 lbs', 'ST004', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV018' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV018', N'30-32 lbs', 'ST004', 0);
+
 -- =====================================================
 -- HƯỚNG DẪN ĐĂNG NHẬP:
 -- =====================================================

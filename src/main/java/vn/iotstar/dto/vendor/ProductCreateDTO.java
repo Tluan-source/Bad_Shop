@@ -45,6 +45,9 @@ public class ProductCreateDTO {
     
     private Boolean isSelling = true;
     
+    // Style values (màu sắc, kích thước...)
+    private List<String> styleValueIds;
+    
     // Images uploaded
     private List<MultipartFile> images;
     
