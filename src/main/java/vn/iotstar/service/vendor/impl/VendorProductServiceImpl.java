@@ -17,6 +17,7 @@ import vn.iotstar.exception.ResourceNotFoundException;
 import vn.iotstar.repository.CategoryRepository;
 import vn.iotstar.repository.ProductRepository;
 import vn.iotstar.repository.StoreRepository;
+import vn.iotstar.service.CloudinaryService;
 import vn.iotstar.service.vendor.VendorProductService;
 import vn.iotstar.service.vendor.VendorSecurityService;
 
@@ -46,6 +47,9 @@ public class VendorProductServiceImpl implements VendorProductService {
     
     @Autowired
     private VendorSecurityService securityService;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
     
     private final ObjectMapper objectMapper = new ObjectMapper();
     
@@ -106,8 +110,19 @@ public class VendorProductServiceImpl implements VendorProductService {
         product.setCreatedAt(LocalDateTime.now());
         product.setUpdatedAt(LocalDateTime.now());
         
-        // Handle images
-        if (createDTO.getImageUrls() != null && !createDTO.getImageUrls().isEmpty()) {
+        // Handle images: prefer uploaded MultipartFile images (Cloudinary), then provided imageUrls
+        if (createDTO.getImages() != null && !createDTO.getImages().isEmpty()) {
+            try {
+                List<String> uploadedUrls = cloudinaryService.uploadFiles(createDTO.getImages());
+                product.setListImages(objectMapper.writeValueAsString(uploadedUrls));
+            } catch (Exception e) {
+                try {
+                    product.setListImages(objectMapper.writeValueAsString(new ArrayList<String>()));
+                } catch (Exception ex) {
+                    product.setListImages("[]");
+                }
+            }
+        } else if (createDTO.getImageUrls() != null && !createDTO.getImageUrls().isEmpty()) {
             try {
                 product.setListImages(objectMapper.writeValueAsString(createDTO.getImageUrls()));
             } catch (Exception e) {
@@ -154,10 +169,19 @@ public class VendorProductServiceImpl implements VendorProductService {
         product.setIsSelling(updateDTO.getIsSelling());
         product.setUpdatedAt(LocalDateTime.now());
         
-        // Update images
-        if (updateDTO.getListImages() != null) {
+        // Update images: priority order - newImages (upload to Cloudinary) > listImages (keep existing) > imageUrls (replace with new URLs)
+        if (updateDTO.getNewImages() != null && !updateDTO.getNewImages().isEmpty()) {
+            try {
+                List<String> uploadedUrls = cloudinaryService.uploadFiles(updateDTO.getNewImages());
+                if (!uploadedUrls.isEmpty()) {
+                    product.setListImages(objectMapper.writeValueAsString(uploadedUrls));
+                }
+            } catch (Exception e) {
+                // Keep existing images on upload failure
+            }
+        } else if (updateDTO.getListImages() != null) {
             product.setListImages(updateDTO.getListImages());
-        } else if (updateDTO.getImageUrls() != null) {
+        } else if (updateDTO.getImageUrls() != null && !updateDTO.getImageUrls().isEmpty()) {
             try {
                 product.setListImages(objectMapper.writeValueAsString(updateDTO.getImageUrls()));
             } catch (Exception e) {

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head}">
+    <title>Quản lý Vouchers - Admin</title>
+</head>
+<body class="admin-page">
+    <div th:replace="~{fragments/header-admin :: header-admin}"></div>
+
+    <div class="container-fluid mt-4 px-4">
+        <div class="admin-content">
+            <!-- Flash Messages -->
+            <div th:if="${message}" class="alert alert-dismissible fade show" 
+                 th:classappend="${'alert-' + messageType}" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <span th:text="${message}">Message</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3><i class="fas fa-ticket-alt text-primary me-2"></i>Quản lý Vouchers</h3>
+                <div class="d-flex gap-2">
+                    <input type="text" class="form-control me-2" id="searchVoucher"
+                           placeholder="Tìm kiếm voucher..." style="width: 300px;">
+                    <button class="btn btn-admin-primary" data-bs-toggle="modal" data-bs-target="#addVoucherModal">
+                        <i class="fas fa-plus me-2"></i>Tạo voucher mới
+                    </button>
+                </div>
+            </div>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-3">
+                    <div class="mini-stat-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-ticket-alt text-white bg-primary p-3 rounded-circle me-3"></i>
+                            <div>
+                                <h6 class="text-muted mb-1">Tổng vouchers</h6>
+                                <h4 class="mb-0" th:text="${totalVouchers}">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mini-stat-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-check-circle text-white bg-success p-3 rounded-circle me-3"></i>
+                            <div>
+                                <h6 class="text-muted mb-1">Đang hoạt động</h6>
+                                <h4 class="mb-0" th:text="${activeVouchers}">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mini-stat-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-users text-white bg-info p-3 rounded-circle me-3"></i>
+                            <div>
+                                <h6 class="text-muted mb-1">Đã sử dụng</h6>
+                                <h4 class="mb-0" th:text="${totalUsageCount}">0</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mini-stat-card">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-dollar-sign text-white bg-warning p-3 rounded-circle me-3"></i>
+                            <div>
+                                <h6 class="text-muted mb-1">Tổng giảm giá</h6>
+                                <h4 class="mb-0" th:text="${#numbers.formatDecimal(totalDiscount / 1000000, 0, 'COMMA', 0, 'POINT')} + 'M'">0M</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row g-4">
+                <div th:if="${vouchers == null or vouchers.isEmpty()}" class="col-12">
+                    <div class="text-center text-muted py-5">
+                        <i class="fas fa-ticket-alt fa-3x mb-3 d-block"></i>
+                        <p>Chưa có voucher nào trong hệ thống</p>
+                    </div>
+                </div>
+                
+                <div class="col-md-6 col-lg-4" th:each="voucher : ${vouchers}">
+                    <div class="card border-0 shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="mb-0">
+                                    <i class="fas fa-tag me-2" 
+                                       th:classappend="${voucher.isActive and !voucher.isExpired() ? 'text-success' : 'text-danger'}"></i>
+                                    <span th:text="${voucher.code}">CODE</span>
+                                </h5>
+                                <span class="badge-admin" 
+                                      th:classappend="${voucher.isExpired() ? 'bg-danger' : (voucher.isActive ? 'bg-success' : 'bg-secondary')}"
+                                      th:text="${voucher.isExpired() ? 'Expired' : (voucher.isActive ? 'Active' : 'Inactive')}">Active</span>
+                            </div>
+                            <p class="text-muted mb-3" th:text="${voucher.description}">Mô tả</p>
+                            <div class="mb-2">
+                                <small class="text-muted">Loại giảm giá:</small>
+                                <strong class="ms-2" th:text="${voucher.discountType == T(vn.iotstar.entity.Voucher.DiscountType).PERCENTAGE ? 'Phần trăm' : 'Cố định'}">Phần trăm</strong>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">Giá trị:</small>
+                                <strong class="ms-2 text-danger">
+                                    <span th:if="${voucher.discountType == T(vn.iotstar.entity.Voucher.DiscountType).PERCENTAGE}">
+                                        <span th:text="${voucher.discountValue}">0</span>%
+                                    </span>
+                                    <span th:if="${voucher.discountType == T(vn.iotstar.entity.Voucher.DiscountType).FIXED}">
+                                        <span th:text="${#numbers.formatCurrency(voucher.discountValue)}">0</span>
+                                    </span>
+                                </strong>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">Đơn tối thiểu:</small>
+                                <strong class="ms-2" th:text="${#numbers.formatCurrency(voucher.minOrderValue)}">0</strong>
+                            </div>
+                            <div class="mb-2">
+                                <small class="text-muted">Giảm tối đa:</small>
+                                <strong class="ms-2" th:text="${#numbers.formatCurrency(voucher.maxDiscount)}">0</strong>
+                            </div>
+                            <div class="mb-3">
+                                <small class="text-muted">Hết hạn:</small>
+                                <strong class="ms-2" 
+                                        th:classappend="${voucher.isExpired() ? 'text-danger' : ''}"
+                                        th:text="${voucher.endDate != null ? #temporals.format(voucher.endDate, 'dd/MM/yyyy') : 'N/A'}">31/12/2024</strong>
+                            </div>
+                            <div class="progress mb-3" style="height: 25px;">
+                                <div class="progress-bar" role="progressbar" 
+                                     th:classappend="${voucher.usagePercentage >= 90 ? 'bg-danger' : (voucher.usagePercentage >= 70 ? 'bg-warning' : 'bg-success')}"
+                                     th:style="'width: ' + ${voucher.usagePercentage} + '%'">
+                                    <span th:text="${voucher.usageCount} + ' / ' + ${voucher.quantity} + ' lượt'">0 / 0 lượt</span>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <form th:action="@{/admin/vouchers/{id}/toggle-status(id=${voucher.id})}" 
+                                      method="post" class="flex-fill">
+                                    <button type="submit" class="btn btn-sm btn-warning w-100"
+                                            th:title="${voucher.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}">
+                                        <i class="fas" th:classappend="${voucher.isActive ? 'fa-ban' : 'fa-check'}"></i>
+                                        <span th:text="${voucher.isActive ? ' Khóa' : ' Mở'}"></span>
+                                    </button>
+                                </form>
+                                <button class="btn btn-sm btn-danger" 
+                                        th:attr="data-voucher-code=${voucher.code}, data-voucher-id=${voucher.id}"
+                                        onclick="confirmDeleteVoucher(this.getAttribute('data-voucher-code'), this.getAttribute('data-voucher-id'))">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Voucher Modal -->
+    <div class="modal fade" id="addVoucherModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-plus me-2"></i>Tạo voucher mới
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/vouchers/create}" method="post">
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fas fa-tag me-1"></i>Mã voucher *</label>
+                                <input type="text" name="code" class="form-control" 
+                                       placeholder="VD: WELCOME2024" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fas fa-percent me-1"></i>Loại giảm giá *</label>
+                                <select name="discountType" class="form-select" required>
+                                    <option value="PERCENTAGE">Phần trăm (%)</option>
+                                    <option value="FIXED">Số tiền cố định (VNĐ)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fas fa-dollar-sign me-1"></i>Giá trị giảm *</label>
+                                <input type="number" name="discountValue" class="form-control" 
+                                       placeholder="VD: 15 (%) hoặc 100000 (VNĐ)" step="0.01" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fas fa-money-bill me-1"></i>Giảm tối đa (VNĐ)</label>
+                                <input type="number" name="maxDiscount" class="form-control" 
+                                       placeholder="VD: 200000" step="0.01">
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fas fa-shopping-cart me-1"></i>Đơn hàng tối thiểu (VNĐ)</label>
+                                <input type="number" name="minOrderValue" class="form-control" 
+                                       placeholder="VD: 500000" step="0.01">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fas fa-sort-numeric-up me-1"></i>Số lượng *</label>
+                                <input type="number" name="quantity" class="form-control" 
+                                       placeholder="VD: 100" required>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fas fa-calendar-check me-1"></i>Ngày bắt đầu *</label>
+                                <input type="date" name="startDate" class="form-control" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label"><i class="fas fa-calendar-times me-1"></i>Ngày kết thúc *</label>
+                                <input type="date" name="endDate" class="form-control" required>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label"><i class="fas fa-align-left me-1"></i>Mô tả</label>
+                            <textarea name="description" class="form-control" rows="3" 
+                                      placeholder="Mô tả về voucher"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                            <i class="fas fa-times me-1"></i>Hủy
+                        </button>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-2"></i>Tạo voucher
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer-admin :: footer-admin}"></div>
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+    
+    <script>
+        // Search functionality
+        document.getElementById('searchVoucher').addEventListener('keyup', function() {
+            const searchValue = this.value.toLowerCase();
+            const cards = document.querySelectorAll('.row.g-4 > .col-md-6');
+            
+            cards.forEach(card => {
+                if (card.querySelector('.text-center.text-muted')) return;
+                
+                const code = card.querySelector('h5 span').innerText.toLowerCase();
+                const description = card.querySelector('.text-muted.mb-3').innerText.toLowerCase();
+                
+                if (code.includes(searchValue) || description.includes(searchValue)) {
+                    card.style.display = '';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        });
+        
+        function confirmDeleteVoucher(voucherCode, voucherId) {
+            if (confirm('Bạn có chắc chắn muốn xóa voucher "' + voucherCode + '"?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/admin/vouchers/' + voucherId + '/delete';
+                
+                const csrfToken = document.querySelector('meta[name="_csrf"]');
+                if (csrfToken) {
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = '_csrf';
+                    csrfInput.value = csrfToken.getAttribute('content');
+                    form.appendChild(csrfInput);
+                }
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

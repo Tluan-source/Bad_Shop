@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head}">
+    <title>Báo cáo - Admin</title>
+</head>
+<body class="admin-page">
+    <div th:replace="~{fragments/header-admin :: header-admin}"></div>
+
+    <div class="container-fluid mt-4 px-4">
+        <div class="admin-content">
+            <!-- Flash Messages -->
+            <div th:if="${message}" class="alert alert-dismissible fade show" 
+                 th:classappend="${'alert-' + messageType}" role="alert">
+                <i class="fas fa-info-circle me-2"></i>
+                <span th:text="${message}">Message</span>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h3><i class="fas fa-chart-line text-primary me-2"></i>Báo cáo & Thống kê</h3>
+                <div class="d-flex gap-2">
+                    <form id="dateFilterForm" method="get" action="/admin/reports" class="d-flex gap-2">
+                        <select name="period" id="periodSelect" class="form-select" style="width: auto;" onchange="handlePeriodChange()">
+                            <option value="7" th:selected="${period == '7'}">7 ngày qua</option>
+                            <option value="30" th:selected="${period == '30'}">30 ngày qua</option>
+                            <option value="90" th:selected="${period == '90'}">3 tháng qua</option>
+                            <option value="365" th:selected="${period == '365'}">Năm nay</option>
+                            <option value="custom" th:selected="${period == 'custom'}">Tùy chỉnh</option>
+                        </select>
+                        <a th:href="@{/admin/reports}" class="btn btn-outline-secondary" th:if="${period != null}">
+                            <i class="fas fa-redo me-1"></i>Reset
+                        </a>
+                    </form>
+                    <a th:href="@{/admin/reports/export(period=${period}, startDate=${startDate}, endDate=${endDate})}" 
+                       class="btn btn-admin-primary">
+                        <i class="fas fa-download me-2"></i>Xuất báo cáo
+                    </a>
+                </div>
+            </div>
+
+            <!-- Date Range Display -->
+            <div th:if="${startDate != null and endDate != null}" class="alert alert-info mb-4">
+                <i class="fas fa-calendar-alt me-2"></i>
+                Báo cáo từ <strong th:text="${#temporals.format(startDate, 'dd/MM/yyyy')}">01/01/2024</strong> 
+                đến <strong th:text="${#temporals.format(endDate, 'dd/MM/yyyy')}">31/12/2024</strong>
+            </div>
+
+            <!-- Statistics Summary -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="chart-container text-center">
+                        <i class="fas fa-shopping-bag fa-3x text-primary mb-3"></i>
+                        <h5>Tổng đơn hàng</h5>
+                        <h2 class="text-primary mb-2" th:text="${totalOrders}">0</h2>
+                        <small class="text-muted">Tất cả đơn hàng</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="chart-container text-center">
+                        <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+                        <h5>Đơn hoàn thành</h5>
+                        <h2 class="text-success mb-2" th:text="${completedOrders}">0</h2>
+                        <small class="text-muted">Đã giao thành công</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="chart-container text-center">
+                        <i class="fas fa-times-circle fa-3x text-danger mb-3"></i>
+                        <h5>Đơn hủy</h5>
+                        <h2 class="text-danger mb-2" th:text="${cancelledOrders}">0</h2>
+                        <small class="text-muted">Đã bị hủy</small>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="chart-container text-center">
+                        <i class="fas fa-dollar-sign fa-3x text-warning mb-3"></i>
+                        <h5>Tổng doanh thu</h5>
+                        <h2 class="text-warning mb-2" th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</h2>
+                        <small class="text-muted">Từ đơn hoàn thành</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Grid -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <h5 class="mb-3"><i class="fas fa-shopping-cart text-primary me-2"></i>Top sản phẩm bán chạy</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Sản phẩm</th>
+                                        <th>Số lượng bán</th>
+                                        <th>Doanh thu</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${topProducts == null or topProducts.isEmpty()}">
+                                        <td colspan="3" class="text-center text-muted py-4">
+                                            <i class="fas fa-inbox fa-3x mb-2"></i>
+                                            <p>Chưa có dữ liệu bán hàng</p>
+                                        </td>
+                                    </tr>
+                                    <tr th:each="item, iterStat : ${topProducts}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-box text-primary me-2"></i>
+                                                <strong th:text="${item.product.name}">Tên sản phẩm</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge-admin" 
+                                                  th:classappend="${iterStat.index == 0} ? 'bg-primary' : (${iterStat.index == 1} ? 'bg-success' : (${iterStat.index == 2} ? 'bg-info' : 'bg-secondary'))"
+                                                  th:text="${item.quantity}">0</span>
+                                        </td>
+                                        <td><strong th:text="${#numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</strong></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="chart-container">
+                        <h5 class="mb-3"><i class="fas fa-store text-success me-2"></i>Top cửa hàng xuất sắc</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Cửa hàng</th>
+                                        <th>Số lượng bán</th>
+                                        <th>Doanh thu</th>
+                                        <th>Rating</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${topStores == null or topStores.isEmpty()}">
+                                        <td colspan="4" class="text-center text-muted py-4">
+                                            <i class="fas fa-store-slash fa-3x mb-2"></i>
+                                            <p>Chưa có dữ liệu cửa hàng</p>
+                                        </td>
+                                    </tr>
+                                    <tr th:each="item, iterStat : ${topStores}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-store me-2"
+                                                   th:classappend="${iterStat.index == 0} ? 'text-primary' : (${iterStat.index == 1} ? 'text-success' : 'text-info')"></i>
+                                                <strong th:text="${item.store.name}">Tên cửa hàng</strong>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge-admin" 
+                                                  th:classappend="${iterStat.index == 0} ? 'bg-primary' : (${iterStat.index == 1} ? 'bg-success' : (${iterStat.index == 2} ? 'bg-info' : 'bg-secondary'))"
+                                                  th:text="${item.quantity}">0</span>
+                                        </td>
+                                        <td><strong th:text="${#numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</strong></td>
+                                        <td><span class="text-warning">★ <span th:text="${item.store.rating}">0.0</span></span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Sales Statistics -->
+            <div class="row g-4">
+                <div class="col-12">
+                    <div class="chart-container">
+                        <h5 class="mb-3"><i class="fas fa-tags text-info me-2"></i>Thống kê theo danh mục</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Danh mục</th>
+                                        <th>Số lượng bán</th>
+                                        <th>Doanh thu</th>
+                                        <th>Tỷ trọng</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${categorySales == null or categorySales.isEmpty()}">
+                                        <td colspan="4" class="text-center text-muted py-4">
+                                            <i class="fas fa-tags fa-3x mb-2"></i>
+                                            <p>Chưa có dữ liệu theo danh mục</p>
+                                        </td>
+                                    </tr>
+                                    <tr th:each="item : ${categorySales}">
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <i class="fas fa-folder text-primary me-2"></i>
+                                                <strong th:text="${item.category.name}">Tên danh mục</strong>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge-admin bg-primary" th:text="${item.quantity}">0</span></td>
+                                        <td><strong th:text="${#numbers.formatDecimal(item.revenue, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</strong></td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar bg-info" 
+                                                     th:style="'width: ' + ${totalRevenue > 0 ? (item.revenue / totalRevenue * 100) : 0} + '%'"
+                                                     th:text="${totalRevenue > 0 ? #numbers.formatDecimal((item.revenue / totalRevenue * 100), 1, 'POINT', 1, 'POINT') : '0'} + '%'">
+                                                    0%
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Date Range Modal -->
+    <div class="modal fade" id="customDateModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-primary text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-calendar-alt me-2"></i>Chọn khoảng thời gian
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-calendar-check me-1"></i>Từ ngày</label>
+                        <input type="date" id="customStartDate" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label"><i class="fas fa-calendar-times me-1"></i>Đến ngày</label>
+                        <input type="date" id="customEndDate" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-1"></i>Hủy
+                    </button>
+                    <button type="button" class="btn btn-primary" onclick="applyCustomDate()">
+                        <i class="fas fa-check me-2"></i>Áp dụng
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer-admin :: footer-admin}"></div>
+    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
+    
+    <script>
+        function handlePeriodChange() {
+            const period = document.getElementById('periodSelect').value;
+            if (period === 'custom') {
+                const modal = new bootstrap.Modal(document.getElementById('customDateModal'));
+                modal.show();
+            } else {
+                document.getElementById('dateFilterForm').submit();
+            }
+        }
+        
+        function applyCustomDate() {
+            const startDate = document.getElementById('customStartDate').value;
+            const endDate = document.getElementById('customEndDate').value;
+            
+            if (!startDate || !endDate) {
+                alert('Vui lòng chọn đầy đủ ngày bắt đầu và ngày kết thúc!');
+                return;
+            }
+            
+            if (new Date(startDate) > new Date(endDate)) {
+                alert('Ngày bắt đầu phải nhỏ hơn ngày kết thúc!');
+                return;
+            }
+            
+            window.location.href = '/admin/reports?period=custom&startDate=' + startDate + '&endDate=' + endDate;
+        }
+        
+        // Set default dates for custom date picker (last 30 days)
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today);
+            thirtyDaysAgo.setDate(today.getDate() - 30);
+            
+            document.getElementById('customEndDate').valueAsDate = today;
+            document.getElementById('customStartDate').valueAsDate = thirtyDaysAgo;
+        });
+    </script>
+</body>
+</html>

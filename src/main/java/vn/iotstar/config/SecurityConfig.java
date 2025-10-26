@@ -28,12 +28,9 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                // ============================================================
-                // PRODUCTION MODE - UNCOMMENT ĐỂ BẬT AUTHENTICATION
-                // ============================================================
-                .requestMatchers("/", "/css/**", "/js/**", "/images/**", 
-                                 "/register", "/login", "/products", 
-                                 "/verify-otp", "/forgot", "/reset").permitAll()
+                .requestMatchers("/", "/css/**", "/js/**", "/images/**", "/uploads/**", "/register", "/login", 
+                    "/products", "/products/**", "/stores", "/stores/**", "/categories", "/categories/**", 
+                    "/verify-otp", "/forgot", "/reset").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/vendor/**").hasAnyRole("VENDOR", "ADMIN")
                 .requestMatchers("/shipper/**").hasRole("SHIPPER")

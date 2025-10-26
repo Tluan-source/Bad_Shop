@@ -4,6 +4,7 @@ import jakarta.validation.constraints.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -42,10 +43,13 @@ public class ProductUpdateDTO {
     
     private Boolean isSelling;
     
-    // Image URLs (JSON array string)
+    // Image URLs (JSON array string) - existing images
     private String listImages;
     
-    // Or list of URLs
+    // New images to upload to Cloudinary
+    private List<MultipartFile> newImages;
+    
+    // Or list of URLs to add/replace
     private List<String> imageUrls;
     
     // Style values

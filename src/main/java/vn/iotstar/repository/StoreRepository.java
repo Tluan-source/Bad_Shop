@@ -37,4 +37,11 @@ public interface StoreRepository extends JpaRepository<Store, String> {
     
     // Search stores by name
     List<Store> findByNameContainingIgnoreCaseAndIsActiveTrue(String name);
+    
+    // Search stores by name for admin (all statuses)
+    List<Store> findByNameContainingIgnoreCase(String name);
+    
+    // Search stores by name or owner name
+    @Query("SELECT s FROM Store s WHERE LOWER(s.name) LIKE LOWER(CONCAT('%', :keyword, '%')) OR LOWER(s.owner.fullName) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+    List<Store> searchStoresByNameOrOwner(@Param("keyword") String keyword);
 }
