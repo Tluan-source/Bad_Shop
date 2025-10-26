@@ -1,45 +1,42 @@
 package vn.iotstar.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import org.springframework.web.multipart.MultipartFile;
-import vn.iotstar.entity.Order;
-import vn.iotstar.entity.User;
-import vn.iotstar.entity.Store;
-import vn.iotstar.entity.Category;
-import vn.iotstar.entity.Product;
-import vn.iotstar.entity.Voucher;
-import vn.iotstar.service.AdminService;
-import vn.iotstar.repository.UserRepository;
-import vn.iotstar.repository.StoreRepository;
-import vn.iotstar.repository.CategoryRepository;
-import vn.iotstar.repository.OrderRepository;
-import vn.iotstar.repository.VoucherRepository;
-import vn.iotstar.service.PasswordService;
-import vn.iotstar.service.CloudinaryService;
-
-import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.math.BigDecimal;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.PrintWriter;
+import vn.iotstar.entity.Category;
+import vn.iotstar.entity.Order;
+import vn.iotstar.entity.Product;
+import vn.iotstar.entity.Store;
+import vn.iotstar.entity.User;
+import vn.iotstar.entity.Voucher;
+import vn.iotstar.repository.CategoryRepository;
+import vn.iotstar.repository.OrderRepository;
+import vn.iotstar.repository.StoreRepository;
+import vn.iotstar.repository.UserRepository;
+import vn.iotstar.repository.VoucherRepository;
+import vn.iotstar.service.AdminService;
+import vn.iotstar.service.CloudinaryService;
+import vn.iotstar.service.PasswordService;
 
 @Controller
 @RequestMapping("/admin")
@@ -132,6 +129,52 @@ public class AdminController {
             model.addAttribute("userCount", 0);
             return "admin/users";
         }
+    }
+    
+    @PostMapping("/users/create")
+    public String createUser(@RequestParam String fullName,
+                            @RequestParam String email,
+                            @RequestParam String phone,
+                            @RequestParam String password,
+                            @RequestParam String role,
+                            RedirectAttributes redirectAttributes) {
+        try {
+            // Check if email already exists
+            Optional<User> existingUser = userRepository.findByEmail(email);
+            if (existingUser.isPresent()) {
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                redirectAttributes.addFlashAttribute("message", "Email đã tồn tại trong hệ thống!");
+                return "redirect:/admin/users";
+            }
+            
+            // Create new user
+            User newUser = new User();
+            newUser.setId("U_" + System.currentTimeMillis());
+            newUser.setFullName(fullName);
+            newUser.setEmail(email);
+            newUser.setPhone(phone);
+            
+            // Hash password (PasswordService không cần salt nữa)
+            newUser.setHashedPassword(passwordService.hashPassword(password));
+            
+            // Set role
+            newUser.setRole(User.UserRole.valueOf(role));
+            newUser.setStatus(User.UserStatus.ACTIVE);
+            newUser.setPoint(0);
+            newUser.setEWallet(BigDecimal.ZERO);
+            
+            // Save user
+            userRepository.save(newUser);
+            
+            redirectAttributes.addFlashAttribute("messageType", "success");
+            redirectAttributes.addFlashAttribute("message", "Tạo người dùng thành công!");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            redirectAttributes.addFlashAttribute("message", "Lỗi khi tạo người dùng: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/users";
     }
     
     @GetMapping("/stores")
