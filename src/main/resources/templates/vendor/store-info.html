@@ -28,76 +28,120 @@
                 <!-- Store Information Card -->
                 <div class="card mb-4">
                     <div class="card-header bg-primary text-white">
-                        <h5><i class="fas fa-info-circle"></i> Chi tiết cửa hàng</h5>
+                        <h5 class="mb-0"><i class="fas fa-info-circle"></i> Chi tiết cửa hàng</h5>
                     </div>
                     <div class="card-body">
-                        <div class="row">
+                        <div class="row mb-3">
                             <div class="col-md-6">
-                                <p><strong>Tên cửa hàng:</strong></p>
-                                <p th:text="${store.name}" class="text-muted">Store Name</p>
-                            </div>
-                            <div class="col-md-6">
-                                <p><strong>Email chủ shop:</strong></p>
-                                <p th:text="${store.ownerEmail}" class="text-muted">email@example.com</p>
-                            </div>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-md-6">
-                                <p><strong>Tên chủ shop:</strong></p>
-                                <p th:text="${store.ownerName}" class="text-muted">Owner Name</p>
+                                <div class="info-item">
+                                    <label class="text-muted small"><i class="fas fa-id-card"></i> Mã cửa hàng</label>
+                                    <p class="fw-bold" th:text="${store.id}">ST001</p>
+                                </div>
                             </div>
                             <div class="col-md-6">
-                                <p><strong>Trạng thái:</strong></p>
-                                <p>
-                                    <span th:if="${store.isActive}" class="badge bg-success">Đang hoạt động</span>
-                                    <span th:unless="${store.isActive}" class="badge bg-danger">Tạm ngừng</span>
-                                </p>
+                                <div class="info-item">
+                                    <label class="text-muted small"><i class="fas fa-toggle-on"></i> Trạng thái</label>
+                                    <p>
+                                        <span th:if="${store.isActive}" class="badge bg-success fs-6">
+                                            <i class="fas fa-check-circle"></i> Đang hoạt động
+                                        </span>
+                                        <span th:unless="${store.isActive}" class="badge bg-danger fs-6">
+                                            <i class="fas fa-ban"></i> Tạm ngừng
+                                        </span>
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                        <div class="row mt-3">
-                            <div class="col-md-12">
-                                <p><strong>Địa chỉ:</strong></p>
-                                <p th:text="${store.address}" class="text-muted">Address</p>
-                            </div>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-md-12">
-                                <p><strong>Mô tả:</strong></p>
-                                <p th:text="${store.description}" class="text-muted">Description</p>
-                            </div>
-                        </div>
-                        <div class="row mt-3">
-                            <div class="col-md-4">
-                                <p><strong>Ngày tham gia:</strong></p>
-                                <p th:text="${#temporals.format(store.createdAt, 'dd/MM/yyyy HH:mm')}" class="text-muted">01/01/2024</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
 
-                <!-- Store Statistics -->
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="card text-white bg-success mb-3">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="fas fa-box"></i> Tổng sản phẩm</h5>
-                                <h2 th:text="${store.totalProducts}">0</h2>
+                        <hr>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label class="text-muted small"><i class="fas fa-store"></i> Tên cửa hàng</label>
+                                    <p class="fw-bold" th:text="${store.name}">Store Name</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label class="text-muted small"><i class="fas fa-phone"></i> Số điện thoại</label>
+                                    <p th:text="${store.ownerPhone != null ? store.ownerPhone : 'Chưa cập nhật'}">Phone</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card text-white bg-info mb-3">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="fas fa-shopping-cart"></i> Tổng đơn hàng</h5>
-                                <h2 th:text="${store.totalOrders}">0</h2>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label class="text-muted small"><i class="fas fa-user"></i> Tên chủ shop</label>
+                                    <p th:text="${store.ownerName}">Owner Name</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label class="text-muted small"><i class="fas fa-envelope"></i> Email chủ shop</label>
+                                    <p th:text="${store.ownerEmail}">email@example.com</p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="card text-white bg-warning mb-3">
-                            <div class="card-body">
-                                <h5 class="card-title"><i class="fas fa-dollar-sign"></i> Doanh thu tháng</h5>
-                                <h2 th:text="${#numbers.formatDecimal(store.monthlyRevenue / 1000000, 0, 0)} + 'M'">0M</h2>
+
+                        <div class="row mb-3">
+                            <div class="col-md-12">
+                                <div class="info-item">
+                                    <label class="text-muted small"><i class="fas fa-align-left"></i> Mô tả cửa hàng (Bio)</label>
+                                    <div class="p-3 bg-light rounded">
+                                        <p class="mb-0" th:text="${store.bio != null ? store.bio : 'Chưa có mô tả'}">Bio</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label class="text-muted small"><i class="fas fa-medal"></i> Điểm tích lũy</label>
+                                    <p><span class="badge bg-warning text-dark fs-6" th:text="${store.point} + ' điểm'">0 điểm</span></p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label class="text-muted small"><i class="fas fa-wallet"></i> Ví điện tử (E-Wallet)</label>
+                                    <p class="text-success fw-bold" th:text="${#numbers.formatDecimal(store.eWallet, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label class="text-muted small"><i class="fas fa-percent"></i> Hoa hồng</label>
+                                    <p th:if="${store.commissionName != null}">
+                                        <span th:text="${store.commissionName}">Commission</span>
+                                        <span class="text-muted">
+                                            (<span th:text="${store.commissionFeePercent}">0</span>%)
+                                        </span>
+                                    </p>
+                                    <p th:unless="${store.commissionName != null}" class="text-muted">Chưa có</p>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label class="text-muted small"><i class="fas fa-calendar-plus"></i> Ngày tham gia</label>
+                                    <p th:text="${#temporals.format(store.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="info-item">
+                                    <label class="text-muted small"><i class="fas fa-star"></i> Đánh giá trung bình</label>
+                                    <p>
+                                        <i class="fas fa-star text-warning"></i>
+                                        <span th:text="${store.rating != null ? #numbers.formatDecimal(store.rating, 1, 'POINT', 1, 'POINT') : '0.0'}">0.0</span>
+                                        <span class="text-muted">/ 5.0</span>
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -107,5 +151,20 @@
     </div>
 
     <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <style>
+        .info-item {
+            margin-bottom: 1rem;
+        }
+        .info-item label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-weight: 600;
+        }
+        .info-item p {
+            margin-bottom: 0;
+            font-size: 1rem;
+        }
+    </style>
 </body>
 </html>

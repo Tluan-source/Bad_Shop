@@ -27,6 +27,7 @@ public class VendorProductDTO {
     private Boolean isActive;      // Admin approved
     private Boolean isSelling;     // Vendor control
     private String listImages;     // JSON array
+    private String styleValueIds;  // JSON array of style value IDs
     private BigDecimal rating;
     private Integer viewCount;
     private LocalDateTime createdAt;

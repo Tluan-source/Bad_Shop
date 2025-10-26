@@ -47,4 +47,7 @@ public class ProductUpdateDTO {
     
     // Or list of URLs
     private List<String> imageUrls;
+    
+    // Style values
+    private List<String> styleValueIds;
 }

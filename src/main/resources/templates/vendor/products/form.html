@@ -70,6 +70,42 @@
                                 </div>
                             </div>
 
+                            <!-- Style Values Section (Màu sắc, Kích thước...) -->
+                            <div class="mb-3" th:if="${styles != null and !styles.empty}">
+                                <label class="form-label">Thuộc tính sản phẩm</label>
+                                <div id="styleAttributesContainer">
+                                    <div class="alert alert-warning" id="noStylesMessage" style="display: none;">
+                                        <i class="fas fa-info-circle"></i> 
+                                        Vui lòng chọn danh mục để hiển thị thuộc tính sản phẩm phù hợp
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div th:each="style : ${styles}" 
+                                             class="col-md-6 mb-3 style-group" 
+                                             th:data-category-ids="${style.categoryIds}"
+                                             th:data-style-id="${style.id}"
+                                             style="display: none;">
+                                            <label th:text="${style.name}" class="form-label fw-bold">Style Name</label>
+                                            <div class="d-flex flex-wrap gap-2">
+                                                <div th:each="value : ${styleValues}" th:if="${value.style.id == style.id}">
+                                                    <input type="checkbox" 
+                                                           th:id="'styleValue_' + ${value.id}"
+                                                           name="styleValueIds" 
+                                                           th:value="${value.id}"
+                                                           th:checked="${selectedStyleValueIds != null and selectedStyleValueIds.contains(value.id)}"
+                                                           class="btn-check style-value-checkbox"
+                                                           th:data-style-id="${style.id}">
+                                                    <label th:for="'styleValue_' + ${value.id}" 
+                                                           th:text="${value.name}"
+                                                           class="btn btn-outline-primary btn-sm">Value</label>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <small class="text-muted">Các thuộc tính sẽ hiển thị dựa trên danh mục sản phẩm bạn chọn</small>
+                            </div>
+
                             <div class="mb-3">
                                 <label for="imageUrls" class="form-label">URL hình ảnh sản phẩm (có thể thêm nhiều URL, mỗi URL một dòng)</label>
                                 <textarea class="form-control" id="imageUrls" rows="3" name="imageUrlsText"
@@ -77,7 +113,7 @@
                                 <small class="text-muted">Nhập URL hình ảnh, mỗi URL một dòng</small>
                             </div>
 
-                            <hr>
+            <hr>
 
                             <div class="row">
                                 <div class="col-md-4">
@@ -145,5 +181,96 @@
     </div>
 
     <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <!-- JavaScript for dynamic style filtering -->
+    <script th:inline="javascript">
+        let isInitialLoad = true; // Track if this is the first load
+        
+        // Function to filter styles based on selected category
+        function filterStylesByCategory(shouldUncheck = true) {
+            const categorySelect = document.getElementById('categoryId');
+            const selectedCategoryId = categorySelect.value;
+            const styleGroups = document.querySelectorAll('.style-group');
+            const noStylesMessage = document.getElementById('noStylesMessage');
+            
+            // If no category selected, hide all styles and show message
+            if (!selectedCategoryId || selectedCategoryId === '') {
+                styleGroups.forEach(group => {
+                    group.style.display = 'none';
+                    // Only uncheck if user is changing category (not on initial load)
+                    if (shouldUncheck) {
+                        uncheckStyleGroup(group);
+                    }
+                });
+                noStylesMessage.style.display = 'block';
+                return;
+            }
+            
+            // Hide the "please select category" message
+            noStylesMessage.style.display = 'none';
+            
+            let hasVisibleStyles = false;
+            
+            // Filter and show/hide style groups
+            styleGroups.forEach(group => {
+                const categoryIdsJson = group.getAttribute('data-category-ids');
+                
+                try {
+                    // Parse the JSON array of category IDs
+                    const categoryIds = JSON.parse(categoryIdsJson || '[]');
+                    
+                    // Check if selected category is in the style's category list
+                    if (categoryIds.includes(selectedCategoryId)) {
+                        group.style.display = 'block';
+                        hasVisibleStyles = true;
+                    } else {
+                        group.style.display = 'none';
+                        // Only uncheck if user is changing category (not on initial load when editing)
+                        if (shouldUncheck) {
+                            uncheckStyleGroup(group);
+                        }
+                    }
+                } catch (e) {
+                    console.error('Error parsing category IDs:', e);
+                    group.style.display = 'none';
+                }
+            });
+            
+            // If no styles match the category, show a message
+            if (!hasVisibleStyles) {
+                noStylesMessage.innerHTML = '<i class="fas fa-info-circle"></i> Danh mục này chưa có thuộc tính sản phẩm nào.';
+                noStylesMessage.style.display = 'block';
+            }
+        }
+        
+        // Helper function to uncheck all checkboxes in a style group
+        function uncheckStyleGroup(group) {
+            const checkboxes = group.querySelectorAll('.style-value-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = false;
+            });
+        }
+        
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const categorySelect = document.getElementById('categoryId');
+            
+            if (!categorySelect.value || categorySelect.value === '') {
+                // New product: no category selected
+                document.getElementById('noStylesMessage').style.display = 'block';
+            } else {
+                // Edit mode: category pre-selected, show styles but DON'T uncheck
+                filterStylesByCategory(false); // false = don't uncheck pre-selected values
+            }
+            
+            // After initial load, mark as no longer initial
+            isInitialLoad = false;
+            
+            // Add event listener for category change (will uncheck when user changes)
+            categorySelect.addEventListener('change', function() {
+                filterStylesByCategory(true); // true = uncheck when user changes category
+            });
+        });
+    </script>
 </body>
 </html>

@@ -1,9 +1,7 @@
 package vn.iotstar.controller;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -30,8 +28,12 @@ import vn.iotstar.dto.vendor.VendorProductDTO;
 import vn.iotstar.dto.vendor.VendorStoreDTO;
 import vn.iotstar.entity.Category;
 import vn.iotstar.entity.Order;
+import vn.iotstar.entity.Style;
+import vn.iotstar.entity.StyleValue;
 import vn.iotstar.entity.User;
 import vn.iotstar.repository.CategoryRepository;
+import vn.iotstar.repository.StyleRepository;
+import vn.iotstar.repository.StyleValueRepository;
 import vn.iotstar.service.UserService;
 import vn.iotstar.service.vendor.VendorAnalyticsService;
 import vn.iotstar.service.vendor.VendorOrderService;
@@ -69,6 +71,12 @@ public class VendorController {
     
     @Autowired
     private CategoryRepository categoryRepository;
+    
+    @Autowired
+    private StyleRepository styleRepository;
+    
+    @Autowired
+    private StyleValueRepository styleValueRepository;
     
     // ========================================
     // DASHBOARD
@@ -158,8 +166,11 @@ public class VendorController {
     @GetMapping("/products")
     public String productList(@RequestParam(defaultValue = "0") int page,
                              @RequestParam(defaultValue = "20") int size,
+                             @RequestParam(required = false) String search,
                              @RequestParam(required = false) String keyword,
                              @RequestParam(required = false) Boolean isSelling,
+                             @RequestParam(required = false) Boolean isActive,
+                             @RequestParam(required = false) String categoryId,
                              Model model,
                              Authentication auth) {
         User user = userService.findByEmail(auth.getName())
@@ -167,25 +178,64 @@ public class VendorController {
         String storeId = securityService.getCurrentVendorStoreId(user.getId());
         
         Pageable pageable = PageRequest.of(page, size);
-        Page<VendorProductDTO> products;
         
-        if (keyword != null && !keyword.isEmpty()) {
-            products = productService.searchMyProducts(storeId, keyword, pageable);
-            model.addAttribute("keyword", keyword);
-        } else if (isSelling != null) {
-            List<VendorProductDTO> filtered = productService.getMyProductsByStatus(storeId, isSelling, null);
-            products = new org.springframework.data.domain.PageImpl<>(
-                filtered.subList(0, Math.min(size, filtered.size())),
-                pageable,
-                filtered.size()
-            );
-        } else {
-            products = productService.getMyProducts(storeId, pageable);
-        }
+        // Support both 'search' and 'keyword' parameters
+        String searchTerm = (search != null && !search.isEmpty()) ? search : keyword;
         
+        // Get all products from store first
+        List<VendorProductDTO> allProducts = productService.getMyProducts(storeId);
+        
+        // Apply filters
+        List<VendorProductDTO> filtered = allProducts.stream()
+            .filter(p -> {
+                // Filter 1: Search by name (contains, case-insensitive)
+                if (searchTerm != null && !searchTerm.trim().isEmpty()) {
+                    if (!p.getName().toLowerCase().contains(searchTerm.toLowerCase().trim())) {
+                        return false;
+                    }
+                }
+                
+                // Filter 2: isSelling status
+                if (isSelling != null && !p.getIsSelling().equals(isSelling)) {
+                    return false;
+                }
+                
+                // Filter 3: isActive status (approved by admin)
+                if (isActive != null && !p.getIsActive().equals(isActive)) {
+                    return false;
+                }
+                
+                // Filter 4: Category
+                if (categoryId != null && !categoryId.isEmpty() && 
+                    !categoryId.equals(p.getCategoryId())) {
+                    return false;
+                }
+                
+                return true;
+            })
+            .toList();
+        
+        // Pagination
+        int start = Math.min(page * size, filtered.size());
+        int end = Math.min(start + size, filtered.size());
+        Page<VendorProductDTO> products = new org.springframework.data.domain.PageImpl<>(
+            filtered.subList(start, end),
+            pageable,
+            filtered.size()
+        );
+        
+        // Add to model
         model.addAttribute("products", products);
         model.addAttribute("currentPage", page);
         model.addAttribute("totalPages", products.getTotalPages());
+        model.addAttribute("search", searchTerm);
+        model.addAttribute("isSelling", isSelling);
+        model.addAttribute("isActive", isActive);
+        model.addAttribute("categoryId", categoryId);
+        
+        // Load categories for filter dropdown
+        List<Category> categories = categoryRepository.findByIsActiveTrueOrderByNameAsc();
+        model.addAttribute("categories", categories);
         
         return "vendor/products/list";
     }
@@ -197,6 +247,13 @@ public class VendorController {
         
         List<Category> categories = categoryRepository.findByIsActiveTrueOrderByNameAsc();
         model.addAttribute("categories", categories);
+        
+        // Load styles và style values
+        List<Style> styles = styleRepository.findByIsDeletedFalse();
+        model.addAttribute("styles", styles);
+        
+        List<StyleValue> styleValues = styleValueRepository.findByIsDeletedFalse();
+        model.addAttribute("styleValues", styleValues);
         
         return "vendor/products/form";
     }
@@ -233,6 +290,38 @@ public class VendorController {
         return "redirect:/vendor/products";
     }
     
+    @GetMapping("/products/{id}")
+    public String viewProductDetail(@PathVariable String id,
+                                   Model model,
+                                   Authentication auth) {
+        User user = userService.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String storeId = securityService.getCurrentVendorStoreId(user.getId());
+        
+        VendorProductDTO product = productService.getMyProduct(id, storeId);
+        
+        // Parse styleValueIds JSON and get names
+        if (product.getStyleValueIds() != null && !product.getStyleValueIds().equals("[]")) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                List<String> styleValueIds = mapper.readValue(product.getStyleValueIds(), 
+                        mapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                
+                if (!styleValueIds.isEmpty()) {
+                    List<String> styleValueNames = styleValueRepository.findAllById(styleValueIds).stream()
+                            .map(sv -> sv.getStyle().getName() + ": " + sv.getName())
+                            .collect(Collectors.toList());
+                    model.addAttribute("styleValueNames", styleValueNames);
+                }
+            } catch (Exception e) {
+                // Ignore JSON parse errors
+            }
+        }
+        
+        model.addAttribute("product", product);
+        return "vendor/products/detail";
+    }
+    
     @GetMapping("/products/{id}/edit")
     public String editProductForm(@PathVariable String id,
                                  Model model,
@@ -260,6 +349,27 @@ public class VendorController {
         
         List<Category> categories = categoryRepository.findByIsActiveTrueOrderByNameAsc();
         model.addAttribute("categories", categories);
+        
+        // Load styles and style values for editing
+        List<Style> styles = styleRepository.findByIsDeletedFalse();
+        model.addAttribute("styles", styles);
+        
+        List<StyleValue> styleValues = styleValueRepository.findByIsDeletedFalse();
+        model.addAttribute("styleValues", styleValues);
+        
+        // Parse selected styleValueIds
+        if (product.getStyleValueIds() != null && !product.getStyleValueIds().equals("[]")) {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                List<String> selectedStyleValueIds = mapper.readValue(product.getStyleValueIds(), 
+                        mapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                model.addAttribute("selectedStyleValueIds", selectedStyleValueIds);
+            } catch (Exception e) {
+                model.addAttribute("selectedStyleValueIds", List.of());
+            }
+        } else {
+            model.addAttribute("selectedStyleValueIds", List.of());
+        }
         
         return "vendor/products/form";
     }
