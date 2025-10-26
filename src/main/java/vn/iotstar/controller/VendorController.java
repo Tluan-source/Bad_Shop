@@ -10,9 +10,22 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
-import vn.iotstar.dto.vendor.*;
+
+import jakarta.validation.Valid;
+import vn.iotstar.dto.vendor.ProductCreateDTO;
+import vn.iotstar.dto.vendor.ProductUpdateDTO;
+import vn.iotstar.dto.vendor.StoreUpdateDTO;
+import vn.iotstar.dto.vendor.VendorDashboardStatsDTO;
+import vn.iotstar.dto.vendor.VendorOrderDTO;
+import vn.iotstar.dto.vendor.VendorProductDTO;
+import vn.iotstar.dto.vendor.VendorStoreDTO;
 import vn.iotstar.entity.Category;
 import vn.iotstar.entity.Order;
 import vn.iotstar.entity.Style;
@@ -22,11 +35,11 @@ import vn.iotstar.repository.CategoryRepository;
 import vn.iotstar.repository.StyleRepository;
 import vn.iotstar.repository.StyleValueRepository;
 import vn.iotstar.service.UserService;
-import vn.iotstar.service.vendor.*;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import vn.iotstar.service.vendor.VendorAnalyticsService;
+import vn.iotstar.service.vendor.VendorOrderService;
+import vn.iotstar.service.vendor.VendorProductService;
+import vn.iotstar.service.vendor.VendorSecurityService;
+import vn.iotstar.service.vendor.VendorStoreService;
 
 /**
  * Main Vendor Controller - handles all vendor operations

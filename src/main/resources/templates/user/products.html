@@ -1,35 +1,560 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head}">
-    <title>Sản phẩm - Badminton Marketplace</title>
-</head>
-<body>
-    <div th:replace="~{fragments/header-user :: header-user}"></div>
+     <head th:replace="~{fragments/head :: head}">
+          <title>Sản phẩm - Badminton Marketplace</title>
+     </head>
+     <body>
+          <div th:replace="~{fragments/header :: header}"></div>
 
-    <section class="py-5">
-        <div class="container">
-            <h2 class="mb-4">Tất cả sản phẩm</h2>
-            <div class="row">
-                <div th:if="${#lists.isEmpty(products)}" class="col-12">
-                    <p>Không có sản phẩm nào.</p>
-                </div>
-                <div th:each="product : ${products}" class="col-md-3 mb-4">
-                    <div class="card h-100">
-                        <img th:src="${product.listImages}" class="card-img-top" alt="Product Image" style="height: 200px; object-fit: cover;"/>
-                        <div class="card-body">
-                            <h5 class="card-title" th:text="${product.name}"></h5>
-                            <p class="card-text">
-                                <span class="text-danger fw-bold" th:text="${#numbers.formatCurrency(product.promotionalPrice ?: product.price)}"></span>
-                                <span th:if="${product.promotionalPrice}" class="text-muted text-decoration-line-through ms-2" th:text="${#numbers.formatCurrency(product.price)}"></span>
-                            </p>
-                            <a th:href="@{/products/{id}(id=${product.id})}" class="btn btn-outline-primary">Xem chi tiết</a>
-                        </div>
+          <!-- Breadcrumb -->
+          <section class="breadcrumb-section py-3 bg-light">
+               <div class="container">
+                    <nav aria-label="breadcrumb">
+                         <ol class="breadcrumb mb-0">
+                              <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+                              <li class="breadcrumb-item active">Sản phẩm</li>
+                         </ol>
+                    </nav>
+               </div>
+          </section>
+
+          <!-- Products Section -->
+          <section class="products-section py-5">
+               <div class="container">
+                    <div class="row">
+                         <!-- Sidebar Filter -->
+                         <div class="col-lg-3 mb-4">
+                              <div class="filter-sidebar">
+                                   <!-- Category Filter -->
+                                   <div class="filter-box mb-4">
+                                        <h5 class="filter-title">
+                                             <i class="fas fa-list me-2"></i>Danh mục
+                                        </h5>
+                                        <div class="filter-content">
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand})}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedCategory == null ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i>Tất
+                                                       cả sản phẩm
+                                                  </a>
+                                             </div>
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(category='C1', minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand})}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedCategory == 'C1' ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i>Vợt
+                                                       cầu lông
+                                                  </a>
+                                             </div>
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(category='C3', minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand})}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedCategory == 'C3' ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i>Giày
+                                                       cầu lông
+                                                  </a>
+                                             </div>
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(category='C2', minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand})}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedCategory == 'C2' ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i>Quả
+                                                       cầu
+                                                  </a>
+                                             </div>
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(category='C4', minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand})}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedCategory == 'C4' ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i>Phụ
+                                                       kiện
+                                                  </a>
+                                             </div>
+                                        </div>
+                                   </div>
+
+                                   <!-- Price Filter -->
+                                   <div class="filter-box mb-4">
+                                        <h5 class="filter-title">
+                                             <i class="fas fa-dollar-sign me-2"></i>Khoảng giá
+                                        </h5>
+                                        <div class="filter-content">
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(category=${selectedCategory}, brand=${selectedBrand})}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedMinPrice == null and selectedMaxPrice == null ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i>Tất
+                                                       cả
+                                                  </a>
+                                             </div>
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(category=${selectedCategory}, brand=${selectedBrand}, maxPrice=500000)}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedMinPrice == null and selectedMaxPrice != null and selectedMaxPrice == 500000.0 ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i>Dưới
+                                                       500.000₫
+                                                  </a>
+                                             </div>
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(category=${selectedCategory}, brand=${selectedBrand}, minPrice=500000, maxPrice=1000000)}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedMinPrice != null and selectedMinPrice == 500000.0 and selectedMaxPrice != null and selectedMaxPrice == 1000000.0 ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i
+                                                       >500.000₫ - 1.000.000₫
+                                                  </a>
+                                             </div>
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(category=${selectedCategory}, brand=${selectedBrand}, minPrice=1000000, maxPrice=2000000)}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedMinPrice != null and selectedMinPrice == 1000000.0 and selectedMaxPrice != null and selectedMaxPrice == 2000000.0 ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i
+                                                       >1.000.000₫ - 2.000.000₫
+                                                  </a>
+                                             </div>
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(category=${selectedCategory}, brand=${selectedBrand}, minPrice=2000000)}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedMinPrice != null and selectedMinPrice == 2000000.0 and selectedMaxPrice == null ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i>Trên
+                                                       2.000.000₫
+                                                  </a>
+                                             </div>
+                                        </div>
+                                   </div>
+
+                                   <!-- Brand Filter -->
+                                   <div class="filter-box mb-4">
+                                        <h5 class="filter-title">
+                                             <i class="fas fa-tag me-2"></i>Thương hiệu
+                                        </h5>
+                                        <div class="filter-content">
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(category=${selectedCategory}, minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice})}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedBrand == null ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i>Tất
+                                                       cả
+                                                  </a>
+                                             </div>
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(category=${selectedCategory}, minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand='yonex')}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedBrand == 'yonex' ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i
+                                                       >Yonex
+                                                  </a>
+                                             </div>
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(category=${selectedCategory}, minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand='victor')}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedBrand == 'victor' ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i
+                                                       >Victor
+                                                  </a>
+                                             </div>
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(category=${selectedCategory}, minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand='li-ning')}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedBrand == 'li-ning' ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i
+                                                       >Li-Ning
+                                                  </a>
+                                             </div>
+                                             <div class="form-check mb-2">
+                                                  <a
+                                                       th:href="@{/products(category=${selectedCategory}, minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand='mizuno')}"
+                                                       class="text-decoration-none"
+                                                       th:classappend="${selectedBrand == 'mizuno' ? 'fw-bold text-primary' : 'text-dark'}"
+                                                  >
+                                                       <i class="fas fa-chevron-right me-2"></i
+                                                       >Mizuno
+                                                  </a>
+                                             </div>
+                                        </div>
+                                   </div>
+
+                                   <!-- Promotion Filter -->
+                                   <div class="filter-box">
+                                        <h5 class="filter-title">
+                                             <i class="fas fa-fire me-2"></i>Khuyến mãi
+                                        </h5>
+                                        <div class="filter-content">
+                                             <div class="form-check mb-2">
+                                                  <input
+                                                       class="form-check-input"
+                                                       type="checkbox"
+                                                       id="promo-sale"
+                                                  />
+                                                  <label
+                                                       class="form-check-label text-danger fw-bold"
+                                                       for="promo-sale"
+                                                  >
+                                                       <i class="fas fa-tags me-1"></i>Đang giảm giá
+                                                  </label>
+                                             </div>
+                                             <div class="form-check mb-2">
+                                                  <input
+                                                       class="form-check-input"
+                                                       type="checkbox"
+                                                       id="promo-new"
+                                                  />
+                                                  <label
+                                                       class="form-check-label text-success fw-bold"
+                                                       for="promo-new"
+                                                  >
+                                                       <i class="fas fa-star me-1"></i>Hàng mới về
+                                                  </label>
+                                             </div>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+
+                         <!-- Products Grid -->
+                         <div class="col-lg-9">
+                              <!-- Toolbar -->
+                              <div class="products-toolbar mb-4">
+                                   <div
+                                        class="d-flex justify-content-between align-items-center flex-wrap"
+                                   >
+                                        <div class="toolbar-left mb-3 mb-md-0">
+                                             <h4 class="mb-0">
+                                                  Tất cả sản phẩm
+                                                  <span
+                                                       class="text-muted fs-6"
+                                                       th:text="'(' + ${#lists.size(products)} + ' sản phẩm)'"
+                                                  ></span>
+                                             </h4>
+                                             <!-- Nút xóa filter -->
+                                             <div
+                                                  th:if="${(selectedCategory != null and !#strings.isEmpty(selectedCategory)) or selectedMinPrice != null or (selectedBrand != null and !#strings.isEmpty(selectedBrand))}"
+                                             >
+                                                  <a
+                                                       th:href="@{/products}"
+                                                       class="btn btn-sm btn-outline-danger mt-2"
+                                                  >
+                                                       <i class="fas fa-times me-1"></i>Xóa tất cả
+                                                       bộ lọc
+                                                  </a>
+                                             </div>
+                                        </div>
+                                        <div class="toolbar-right d-flex gap-2">
+                                             <select
+                                                  class="form-select form-select-sm"
+                                                  style="width: auto"
+                                                  onchange="window.location.href=this.value"
+                                             >
+                                                  <option
+                                                       value=""
+                                                       th:selected="${selectedSort == null}"
+                                                  >
+                                                       Sắp xếp mặc định
+                                                  </option>
+                                                  <option
+                                                       th:value="@{/products(category=${selectedCategory}, minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand}, sort='price-asc')}"
+                                                       th:selected="${selectedSort == 'price-asc'}"
+                                                  >
+                                                       Giá: Thấp đến cao
+                                                  </option>
+                                                  <option
+                                                       th:value="@{/products(category=${selectedCategory}, minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand}, sort='price-desc')}"
+                                                       th:selected="${selectedSort == 'price-desc'}"
+                                                  >
+                                                       Giá: Cao đến thấp
+                                                  </option>
+                                                  <option
+                                                       th:value="@{/products(category=${selectedCategory}, minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand}, sort='name-asc')}"
+                                                       th:selected="${selectedSort == 'name-asc'}"
+                                                  >
+                                                       Tên: A-Z
+                                                  </option>
+                                                  <option
+                                                       th:value="@{/products(category=${selectedCategory}, minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand}, sort='name-desc')}"
+                                                       th:selected="${selectedSort == 'name-desc'}"
+                                                  >
+                                                       Tên: Z-A
+                                                  </option>
+                                             </select>
+                                             <div class="btn-group" role="group">
+                                                  <button
+                                                       type="button"
+                                                       class="btn btn-sm btn-outline-secondary active"
+                                                       id="gridViewBtn"
+                                                       onclick="switchView('grid')"
+                                                  >
+                                                       <i class="fas fa-th"></i>
+                                                  </button>
+                                                  <button
+                                                       type="button"
+                                                       class="btn btn-sm btn-outline-secondary"
+                                                       id="listViewBtn"
+                                                       onclick="switchView('list')"
+                                                  >
+                                                       <i class="fas fa-list"></i>
+                                                  </button>
+                                             </div>
+                                        </div>
+                                   </div>
+                              </div>
+
+                              <!-- Active Filters Display -->
+                              <div
+                                   class="active-filters mb-3"
+                                   th:if="${(selectedCategory != null and !#strings.isEmpty(selectedCategory)) or selectedMinPrice != null or selectedMaxPrice != null or (selectedBrand != null and !#strings.isEmpty(selectedBrand))}"
+                              >
+                                   <strong class="me-2">Đang lọc:</strong>
+
+                                   <!-- Category Badge -->
+                                   <span
+                                        th:if="${selectedCategory != null and !#strings.isEmpty(selectedCategory)}"
+                                        class="badge bg-primary me-2"
+                                   >
+                                        <span th:switch="${selectedCategory}">
+                                             <span th:case="'C1'">Danh mục: Vợt cầu lông</span>
+                                             <span th:case="'C2'">Danh mục: Quả cầu</span>
+                                             <span th:case="'C3'">Danh mục: Giày cầu lông</span>
+                                             <span th:case="'C4'">Danh mục: Phụ kiện</span>
+                                        </span>
+                                        <a
+                                             th:href="@{/products(minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand}, sort=${selectedSort})}"
+                                             class="text-white ms-2 text-decoration-none"
+                                             >×</a
+                                        >
+                                   </span>
+
+                                   <!-- Price Badge -->
+                                   <span
+                                        th:if="${selectedMinPrice != null or selectedMaxPrice != null}"
+                                        class="badge bg-success me-2"
+                                   >
+                                        Giá:
+                                        <span
+                                             th:text="${selectedMinPrice != null ? #numbers.formatDecimal(selectedMinPrice, 0, 0) + '₫' : '0₫'}"
+                                        ></span>
+                                        -
+                                        <span
+                                             th:text="${selectedMaxPrice != null ? #numbers.formatDecimal(selectedMaxPrice, 0, 0) + '₫' : '∞'}"
+                                        ></span>
+                                        <a
+                                             th:href="@{/products(category=${selectedCategory}, brand=${selectedBrand}, sort=${selectedSort})}"
+                                             class="text-white ms-2 text-decoration-none"
+                                             >×</a
+                                        >
+                                   </span>
+
+                                   <!-- Brand Badge -->
+                                   <span
+                                        th:if="${selectedBrand != null and !#strings.isEmpty(selectedBrand)}"
+                                        class="badge bg-warning text-dark me-2"
+                                   >
+                                        Thương hiệu:
+                                        <span
+                                             th:text="${#strings.capitalize(selectedBrand)}"
+                                        ></span>
+                                        <a
+                                             th:href="@{/products(category=${selectedCategory}, minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, sort=${selectedSort})}"
+                                             class="text-dark ms-2 text-decoration-none"
+                                             >×</a
+                                        >
+                                   </span>
+                              </div>
+
+                              <!-- Products Grid/List -->
+                              <div
+                                   class="row g-4"
+                                   id="productsContainer"
+                                   th:if="${!#lists.isEmpty(products)}"
+                              >
+                                   <div
+                                        th:each="product : ${products}"
+                                        class="col-lg-4 col-md-6 product-item"
+                                   >
+                                        <div class="product-card h-100">
+                                             <div class="product-image-wrapper">
+                                                  <img
+                                                       th:src="${product.firstImage}"
+                                                       class="product-image"
+                                                       th:alt="${product.name}"
+                                                  />
+                                                  <div class="product-overlay">
+                                                       <a
+                                                            th:href="@{/products/{id}(id=${product.id})}"
+                                                            class="btn btn-light btn-sm"
+                                                       >
+                                                            <i class="fas fa-eye me-1"></i> Xem chi
+                                                            tiết
+                                                       </a>
+                                                  </div>
+                                                  <div
+                                                       class="product-badge"
+                                                       th:if="${product.promotionalPrice}"
+                                                  >
+                                                       <span class="badge bg-danger">SALE</span>
+                                                  </div>
+                                                  <div class="product-actions">
+                                                       <button
+                                                            class="btn btn-light btn-sm rounded-circle"
+                                                            title="Yêu thích"
+                                                       >
+                                                            <i class="far fa-heart"></i>
+                                                       </button>
+                                                  </div>
+                                             </div>
+                                             <div class="product-info p-3">
+                                                  <h5
+                                                       class="product-title mb-2"
+                                                       th:text="${product.name}"
+                                                  >
+                                                       Product Name
+                                                  </h5>
+                                                  <p
+                                                       class="product-description mb-2 text-muted small"
+                                                       th:text="${product.description}"
+                                                  >
+                                                       Mô tả sản phẩm
+                                                  </p>
+                                                  <div class="product-rating mb-2">
+                                                       <i class="fas fa-star text-warning"></i>
+                                                       <i class="fas fa-star text-warning"></i>
+                                                       <i class="fas fa-star text-warning"></i>
+                                                       <i class="fas fa-star text-warning"></i>
+                                                       <i
+                                                            class="fas fa-star-half-alt text-warning"
+                                                       ></i>
+                                                       <span class="text-muted ms-2">(4.5)</span>
+                                                  </div>
+                                                  <div class="product-price">
+                                                       <span
+                                                            class="price-current fw-bold fs-5 text-danger"
+                                                            th:text="${#numbers.formatCurrency(product.promotionalPrice ?: product.price)}"
+                                                       >
+                                                            500,000₫
+                                                       </span>
+                                                       <span
+                                                            th:if="${product.promotionalPrice}"
+                                                            class="price-original text-muted text-decoration-line-through ms-2"
+                                                            th:text="${#numbers.formatCurrency(product.price)}"
+                                                       >
+                                                            700,000₫
+                                                       </span>
+                                                  </div>
+                                                  <button
+                                                       class="btn btn-primary w-100 mt-3 btn-add-cart"
+                                                  >
+                                                       <i class="fas fa-cart-plus me-2"></i>Thêm vào
+                                                       giỏ
+                                                  </button>
+                                             </div>
+                                        </div>
+                                   </div>
+                              </div>
+
+                              <!-- No Products Message -->
+                              <div th:if="${#lists.isEmpty(products)}" class="text-center py-5">
+                                   <i class="fas fa-inbox fa-5x text-muted mb-3"></i>
+                                   <h4 class="text-muted">Không tìm thấy sản phẩm nào</h4>
+                                   <p class="text-muted">Vui lòng thử lại với bộ lọc khác</p>
+                              </div>
+
+                              <!-- Pagination -->
+                              <nav class="mt-5" th:if="${!#lists.isEmpty(products)}">
+                                   <ul class="pagination justify-content-center">
+                                        <li class="page-item disabled">
+                                             <a class="page-link" href="#" tabindex="-1">
+                                                  <i class="fas fa-chevron-left"></i>
+                                             </a>
+                                        </li>
+                                        <li class="page-item active">
+                                             <a class="page-link" href="#">1</a>
+                                        </li>
+                                        <li class="page-item">
+                                             <a class="page-link" href="#">2</a>
+                                        </li>
+                                        <li class="page-item">
+                                             <a class="page-link" href="#">3</a>
+                                        </li>
+                                        <li class="page-item">
+                                             <a class="page-link" href="#">4</a>
+                                        </li>
+                                        <li class="page-item">
+                                             <a class="page-link" href="#">5</a>
+                                        </li>
+                                        <li class="page-item">
+                                             <a class="page-link" href="#">
+                                                  <i class="fas fa-chevron-right"></i>
+                                             </a>
+                                        </li>
+                                   </ul>
+                              </nav>
+                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <div th:replace="~{fragments/footer-user :: footer-user}"></div>
-</body>
+               </div>
+          </section>
+
+          <div th:replace="~{fragments/footer :: footer}"></div>
+
+          <script>
+               function switchView(view) {
+                    const container = document.getElementById("productsContainer");
+                    const items = document.querySelectorAll(".product-item");
+                    const gridBtn = document.getElementById("gridViewBtn");
+                    const listBtn = document.getElementById("listViewBtn");
+
+                    if (view === "list") {
+                         // Chuyển sang list view
+                         container.classList.remove("row", "g-4");
+                         container.classList.add("list-view");
+                         items.forEach((item) => {
+                              item.classList.remove("col-lg-4", "col-md-6");
+                              item.classList.add("col-12");
+                         });
+
+                         // Toggle active button
+                         gridBtn.classList.remove("active");
+                         listBtn.classList.add("active");
+                    } else {
+                         // Chuyển về grid view
+                         container.classList.remove("list-view");
+                         container.classList.add("row", "g-4");
+                         items.forEach((item) => {
+                              item.classList.remove("col-12");
+                              item.classList.add("col-lg-4", "col-md-6");
+                         });
+
+                         // Toggle active button
+                         listBtn.classList.remove("active");
+                         gridBtn.classList.add("active");
+                    }
+               }
+          </script>
+     </body>
 </html>

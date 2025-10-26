@@ -18,9 +18,10 @@ public class Product {
     @Id
     private String id;
     
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(500)")
     private String name;
     
+    @Column(columnDefinition = "NVARCHAR(500)")
     private String slug;
     
     @Column(columnDefinition = "NVARCHAR(1000)")
@@ -93,4 +94,26 @@ public class Product {
     @ManyToMany(mappedBy = "products")
     @JsonIgnore
     private List<Promotion> promotions;
+
+    
+    // Helper method to get first image from JSON array
+    public String getFirstImage() {
+        if (listImages == null || listImages.isEmpty() || listImages.equals("[]")) {
+            return "https://via.placeholder.com/500x500/CCCCCC/666666?text=No+Image";
+        }
+        try {
+            // Parse JSON array and get first element
+            String trimmed = listImages.trim();
+            if (trimmed.startsWith("[") && trimmed.contains("\"")) {
+                int start = trimmed.indexOf("\"") + 1;
+                int end = trimmed.indexOf("\"", start);
+                if (end > start) {
+                    return trimmed.substring(start, end);
+                }
+            }
+        } catch (Exception e) {
+            // Return default image if parsing fails
+        }
+        return "https://via.placeholder.com/500x500/CCCCCC/666666?text=No+Image";
+    }
 }

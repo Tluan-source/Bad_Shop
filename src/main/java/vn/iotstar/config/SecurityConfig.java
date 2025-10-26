@@ -28,11 +28,23 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/css/**", "/js/**", "/images/**", "/register", "/login", "/products", "/verify-otp", "/forgot", "/reset").permitAll()
+                // ============================================================
+                // PRODUCTION MODE - UNCOMMENT ĐỂ BẬT AUTHENTICATION
+                // ============================================================
+                .requestMatchers("/", "/css/**", "/js/**", "/images/**", 
+                                 "/register", "/login", "/products", 
+                                 "/verify-otp", "/forgot", "/reset").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/vendor/**").hasAnyRole("VENDOR", "ADMIN")
                 .requestMatchers("/shipper/**").hasRole("SHIPPER")
+                .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN", "VENDOR", "SHIPPER")
                 .anyRequest().authenticated()
+                
+                // ============================================================
+                // DEVELOPMENT MODE - CHO PHÉP TẤT CẢ ĐỂ TEST
+                // COMMENT DÒNG NÀY KHI DEPLOY/DEMO
+                // ============================================================
+                // .anyRequest().permitAll()
             )
             .formLogin(form -> form
                 .loginPage("/login")

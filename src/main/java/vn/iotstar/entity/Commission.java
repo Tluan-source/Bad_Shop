@@ -17,7 +17,7 @@ public class Commission {
     @Id
     private String id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(255)")
     private String name;
 
     @Column(name = "fee_percent", precision = 5, scale = 2)
