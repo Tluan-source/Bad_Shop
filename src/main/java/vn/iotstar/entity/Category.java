@@ -16,9 +16,10 @@ public class Category {
     @Id
     private String id;
 
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(255)")
     private String name;
 
+    @Column(columnDefinition = "NVARCHAR(255)")
     private String slug;
 
     @Column(columnDefinition = "NVARCHAR(1000)")

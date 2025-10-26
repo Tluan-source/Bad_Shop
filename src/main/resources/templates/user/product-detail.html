@@ -1,0 +1,280 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+     <head th:replace="~{fragments/head :: head}">
+          <title>Chi tiết sản phẩm - Badminton Marketplace</title>
+     </head>
+     <body>
+          <div th:replace="~{fragments/header :: header}"></div>
+
+          <!-- Breadcrumb -->
+          <section class="breadcrumb-section py-3 bg-light">
+               <div class="container">
+                    <nav aria-label="breadcrumb">
+                         <ol class="breadcrumb mb-0">
+                              <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+                              <li class="breadcrumb-item">
+                                   <a th:href="@{/products}">Sản phẩm</a>
+                              </li>
+                              <li class="breadcrumb-item active" th:text="${product.name}">
+                                   Tên sản phẩm
+                              </li>
+                         </ol>
+                    </nav>
+               </div>
+          </section>
+
+          <!-- Product Detail Section -->
+          <section class="product-detail-section py-5">
+               <div class="container">
+                    <div class="row">
+                         <!-- Product Images -->
+                         <div class="col-lg-5 mb-4">
+                              <div class="product-detail-image">
+                                   <img
+                                        th:src="${product.firstImage}"
+                                        class="img-fluid rounded shadow"
+                                        th:alt="${product.name}"
+                                   />
+                              </div>
+                         </div>
+
+                         <!-- Product Info -->
+                         <div class="col-lg-7">
+                              <div class="product-detail-info">
+                                   <h1 class="product-title mb-3" th:text="${product.name}">
+                                        Tên sản phẩm
+                                   </h1>
+
+                                   <!-- Rating -->
+                                   <div class="product-rating mb-3">
+                                        <div class="d-flex align-items-center">
+                                             <div class="stars me-2">
+                                                  <i class="fas fa-star text-warning"></i>
+                                                  <i class="fas fa-star text-warning"></i>
+                                                  <i class="fas fa-star text-warning"></i>
+                                                  <i class="fas fa-star text-warning"></i>
+                                                  <i class="fas fa-star-half-alt text-warning"></i>
+                                             </div>
+                                             <span class="text-muted">(4.5/5 - 120 đánh giá)</span>
+                                        </div>
+                                   </div>
+
+                                   <!-- Price -->
+                                   <div class="product-price mb-4">
+                                        <h2 class="text-danger mb-0">
+                                             <span
+                                                  th:text="${#numbers.formatCurrency(product.promotionalPrice ?: product.price)}"
+                                                  >500,000₫</span
+                                             >
+                                        </h2>
+                                        <span
+                                             th:if="${product.promotionalPrice}"
+                                             class="text-muted text-decoration-line-through fs-5"
+                                             th:text="${#numbers.formatCurrency(product.price)}"
+                                        >
+                                             700,000₫
+                                        </span>
+                                        <span
+                                             th:if="${product.promotionalPrice}"
+                                             class="badge bg-danger ms-2"
+                                        >
+                                             -<span
+                                                  th:text="${(1 - product.promotionalPrice.doubleValue() / product.price.doubleValue()) * 100}"
+                                                  >30</span
+                                             >%
+                                        </span>
+                                   </div>
+
+                                   <!-- Description -->
+                                   <div class="product-description mb-4">
+                                        <h5 class="mb-3">
+                                             <i class="fas fa-info-circle me-2"></i>Mô tả sản phẩm
+                                        </h5>
+                                        <p class="text-muted" th:text="${product.description}">
+                                             Mô tả chi tiết về sản phẩm
+                                        </p>
+                                   </div>
+
+                                   <!-- Store Info -->
+                                   <div class="store-info mb-4 p-3 bg-light rounded">
+                                        <h6 class="mb-2">
+                                             <i class="fas fa-store me-2"></i>Cửa hàng
+                                        </h6>
+                                        <p class="mb-0 fw-bold" th:text="${product.store.name}">
+                                             Tên cửa hàng
+                                        </p>
+                                   </div>
+
+                                   <!-- Quantity Selector -->
+                                   <div class="quantity-selector mb-4">
+                                        <label class="form-label fw-bold">Số lượng:</label>
+                                        <div class="input-group" style="max-width: 200px">
+                                             <button
+                                                  class="btn btn-outline-secondary"
+                                                  type="button"
+                                                  onclick="decreaseQuantity()"
+                                             >
+                                                  <i class="fas fa-minus"></i>
+                                             </button>
+                                             <input
+                                                  type="number"
+                                                  class="form-control text-center"
+                                                  id="quantity"
+                                                  value="1"
+                                                  min="1"
+                                                  max="99"
+                                             />
+                                             <button
+                                                  class="btn btn-outline-secondary"
+                                                  type="button"
+                                                  onclick="increaseQuantity()"
+                                             >
+                                                  <i class="fas fa-plus"></i>
+                                             </button>
+                                        </div>
+                                   </div>
+
+                                   <!-- Action Buttons -->
+                                   <div class="product-actions d-flex gap-3 mb-4">
+                                        <button class="btn btn-primary btn-lg flex-grow-1">
+                                             <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ hàng
+                                        </button>
+                                        <button class="btn btn-outline-danger btn-lg">
+                                             <i class="far fa-heart"></i>
+                                        </button>
+                                   </div>
+
+                                   <!-- Product Meta -->
+                                   <div class="product-meta">
+                                        <div class="row g-3">
+                                             <div class="col-md-6">
+                                                  <p class="mb-1">
+                                                       <i class="fas fa-tag me-2 text-muted"></i>
+                                                       <strong>Danh mục:</strong>
+                                                       <span th:text="${product.category.name}"
+                                                            >Vợt cầu lông</span
+                                                       >
+                                                  </p>
+                                             </div>
+                                             <div class="col-md-6">
+                                                  <p class="mb-1">
+                                                       <i class="fas fa-box me-2 text-muted"></i>
+                                                       <strong>Tình trạng:</strong>
+                                                       <span
+                                                            class="text-success"
+                                                            th:text="${product.isSelling ? 'Còn hàng' : 'Hết hàng'}"
+                                                            >Còn hàng</span
+                                                       >
+                                                  </p>
+                                             </div>
+                                             <div class="col-md-6">
+                                                  <p class="mb-1">
+                                                       <i class="fas fa-fire me-2 text-muted"></i>
+                                                       <strong>Đã bán:</strong>
+                                                       <span th:text="${product.sold}">0</span> sản
+                                                       phẩm
+                                                  </p>
+                                             </div>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </section>
+
+          <!-- Related Products Section -->
+          <section
+               class="related-products-section py-5 bg-light"
+               th:if="${!#lists.isEmpty(relatedProducts)}"
+          >
+               <div class="container">
+                    <h3 class="mb-4"><i class="fas fa-box-open me-2"></i>Sản phẩm liên quan</h3>
+                    <div class="row g-4">
+                         <div
+                              th:each="relatedProduct : ${relatedProducts}"
+                              class="col-lg-3 col-md-6"
+                         >
+                              <div class="product-card h-100">
+                                   <div class="product-image-wrapper">
+                                        <img
+                                             th:src="${relatedProduct.firstImage}"
+                                             class="product-image"
+                                             th:alt="${relatedProduct.name}"
+                                        />
+                                        <div class="product-overlay">
+                                             <a
+                                                  th:href="@{/products/{id}(id=${relatedProduct.id})}"
+                                                  class="btn btn-light btn-sm"
+                                             >
+                                                  <i class="fas fa-eye me-1"></i> Xem chi tiết
+                                             </a>
+                                        </div>
+                                        <div
+                                             class="product-badge"
+                                             th:if="${relatedProduct.promotionalPrice}"
+                                        >
+                                             <span class="badge bg-danger">SALE</span>
+                                        </div>
+                                   </div>
+                                   <div class="product-info p-3">
+                                        <h5
+                                             class="product-title mb-2"
+                                             th:text="${relatedProduct.name}"
+                                        >
+                                             Product Name
+                                        </h5>
+                                        <div class="product-rating mb-2">
+                                             <i class="fas fa-star text-warning"></i>
+                                             <i class="fas fa-star text-warning"></i>
+                                             <i class="fas fa-star text-warning"></i>
+                                             <i class="fas fa-star text-warning"></i>
+                                             <i class="fas fa-star-half-alt text-warning"></i>
+                                             <span class="text-muted ms-2">(4.5)</span>
+                                        </div>
+                                        <div class="product-price">
+                                             <span
+                                                  class="price-current fw-bold fs-5 text-danger"
+                                                  th:text="${#numbers.formatCurrency(relatedProduct.promotionalPrice ?: relatedProduct.price)}"
+                                             >
+                                                  500,000₫
+                                             </span>
+                                             <span
+                                                  th:if="${relatedProduct.promotionalPrice}"
+                                                  class="price-original text-muted text-decoration-line-through ms-2"
+                                                  th:text="${#numbers.formatCurrency(relatedProduct.price)}"
+                                             >
+                                                  700,000₫
+                                             </span>
+                                        </div>
+                                        <button class="btn btn-primary w-100 mt-3 btn-add-cart">
+                                             <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ
+                                        </button>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </section>
+
+          <div th:replace="~{fragments/footer :: footer}"></div>
+
+          <script>
+               function increaseQuantity() {
+                    const input = document.getElementById("quantity");
+                    const currentValue = parseInt(input.value) || 1;
+                    if (currentValue < 99) {
+                         input.value = currentValue + 1;
+                    }
+               }
+
+               function decreaseQuantity() {
+                    const input = document.getElementById("quantity");
+                    const currentValue = parseInt(input.value) || 1;
+                    if (currentValue > 1) {
+                         input.value = currentValue - 1;
+                    }
+               }
+          </script>
+     </body>
+</html>

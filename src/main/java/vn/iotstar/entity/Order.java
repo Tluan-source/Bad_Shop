@@ -35,6 +35,7 @@ public class Order {
     @Column(columnDefinition = "NVARCHAR(500)")
     private String address;
     
+    @Column(columnDefinition = "NVARCHAR(20)")
     private String phone;
     
     @Column(name = "shipping_fee", precision = 15, scale = 2)

@@ -1,36 +1,133 @@
-</main>
-    
-    <footer th:fragment="footer" class="bg-dark text-light mt-5 py-4">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-4">
-                    <h5>Badminton Marketplace</h5>
-                    <p>Hệ thống mua bán dụng cụ cầu lông uy tín hàng đầu Việt Nam</p>
-                </div>
-                <div class="col-md-4">
-                    <h5>Liên kết</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="#" class="text-light">Về chúng tôi</a></li>
-                        <li><a href="#" class="text-light">Chính sách bảo mật</a></li>
-                        <li><a href="#" class="text-light">Điều khoản sử dụng</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-4">
-                    <h5>Liên hệ</h5>
-                    <p><i class="fas fa-envelope"></i> support@badmintonmarket.com</p>
-                    <p><i class="fas fa-phone"></i> 1900 1234</p>
-                </div>
-            </div>
-            <hr>
-            <div class="text-center">
-                <p>&copy; 2024 Badminton Marketplace. All rights reserved.</p>
-            </div>
-        </div>
-    </footer>
-    
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JS -->
-    <script th:src="@{/js/main.js}"></script>
-</body>
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+     <head>
+          <title>Footer Fragment</title>
+     </head>
+     <body>
+          <footer th:fragment="footer" class="footer bg-dark text-light pt-5 pb-3">
+               <div class="container">
+                    <div class="row g-4">
+                         <!-- Company Info -->
+                         <div class="col-lg-4 col-md-6">
+                              <h5 class="text-white fw-bold mb-3">
+                                   <i class="fas fa-badminton me-2"></i>Badminton Store
+                              </h5>
+                              <p class="text-muted">
+                                   Hệ thống mua bán dụng cụ cầu lông uy tín hàng đầu Việt Nam.
+                                   Chuyên cung cấp các sản phẩm chính hãng từ các thương hiệu nổi
+                                   tiếng.
+                              </p>
+                              <div class="social-links mt-3">
+                                   <a
+                                        href="#"
+                                        class="btn btn-outline-light btn-sm rounded-circle me-2"
+                                   >
+                                        <i class="fab fa-facebook-f"></i>
+                                   </a>
+                                   <a
+                                        href="#"
+                                        class="btn btn-outline-light btn-sm rounded-circle me-2"
+                                   >
+                                        <i class="fab fa-instagram"></i>
+                                   </a>
+                                   <a
+                                        href="#"
+                                        class="btn btn-outline-light btn-sm rounded-circle me-2"
+                                   >
+                                        <i class="fab fa-youtube"></i>
+                                   </a>
+                                   <a href="#" class="btn btn-outline-light btn-sm rounded-circle">
+                                        <i class="fab fa-tiktok"></i>
+                                   </a>
+                              </div>
+                         </div>
+
+                         <!-- Quick Links -->
+                         <div class="col-lg-2 col-md-6">
+                              <h5 class="text-white fw-bold mb-3">Về chúng tôi</h5>
+                              <ul class="list-unstyled footer-links">
+                                   <li><a href="#" class="text-muted">Giới thiệu</a></li>
+                                   <li><a href="#" class="text-muted">Liên hệ</a></li>
+                                   <li><a href="#" class="text-muted">Tuyển dụng</a></li>
+                                   <li><a href="#" class="text-muted">Tin tức</a></li>
+                              </ul>
+                         </div>
+
+                         <!-- Customer Service -->
+                         <div class="col-lg-3 col-md-6">
+                              <h5 class="text-white fw-bold mb-3">Hỗ trợ khách hàng</h5>
+                              <ul class="list-unstyled footer-links">
+                                   <li><a href="#" class="text-muted">Chính sách bảo hành</a></li>
+                                   <li><a href="#" class="text-muted">Chính sách đổi trả</a></li>
+                                   <li><a href="#" class="text-muted">Hướng dẫn mua hàng</a></li>
+                                   <li><a href="#" class="text-muted">Câu hỏi thường gặp</a></li>
+                              </ul>
+                         </div>
+
+                         <!-- Contact Info -->
+                         <div class="col-lg-3 col-md-6">
+                              <h5 class="text-white fw-bold mb-3">Liên hệ</h5>
+                              <ul class="list-unstyled text-muted">
+                                   <li class="mb-2">
+                                        <i class="fas fa-map-marker-alt me-2"></i>
+                                        123 Đường ABC, Quận 1, TP.HCM
+                                   </li>
+                                   <li class="mb-2">
+                                        <i class="fas fa-phone me-2"></i>
+                                        <a href="tel:1900123456" class="text-muted">1900 123 456</a>
+                                   </li>
+                                   <li class="mb-2">
+                                        <i class="fas fa-envelope me-2"></i>
+                                        <a
+                                             href="mailto:support@badmintonstore.vn"
+                                             class="text-muted"
+                                        >
+                                             support@badmintonstore.vn
+                                        </a>
+                                   </li>
+                                   <li class="mb-2">
+                                        <i class="fas fa-clock me-2"></i>
+                                        8:00 - 22:00 (Hàng ngày)
+                                   </li>
+                              </ul>
+                         </div>
+                    </div>
+
+                    <hr class="border-secondary my-4" />
+
+                    <!-- Payment Methods -->
+                    <div class="row mb-3">
+                         <div class="col-md-6 mb-3 mb-md-0">
+                              <h6 class="text-white-50 mb-2">Phương thức thanh toán</h6>
+                              <div class="payment-methods">
+                                   <i class="fab fa-cc-visa fa-2x text-muted me-2"></i>
+                                   <i class="fab fa-cc-mastercard fa-2x text-muted me-2"></i>
+                                   <i class="fas fa-credit-card fa-2x text-muted me-2"></i>
+                                   <i class="fas fa-money-bill-wave fa-2x text-muted"></i>
+                              </div>
+                         </div>
+                         <div class="col-md-6">
+                              <h6 class="text-white-50 mb-2">Đối tác vận chuyển</h6>
+                              <div class="shipping-partners text-muted">
+                                   <span class="me-3">Giao Hàng Nhanh</span>
+                                   <span class="me-3">Giao Hàng Tiết Kiệm</span>
+                                   <span>Viettel Post</span>
+                              </div>
+                         </div>
+                    </div>
+
+                    <!-- Copyright -->
+                    <div class="text-center pt-3 border-top border-secondary">
+                         <p class="text-muted mb-0">
+                              &copy; 2025 Badminton Store. All rights reserved. |
+                              <a href="#" class="text-muted">Chính sách bảo mật</a> |
+                              <a href="#" class="text-muted">Điều khoản sử dụng</a>
+                         </p>
+                    </div>
+               </div>
+          </footer>
+
+          <!-- Bootstrap JS -->
+          <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+     </body>
 </html>
