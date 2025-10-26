@@ -1,0 +1,242 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+     <head>
+          <div th:replace="~{fragments/head :: head}"></div>
+          <title>Thông tin tài khoản</title>
+     </head>
+     <body>
+          <div th:replace="~{fragments/header :: header}"></div>
+
+          <!-- Profile Section -->
+          <section class="profile-section py-5">
+               <div class="container">
+                    <div class="row">
+                         <!-- Sidebar -->
+                         <div class="col-lg-3 col-md-4 mb-4">
+                              <div class="profile-sidebar card shadow-sm">
+                                   <div class="card-body text-center">
+                                        <div class="profile-avatar mb-3">
+                                             <i class="fas fa-user-circle fa-5x text-primary"></i>
+                                        </div>
+                                        <h5 class="mb-1" th:text="${user.fullName}">
+                                             Tên người dùng
+                                        </h5>
+                                        <p class="text-muted small mb-3" th:text="${user.email}">
+                                             email@example.com
+                                        </p>
+                                        <div class="user-stats">
+                                             <div class="stat-item mb-2">
+                                                  <i class="fas fa-coins text-warning me-2"></i>
+                                                  <span>Điểm: </span>
+                                                  <strong th:text="${user.point}">0</strong>
+                                             </div>
+                                             <div class="stat-item">
+                                                  <i class="fas fa-wallet text-success me-2"></i>
+                                                  <span>Ví: </span>
+                                                  <strong
+                                                       th:text="${#numbers.formatCurrency(user.eWallet)}"
+                                                       >0₫</strong
+                                                  >
+                                             </div>
+                                        </div>
+                                   </div>
+                                   <div class="list-group list-group-flush">
+                                        <a
+                                             href="#"
+                                             class="list-group-item list-group-item-action active"
+                                        >
+                                             <i class="fas fa-user me-2"></i>Thông tin cá nhân
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action">
+                                             <i class="fas fa-shopping-bag me-2"></i>Đơn hàng của
+                                             tôi
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action">
+                                             <i class="fas fa-heart me-2"></i>Sản phẩm yêu thích
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action">
+                                             <i class="fas fa-map-marker-alt me-2"></i>Địa chỉ
+                                        </a>
+                                        <a href="#" class="list-group-item list-group-item-action">
+                                             <i class="fas fa-bell me-2"></i>Thông báo
+                                        </a>
+                                        <form
+                                             th:action="@{/logout}"
+                                             method="post"
+                                             class="d-inline w-100"
+                                        >
+                                             <button
+                                                  type="submit"
+                                                  class="dropdown-item text-danger"
+                                             >
+                                                  <i class="fas fa-sign-out-alt me-2"></i>Đăng xuất
+                                             </button>
+                                        </form>
+                                   </div>
+                              </div>
+                         </div>
+
+                         <!-- Main Content -->
+                         <div class="col-lg-9 col-md-8">
+                              <!-- Alert Messages -->
+                              <div
+                                   th:if="${message}"
+                                   class="alert alert-dismissible fade show"
+                                   th:classappend="${messageType == 'success' ? 'alert-success' : 'alert-danger'}"
+                                   role="alert"
+                              >
+                                   <i
+                                        class="fas"
+                                        th:classappend="${messageType == 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"
+                                   ></i>
+                                   <span th:text="${message}"></span>
+                                   <button
+                                        type="button"
+                                        class="btn-close"
+                                        data-bs-dismiss="alert"
+                                   ></button>
+                              </div>
+
+                              <!-- Profile Info Card -->
+                              <div class="card shadow-sm mb-4">
+                                   <div class="card-header bg-primary text-white">
+                                        <h5 class="mb-0">
+                                             <i class="fas fa-user-edit me-2"></i>Thông tin cá nhân
+                                        </h5>
+                                   </div>
+                                   <div class="card-body">
+                                        <form th:action="@{/user/profile/update}" method="post">
+                                             <div class="row">
+                                                  <div class="col-md-6 mb-3">
+                                                       <label class="form-label fw-bold"
+                                                            >Họ và tên</label
+                                                       >
+                                                       <input
+                                                            type="text"
+                                                            class="form-control"
+                                                            name="fullName"
+                                                            th:value="${user.fullName}"
+                                                            required
+                                                       />
+                                                  </div>
+                                                  <div class="col-md-6 mb-3">
+                                                       <label class="form-label fw-bold"
+                                                            >Số điện thoại</label
+                                                       >
+                                                       <input
+                                                            type="tel"
+                                                            class="form-control"
+                                                            name="phone"
+                                                            th:value="${user.phone}"
+                                                            required
+                                                       />
+                                                  </div>
+                                                  <div class="col-md-6 mb-3">
+                                                       <label class="form-label fw-bold"
+                                                            >Email</label
+                                                       >
+                                                       <input
+                                                            type="email"
+                                                            class="form-control"
+                                                            th:value="${user.email}"
+                                                            disabled
+                                                       />
+                                                       <small class="text-muted"
+                                                            >Email không thể thay đổi</small
+                                                       >
+                                                  </div>
+                                                  <div class="col-md-6 mb-3">
+                                                       <label class="form-label fw-bold"
+                                                            >Vai trò</label
+                                                       >
+                                                       <input
+                                                            type="text"
+                                                            class="form-control"
+                                                            th:value="${user.role}"
+                                                            disabled
+                                                       />
+                                                  </div>
+                                                  <div class="col-12">
+                                                       <button
+                                                            type="submit"
+                                                            class="btn btn-primary"
+                                                       >
+                                                            <i class="fas fa-save me-2"></i>Cập nhật
+                                                            thông tin
+                                                       </button>
+                                                  </div>
+                                             </div>
+                                        </form>
+                                   </div>
+                              </div>
+
+                              <!-- Change Password Card -->
+                              <div class="card shadow-sm">
+                                   <div class="card-header bg-warning text-dark">
+                                        <h5 class="mb-0">
+                                             <i class="fas fa-key me-2"></i>Đổi mật khẩu
+                                        </h5>
+                                   </div>
+                                   <div class="card-body">
+                                        <form
+                                             th:action="@{/user/profile/change-password}"
+                                             method="post"
+                                        >
+                                             <div class="row">
+                                                  <div class="col-md-12 mb-3">
+                                                       <label class="form-label fw-bold"
+                                                            >Mật khẩu hiện tại</label
+                                                       >
+                                                       <input
+                                                            type="password"
+                                                            class="form-control"
+                                                            name="oldPassword"
+                                                            placeholder="Nhập mật khẩu hiện tại"
+                                                            required
+                                                       />
+                                                  </div>
+                                                  <div class="col-md-6 mb-3">
+                                                       <label class="form-label fw-bold"
+                                                            >Mật khẩu mới</label
+                                                       >
+                                                       <input
+                                                            type="password"
+                                                            class="form-control"
+                                                            name="newPassword"
+                                                            placeholder="Nhập mật khẩu mới"
+                                                            required
+                                                       />
+                                                  </div>
+                                                  <div class="col-md-6 mb-3">
+                                                       <label class="form-label fw-bold"
+                                                            >Xác nhận mật khẩu mới</label
+                                                       >
+                                                       <input
+                                                            type="password"
+                                                            class="form-control"
+                                                            name="confirmPassword"
+                                                            placeholder="Nhập lại mật khẩu mới"
+                                                            required
+                                                       />
+                                                  </div>
+                                                  <div class="col-12">
+                                                       <button
+                                                            type="submit"
+                                                            class="btn btn-warning"
+                                                       >
+                                                            <i class="fas fa-lock me-2"></i>Đổi mật
+                                                            khẩu
+                                                       </button>
+                                                  </div>
+                                             </div>
+                                        </form>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </section>
+
+          <div th:replace="~{fragments/footer :: footer}"></div>
+     </body>
+</html>

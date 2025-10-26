@@ -22,7 +22,7 @@ public class Voucher {
     @Id
     private String id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, unique = true, columnDefinition = "NVARCHAR(50)")
     private String code;
     
     @Column(length = 500)

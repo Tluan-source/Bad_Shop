@@ -34,7 +34,14 @@ public class SecurityConfig {
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/vendor/**").hasAnyRole("VENDOR", "ADMIN")
                 .requestMatchers("/shipper/**").hasRole("SHIPPER")
+                .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN", "VENDOR", "SHIPPER")
                 .anyRequest().authenticated()
+                
+                // ============================================================
+                // DEVELOPMENT MODE - CHO PHÉP TẤT CẢ ĐỂ TEST
+                // COMMENT DÒNG NÀY KHI DEPLOY/DEMO
+                // ============================================================
+                // .anyRequest().permitAll()
             )
             .formLogin(form -> form
                 .loginPage("/login")

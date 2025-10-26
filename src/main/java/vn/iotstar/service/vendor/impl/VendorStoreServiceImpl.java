@@ -115,6 +115,7 @@ public class VendorStoreServiceImpl implements VendorStoreService {
         dto.setOwnerId(store.getOwner().getId());
         dto.setOwnerName(store.getOwner().getFullName());
         dto.setOwnerEmail(store.getOwner().getEmail());
+        dto.setOwnerPhone(store.getOwner().getPhone());
         
         // Commission info
         if (store.getCommission() != null) {

@@ -132,6 +132,17 @@ public class VendorProductServiceImpl implements VendorProductService {
             product.setListImages("[]");
         }
         
+        // Handle style values (màu sắc, kích thước...)
+        if (createDTO.getStyleValueIds() != null && !createDTO.getStyleValueIds().isEmpty()) {
+            try {
+                product.setStyleValueIds(objectMapper.writeValueAsString(createDTO.getStyleValueIds()));
+            } catch (Exception e) {
+                product.setStyleValueIds("[]");
+            }
+        } else {
+            product.setStyleValueIds("[]");
+        }
+        
         Product savedProduct = productRepository.save(product);
         return convertToDTO(savedProduct);
     }
@@ -176,6 +187,17 @@ public class VendorProductServiceImpl implements VendorProductService {
             } catch (Exception e) {
                 // Keep existing images
             }
+        }
+        
+        // Update style values
+        if (updateDTO.getStyleValueIds() != null && !updateDTO.getStyleValueIds().isEmpty()) {
+            try {
+                product.setStyleValueIds(objectMapper.writeValueAsString(updateDTO.getStyleValueIds()));
+            } catch (Exception e) {
+                product.setStyleValueIds("[]");
+            }
+        } else {
+            product.setStyleValueIds("[]");
         }
         
         Product savedProduct = productRepository.save(product);
@@ -290,6 +312,7 @@ public class VendorProductServiceImpl implements VendorProductService {
         dto.setIsActive(product.getIsActive());
         dto.setIsSelling(product.getIsSelling());
         dto.setListImages(product.getListImages());
+        dto.setStyleValueIds(product.getStyleValueIds());
         dto.setRating(product.getRating());
         dto.setViewCount(product.getViewCount());
         dto.setCreatedAt(product.getCreatedAt());

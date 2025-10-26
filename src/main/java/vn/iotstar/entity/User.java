@@ -18,13 +18,13 @@ public class User {
     @Id
     private String id;
     
-    @Column(name = "full_name", nullable = false)
+    @Column(name = "full_name", nullable = false, columnDefinition = "NVARCHAR(255)")
     private String fullName;
     
-    @Column(unique = true, nullable = false)
+    @Column(unique = true, nullable = false, columnDefinition = "NVARCHAR(255)")
     private String email;
     
-    @Column(unique = true)
+    @Column(unique = true, columnDefinition = "NVARCHAR(20)")
     private String phone;
     
     private String salt;
