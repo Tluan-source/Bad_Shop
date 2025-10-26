@@ -18,8 +18,17 @@
             
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3><i class="fas fa-store text-primary me-2"></i>Quản lý cửa hàng</h3>
-                <div>
-                    <input type="text" class="admin-search me-2" placeholder="Tìm kiếm cửa hàng...">
+                <div class="d-flex gap-2">
+                    <form action="/admin/stores" method="get" class="d-flex">
+                        <input type="text" name="search" class="form-control me-2" 
+                               placeholder="Tìm kiếm cửa hàng hoặc chủ cửa hàng..." 
+                               th:value="${search}"
+                               style="min-width: 300px;">
+                        <a th:href="@{/admin/stores}" class="btn btn-outline-secondary me-2" 
+                           th:if="${search != null and !search.isEmpty()}">
+                            <i class="fas fa-times"></i> Xóa
+                        </a>
+                    </form>
                     <button class="btn btn-admin-primary" data-bs-toggle="modal" data-bs-target="#addStoreModal">
                         <i class="fas fa-plus me-2"></i>Thêm cửa hàng
                     </button>
@@ -95,9 +104,9 @@
                                 <strong class="ms-2 text-warning" th:text="${store.rating != null ? store.rating + '/5' : '0/5'}">0/5</strong>
                             </div>
                             <div class="d-flex gap-2">
-                                <button class="btn btn-sm btn-info flex-fill">
+                                <a th:href="@{/admin/stores/{id}/details(id=${store.id})}" class="btn btn-sm btn-info flex-fill">
                                     <i class="fas fa-eye me-1"></i>Chi tiết
-                                </button>
+                                </a>
                                 <form th:action="@{/admin/stores/{id}/toggle-status(id=${store.id})}" 
                                       method="post" class="flex-fill">
                                     <button type="submit" class="btn btn-sm btn-warning w-100"
@@ -267,45 +276,46 @@
                     
                     cards.forEach(card => {
                         if (card.querySelector('.text-center.text-muted')) return;
+
+                        const storeName = card.querySelector('h5 span').innerText.toLowerCase();
+                        const ownerName = card.querySelector('.mb-2 strong').innerText.toLowerCase();
                         
-                        const text = card.textContent.toLowerCase();
-                        if (text.includes(searchValue)) {
-                            card.style.display = '';
+                        if (storeName.includes(searchValue) || ownerName.includes(searchValue)) {
+                            card.classList.remove('d-none');
                         } else {
-                            card.style.display = 'none';
+                            card.classList.add('d-none');
                         }
                     });
 
+                    // Update pagination after search
+                    const visibleCards = Array.from(document.querySelectorAll('.row.g-4 > .col-md-6:not(.d-none)'));
+                    const totalPages = Math.ceil(visibleCards.length / itemsPerPage);
+                    updatePagination(totalPages);
+
+                    // Reset to first page
                     currentPage = 1;
-                    if (searchValue) {
-                        document.querySelector('nav.mt-4')?.style.setProperty('display', 'none');
-                    } else {
-                        paginateCards();
-                    }
+                    paginateCards();
                 });
             }
-
-            // Initialize pagination
-            paginateCards();
         });
-        
+
         function confirmDeleteStore(storeName, storeId) {
-            if (confirm('Bạn có chắc chắn muốn xóa cửa hàng "' + storeName + '"?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/admin/stores/' + storeId + '/delete';
-                
-                const csrfToken = document.querySelector('meta[name="_csrf"]');
-                if (csrfToken) {
-                    const csrfInput = document.createElement('input');
-                    csrfInput.type = 'hidden';
-                    csrfInput.name = '_csrf';
-                    csrfInput.value = csrfToken.getAttribute('content');
-                    form.appendChild(csrfInput);
-                }
-                
-                document.body.appendChild(form);
-                form.submit();
+            const confirmed = confirm(`Bạn có chắc chắn muốn xóa cửa hàng "${storeName}"?`);
+            if (confirmed) {
+                // Proceed with deletion
+                fetch(`/admin/stores/${storeId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('input[name="_csrf"]').value
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        location.reload();
+                    } else {
+                        alert('Có lỗi xảy ra. Vui lòng thử lại.');
+                    }
+                });
             }
         }
     </script>

@@ -56,7 +56,8 @@
                                     </button>
                                 </form>
                                 <button class="btn btn-danger" 
-                                        th:onclick="'confirmDeleteStore(\'' + ${store.name} + '\', \'' + ${store.id} + '\')'">
+                                        th:attr="data-store-name=${store.name}, data-store-id=${store.id}"
+                                        onclick="confirmDeleteStore(this.getAttribute('data-store-name'), this.getAttribute('data-store-id'))">
                                     <i class="fas fa-trash me-2"></i>Xóa cửa hàng
                                 </button>
                             </div>
@@ -137,7 +138,9 @@
                         <div class="col-md-4">
                             <div class="mini-stat-card text-center">
                                 <i class="fas fa-dollar-sign fa-3x text-warning mb-2"></i>
-                                <h4 th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT')} + 'đ'">0đ</h4>
+                                <h4>
+                                    <span th:text="${#numbers.formatDecimal(totalRevenue, 0, 'COMMA', 0, 'POINT')}">0</span>đ
+                                </h4>
                                 <p class="text-muted mb-0">Doanh thu</p>
                             </div>
                         </div>

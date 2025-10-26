@@ -174,6 +174,61 @@ public class AdminService {
     }
     
     /**
+     * Get report statistics by date range
+     */
+    public Map<String, Object> getReportStatsByDateRange(LocalDateTime startDate, LocalDateTime endDate) {
+        Map<String, Object> stats = new HashMap<>();
+        
+        // Filter orders by date range
+        List<Order> filteredOrders = orderRepository.findAll().stream()
+            .filter(order -> order.getCreatedAt() != null &&
+                           order.getCreatedAt().isAfter(startDate) && 
+                           order.getCreatedAt().isBefore(endDate))
+            .collect(Collectors.toList());
+        
+        // Get order statistics
+        long totalOrders = filteredOrders.size();
+        long completedOrders = filteredOrders.stream()
+            .filter(o -> o.getStatus() == Order.OrderStatus.DELIVERED)
+            .count();
+        long cancelledOrders = filteredOrders.stream()
+            .filter(o -> o.getStatus() == Order.OrderStatus.CANCELLED)
+            .count();
+        
+        stats.put("totalOrders", totalOrders);
+        stats.put("completedOrders", completedOrders);
+        stats.put("cancelledOrders", cancelledOrders);
+        
+        // Calculate total revenue
+        BigDecimal totalRevenue = filteredOrders.stream()
+            .filter(o -> o.getStatus() == Order.OrderStatus.DELIVERED)
+            .map(Order::getAmountFromUser)
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        stats.put("totalRevenue", totalRevenue);
+        
+        // Get filtered order items
+        List<OrderItem> filteredOrderItems = orderItemRepository.findAll().stream()
+            .filter(item -> item.getOrder().getCreatedAt() != null &&
+                          item.getOrder().getCreatedAt().isAfter(startDate) && 
+                          item.getOrder().getCreatedAt().isBefore(endDate))
+            .collect(Collectors.toList());
+        
+        // Get top selling products in date range
+        List<Map<String, Object>> topProducts = getTopSellingProductsByDateRange(filteredOrderItems, 5);
+        stats.put("topProducts", topProducts);
+        
+        // Get sales by category in date range
+        List<Map<String, Object>> categorySales = getSalesByCategoryByDateRange(filteredOrderItems);
+        stats.put("categorySales", categorySales);
+        
+        // Get top stores by revenue in date range
+        List<Map<String, Object>> topStores = getTopStoresByDateRange(filteredOrderItems, 5);
+        stats.put("topStores", topStores);
+        
+        return stats;
+    }
+    
+    /**
      * Get top selling products (from all orders, not just DELIVERED)
      */
     public List<Map<String, Object>> getTopSellingProducts(int limit) {
@@ -183,6 +238,11 @@ public class AdminService {
             return new ArrayList<>();
         }
         
+        // Only count items from DELIVERED orders for revenue calculation
+        List<OrderItem> deliveredOrderItems = allOrderItems.stream()
+            .filter(item -> item.getOrder().getStatus() == Order.OrderStatus.DELIVERED)
+            .collect(Collectors.toList());
+        
         // Group by product and sum quantities (all orders except CANCELLED)
         Map<Product, Integer> productSales = allOrderItems.stream()
             .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
@@ -191,9 +251,8 @@ public class AdminService {
                 Collectors.summingInt(OrderItem::getQuantity)
             ));
         
-        // Calculate revenue for each product
-        Map<Product, BigDecimal> productRevenue = allOrderItems.stream()
-            .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
+        // Calculate revenue for each product (ONLY from DELIVERED orders)
+        Map<Product, BigDecimal> productRevenue = deliveredOrderItems.stream()
             .collect(Collectors.groupingBy(
                 OrderItem::getProduct,
                 Collectors.reducing(
@@ -228,6 +287,11 @@ public class AdminService {
             return new ArrayList<>();
         }
         
+        // Only count items from DELIVERED orders for revenue calculation
+        List<OrderItem> deliveredOrderItems = allOrderItems.stream()
+            .filter(item -> item.getOrder().getStatus() == Order.OrderStatus.DELIVERED)
+            .collect(Collectors.toList());
+        
         // Group by category
         Map<Category, Integer> categorySales = allOrderItems.stream()
             .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
@@ -237,9 +301,8 @@ public class AdminService {
                 Collectors.summingInt(OrderItem::getQuantity)
             ));
         
-        // Calculate revenue by category
-        Map<Category, BigDecimal> categoryRevenue = allOrderItems.stream()
-            .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
+        // Calculate revenue by category (ONLY from DELIVERED orders)
+        Map<Category, BigDecimal> categoryRevenue = deliveredOrderItems.stream()
             .filter(item -> item.getProduct().getCategory() != null)
             .collect(Collectors.groupingBy(
                 item -> item.getProduct().getCategory(),
@@ -283,6 +346,11 @@ public class AdminService {
                 .collect(Collectors.toList());
         }
         
+        // Only count items from DELIVERED orders for revenue calculation
+        List<OrderItem> deliveredOrderItems = allOrderItems.stream()
+            .filter(item -> item.getOrder().getStatus() == Order.OrderStatus.DELIVERED)
+            .collect(Collectors.toList());
+        
         // Group by store
         Map<Store, Integer> storeSales = allOrderItems.stream()
             .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
@@ -291,9 +359,8 @@ public class AdminService {
                 Collectors.summingInt(OrderItem::getQuantity)
             ));
         
-        // Calculate revenue by store
-        Map<Store, BigDecimal> storeRevenue = allOrderItems.stream()
-            .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
+        // Calculate revenue by store (ONLY from DELIVERED orders)
+        Map<Store, BigDecimal> storeRevenue = deliveredOrderItems.stream()
             .collect(Collectors.groupingBy(
                 item -> item.getProduct().getStore(),
                 Collectors.reducing(
@@ -316,6 +383,150 @@ public class AdminService {
             })
             .sorted((a, b) -> ((BigDecimal)b.get("revenue")).compareTo((BigDecimal)a.get("revenue")))
             .limit(limit)
+            .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get top selling products by date range
+     */
+    private List<Map<String, Object>> getTopSellingProductsByDateRange(List<OrderItem> orderItems, int limit) {
+        if (orderItems.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // Only count items from DELIVERED orders for revenue calculation
+        List<OrderItem> deliveredOrderItems = orderItems.stream()
+            .filter(item -> item.getOrder().getStatus() == Order.OrderStatus.DELIVERED)
+            .collect(Collectors.toList());
+        
+        // Group by product and sum quantities
+        Map<Product, Integer> productSales = orderItems.stream()
+            .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
+            .collect(Collectors.groupingBy(
+                OrderItem::getProduct,
+                Collectors.summingInt(OrderItem::getQuantity)
+            ));
+        
+        // Calculate revenue for each product (ONLY from DELIVERED orders)
+        Map<Product, BigDecimal> productRevenue = deliveredOrderItems.stream()
+            .collect(Collectors.groupingBy(
+                OrderItem::getProduct,
+                Collectors.reducing(
+                    BigDecimal.ZERO,
+                    OrderItem::getTotal,
+                    BigDecimal::add
+                )
+            ));
+        
+        // Sort by quantity and create result list
+        return productSales.entrySet().stream()
+            .sorted(Map.Entry.<Product, Integer>comparingByValue().reversed())
+            .limit(limit)
+            .map(entry -> {
+                Map<String, Object> item = new HashMap<>();
+                Product product = entry.getKey();
+                item.put("product", product);
+                item.put("quantity", entry.getValue());
+                item.put("revenue", productRevenue.getOrDefault(product, BigDecimal.ZERO));
+                return item;
+            })
+            .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get sales by category by date range
+     */
+    private List<Map<String, Object>> getSalesByCategoryByDateRange(List<OrderItem> orderItems) {
+        if (orderItems.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // Only count items from DELIVERED orders for revenue calculation
+        List<OrderItem> deliveredOrderItems = orderItems.stream()
+            .filter(item -> item.getOrder().getStatus() == Order.OrderStatus.DELIVERED)
+            .collect(Collectors.toList());
+        
+        // Group by category
+        Map<Category, Integer> categorySales = orderItems.stream()
+            .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
+            .filter(item -> item.getProduct().getCategory() != null)
+            .collect(Collectors.groupingBy(
+                item -> item.getProduct().getCategory(),
+                Collectors.summingInt(OrderItem::getQuantity)
+            ));
+        
+        // Calculate revenue by category (ONLY from DELIVERED orders)
+        Map<Category, BigDecimal> categoryRevenue = deliveredOrderItems.stream()
+            .filter(item -> item.getProduct().getCategory() != null)
+            .collect(Collectors.groupingBy(
+                item -> item.getProduct().getCategory(),
+                Collectors.reducing(
+                    BigDecimal.ZERO,
+                    OrderItem::getTotal,
+                    BigDecimal::add
+                )
+            ));
+        
+        // Create result list
+        return categorySales.entrySet().stream()
+            .sorted(Map.Entry.<Category, Integer>comparingByValue().reversed())
+            .map(entry -> {
+                Map<String, Object> item = new HashMap<>();
+                Category category = entry.getKey();
+                item.put("category", category);
+                item.put("quantity", entry.getValue());
+                item.put("revenue", categoryRevenue.getOrDefault(category, BigDecimal.ZERO));
+                return item;
+            })
+            .collect(Collectors.toList());
+    }
+    
+    /**
+     * Get top stores by date range
+     */
+    private List<Map<String, Object>> getTopStoresByDateRange(List<OrderItem> orderItems, int limit) {
+        if (orderItems.isEmpty()) {
+            return new ArrayList<>();
+        }
+        
+        // Only count items from DELIVERED orders for revenue calculation
+        List<OrderItem> deliveredOrderItems = orderItems.stream()
+            .filter(item -> item.getOrder().getStatus() == Order.OrderStatus.DELIVERED)
+            .collect(Collectors.toList());
+        
+        // Group by store
+        Map<Store, Integer> storeSales = orderItems.stream()
+            .filter(item -> item.getOrder().getStatus() != Order.OrderStatus.CANCELLED)
+            .filter(item -> item.getProduct().getStore() != null)
+            .collect(Collectors.groupingBy(
+                item -> item.getProduct().getStore(),
+                Collectors.summingInt(OrderItem::getQuantity)
+            ));
+        
+        // Calculate revenue by store (ONLY from DELIVERED orders)
+        Map<Store, BigDecimal> storeRevenue = deliveredOrderItems.stream()
+            .filter(item -> item.getProduct().getStore() != null)
+            .collect(Collectors.groupingBy(
+                item -> item.getProduct().getStore(),
+                Collectors.reducing(
+                    BigDecimal.ZERO,
+                    OrderItem::getTotal,
+                    BigDecimal::add
+                )
+            ));
+        
+        // Sort by revenue and create result list
+        return storeRevenue.entrySet().stream()
+            .sorted(Map.Entry.<Store, BigDecimal>comparingByValue().reversed())
+            .limit(limit)
+            .map(entry -> {
+                Map<String, Object> item = new HashMap<>();
+                Store store = entry.getKey();
+                item.put("store", store);
+                item.put("quantity", storeSales.getOrDefault(store, 0));
+                item.put("revenue", entry.getValue());
+                return item;
+            })
             .collect(Collectors.toList());
     }
 }

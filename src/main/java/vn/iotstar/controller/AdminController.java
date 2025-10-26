@@ -15,12 +15,16 @@ import vn.iotstar.entity.Order;
 import vn.iotstar.entity.User;
 import vn.iotstar.entity.Store;
 import vn.iotstar.entity.Category;
+import vn.iotstar.entity.Product;
+import vn.iotstar.entity.Voucher;
 import vn.iotstar.service.AdminService;
 import vn.iotstar.repository.UserRepository;
 import vn.iotstar.repository.StoreRepository;
 import vn.iotstar.repository.CategoryRepository;
 import vn.iotstar.repository.OrderRepository;
+import vn.iotstar.repository.VoucherRepository;
 import vn.iotstar.service.PasswordService;
+import vn.iotstar.service.CloudinaryService;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,9 +33,13 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.PrintWriter;
 
 @Controller
 @RequestMapping("/admin")
@@ -42,6 +50,9 @@ public class AdminController {
     
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
     
     @Autowired
     private StoreRepository storeRepository;
@@ -54,6 +65,9 @@ public class AdminController {
 
     @Autowired
     private PasswordService passwordService;
+    
+    @Autowired
+    private VoucherRepository voucherRepository;
     
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication authentication) {
@@ -121,11 +135,20 @@ public class AdminController {
     }
     
     @GetMapping("/stores")
-    public String stores(Model model, Authentication authentication) {
+    public String stores(@RequestParam(required = false) String search, 
+                        Model model, 
+                        Authentication authentication) {
         model.addAttribute("username", authentication.getName());
         
-        // Get all stores
-        List<Store> stores = storeRepository.findAll();
+        // Get stores based on search parameter
+        List<Store> stores;
+        if (search != null && !search.trim().isEmpty()) {
+            stores = storeRepository.searchStoresByNameOrOwner(search.trim());
+            model.addAttribute("search", search);
+        } else {
+            stores = storeRepository.findAll();
+        }
+        
         model.addAttribute("stores", stores);
         
         // Get all vendors for dropdown in add store modal
@@ -183,17 +206,103 @@ public class AdminController {
     }
     
     @GetMapping("/vouchers")
-    public String vouchers(Model model, Authentication authentication) {
+    public String vouchers(@RequestParam(required = false) String search, 
+                          Model model, 
+                          Authentication authentication) {
         model.addAttribute("username", authentication.getName());
+        
+        // Get vouchers based on search parameter
+        List<Voucher> vouchers;
+        if (search != null && !search.trim().isEmpty()) {
+            vouchers = voucherRepository.searchVouchers(search.trim());
+            model.addAttribute("search", search);
+        } else {
+            vouchers = voucherRepository.findAll();
+        }
+        
+        model.addAttribute("vouchers", vouchers);
+        
+        // Calculate statistics
+        long totalVouchers = vouchers.size();
+        long activeVouchers = vouchers.stream().filter(v -> v.getIsActive() && !v.isExpired()).count();
+        int totalUsageCount = vouchers.stream().mapToInt(Voucher::getUsageCount).sum();
+        
+        // Calculate total discount given (estimated)
+        BigDecimal totalDiscount = vouchers.stream()
+            .map(v -> {
+                if (v.getDiscountType() == Voucher.DiscountType.FIXED) {
+                    return v.getDiscountValue().multiply(new BigDecimal(v.getUsageCount()));
+                } else {
+                    // For percentage, use max discount as estimate
+                    return v.getMaxDiscount().multiply(new BigDecimal(v.getUsageCount()));
+                }
+            })
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        model.addAttribute("totalVouchers", totalVouchers);
+        model.addAttribute("activeVouchers", activeVouchers);
+        model.addAttribute("totalUsageCount", totalUsageCount);
+        model.addAttribute("totalDiscount", totalDiscount);
+        
         return "admin/vouchers";
     }
     
     @GetMapping("/reports")
-    public String reports(Model model, Authentication authentication) {
+    public String reports(
+            @RequestParam(required = false) String period,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            Model model, 
+            Authentication authentication) {
         model.addAttribute("username", authentication.getName());
         
-        // Get report statistics from database
-        Map<String, Object> reportStats = adminService.getReportStats();
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+        
+        // Calculate date range based on period
+        if (period != null) {
+            LocalDateTime now = LocalDateTime.now();
+            switch (period) {
+                case "7":
+                    start = now.minusDays(7);
+                    end = now;
+                    break;
+                case "30":
+                    start = now.minusDays(30);
+                    end = now;
+                    break;
+                case "90":
+                    start = now.minusDays(90);
+                    end = now;
+                    break;
+                case "365":
+                    start = now.minusDays(365);
+                    end = now;
+                    break;
+                case "custom":
+                    if (startDate != null && endDate != null) {
+                        try {
+                            start = LocalDate.parse(startDate).atStartOfDay();
+                            end = LocalDate.parse(endDate).atTime(23, 59, 59);
+                        } catch (Exception e) {
+                            // If parsing fails, use all time
+                        }
+                    }
+                    break;
+            }
+        }
+        
+        // Get report statistics with date filter
+        Map<String, Object> reportStats;
+        if (start != null && end != null) {
+            reportStats = adminService.getReportStatsByDateRange(start, end);
+            model.addAttribute("startDate", start);
+            model.addAttribute("endDate", end);
+        } else {
+            reportStats = adminService.getReportStats();
+        }
+        
+        model.addAttribute("period", period);
         model.addAttribute("topProducts", reportStats.get("topProducts"));
         model.addAttribute("categorySales", reportStats.get("categorySales"));
         model.addAttribute("topStores", reportStats.get("topStores"));
@@ -203,6 +312,246 @@ public class AdminController {
         model.addAttribute("totalRevenue", reportStats.get("totalRevenue"));
         
         return "admin/reports";
+    }
+    
+    @GetMapping("/reports/export")
+    public void exportReport(
+            @RequestParam(required = false) String period,
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate,
+            HttpServletResponse response,
+            Authentication authentication) throws IOException {
+        
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+        
+        // Calculate date range
+        if (period != null) {
+            LocalDateTime now = LocalDateTime.now();
+            switch (period) {
+                case "7":
+                    start = now.minusDays(7);
+                    end = now;
+                    break;
+                case "30":
+                    start = now.minusDays(30);
+                    end = now;
+                    break;
+                case "90":
+                    start = now.minusDays(90);
+                    end = now;
+                    break;
+                case "365":
+                    start = now.minusDays(365);
+                    end = now;
+                    break;
+                case "custom":
+                    if (startDate != null && endDate != null) {
+                        try {
+                            start = LocalDate.parse(startDate).atStartOfDay();
+                            end = LocalDate.parse(endDate).atTime(23, 59, 59);
+                        } catch (Exception e) {
+                            // If parsing fails, use all time
+                        }
+                    }
+                    break;
+            }
+        }
+        
+        // Get report data
+        Map<String, Object> reportStats;
+        if (start != null && end != null) {
+            reportStats = adminService.getReportStatsByDateRange(start, end);
+        } else {
+            reportStats = adminService.getReportStats();
+        }
+        
+        // Generate CSV report
+        String fileName = "BaoCao_" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")) + ".csv";
+        
+        response.setContentType("text/csv; charset=UTF-8");
+        response.setHeader("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
+        
+        PrintWriter writer = response.getWriter();
+        
+        // Write BOM for UTF-8
+        writer.write('\ufeff');
+        
+        // Write header
+        writer.println("BÁO CÁO THỐNG KÊ - BADMINTON MARKETPLACE");
+        if (start != null && end != null) {
+            writer.println("Thời gian: " + start.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")) + 
+                          " - " + end.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        } else {
+            writer.println("Thời gian: Tất cả");
+        }
+        writer.println("Ngày xuất: " + LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")));
+        writer.println();
+        
+        // Summary statistics
+        writer.println("TỔNG QUAN");
+        writer.println("Tổng đơn hàng," + reportStats.get("totalOrders"));
+        writer.println("Đơn hoàn thành," + reportStats.get("completedOrders"));
+        writer.println("Đơn hủy," + reportStats.get("cancelledOrders"));
+        writer.println("Tổng doanh thu," + reportStats.get("totalRevenue") + " VNĐ");
+        writer.println();
+        
+        // Top products
+        writer.println("TOP SẢN PHẨM BÁN CHẠY");
+        writer.println("STT,Tên sản phẩm,Số lượng bán,Doanh thu (VNĐ)");
+        List<Map<String, Object>> topProducts = (List<Map<String, Object>>) reportStats.get("topProducts");
+        if (topProducts != null) {
+            int index = 1;
+            for (Map<String, Object> item : topProducts) {
+                Product product = (Product) item.get("product");
+                writer.println(index++ + "," + 
+                    product.getName() + "," + 
+                    item.get("quantity") + "," + 
+                    item.get("revenue"));
+            }
+        }
+        writer.println();
+        
+        // Top stores
+        writer.println("TOP CỬA HÀNG XUẤT SẮC");
+        writer.println("STT,Tên cửa hàng,Số lượng bán,Doanh thu (VNĐ),Rating");
+        List<Map<String, Object>> topStores = (List<Map<String, Object>>) reportStats.get("topStores");
+        if (topStores != null) {
+            int index = 1;
+            for (Map<String, Object> item : topStores) {
+                Store store = (Store) item.get("store");
+                writer.println(index++ + "," + 
+                    store.getName() + "," + 
+                    item.get("quantity") + "," + 
+                    item.get("revenue") + "," + 
+                    store.getRating());
+            }
+        }
+        writer.println();
+        
+        // Category sales
+        writer.println("THỐNG KÊ THEO DANH MỤC");
+        writer.println("STT,Danh mục,Số lượng bán,Doanh thu (VNĐ)");
+        List<Map<String, Object>> categorySales = (List<Map<String, Object>>) reportStats.get("categorySales");
+        if (categorySales != null) {
+            int index = 1;
+            for (Map<String, Object> item : categorySales) {
+                Category category = (Category) item.get("category");
+                writer.println(index++ + "," + 
+                    category.getName() + "," + 
+                    item.get("quantity") + "," + 
+                    item.get("revenue"));
+            }
+        }
+        
+        writer.flush();
+    }
+    
+    // ==================== VOUCHER CRUD ====================
+    
+    /**
+     * Create new voucher
+     */
+    @PostMapping("/vouchers/create")
+    public String createVoucher(
+            @RequestParam String code,
+            @RequestParam(required = false) String description,
+            @RequestParam String discountType,
+            @RequestParam BigDecimal discountValue,
+            @RequestParam(required = false) BigDecimal maxDiscount,
+            @RequestParam(required = false) BigDecimal minOrderValue,
+            @RequestParam Integer quantity,
+            @RequestParam String startDate,
+            @RequestParam String endDate,
+            RedirectAttributes redirectAttributes) {
+        try {
+            // Check if code already exists
+            if (voucherRepository.findByCode(code).isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Mã voucher '" + code + "' đã tồn tại!");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/vouchers";
+            }
+            
+            Voucher voucher = new Voucher();
+            voucher.setId("V" + System.currentTimeMillis());
+            voucher.setCode(code.toUpperCase());
+            voucher.setDescription(description);
+            voucher.setDiscountType(Voucher.DiscountType.valueOf(discountType));
+            voucher.setDiscountValue(discountValue);
+            voucher.setMaxDiscount(maxDiscount != null ? maxDiscount : BigDecimal.ZERO);
+            voucher.setMinOrderValue(minOrderValue != null ? minOrderValue : BigDecimal.ZERO);
+            voucher.setQuantity(quantity);
+            voucher.setUsageCount(0);
+            voucher.setStartDate(LocalDateTime.parse(startDate + "T00:00:00"));
+            voucher.setEndDate(LocalDateTime.parse(endDate + "T23:59:59"));
+            voucher.setIsActive(true);
+            
+            voucherRepository.save(voucher);
+            
+            redirectAttributes.addFlashAttribute("message", "Đã tạo voucher thành công!");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("message", "Lỗi khi tạo voucher: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+        return "redirect:/admin/vouchers";
+    }
+    
+    /**
+     * Toggle voucher status
+     */
+    @PostMapping("/vouchers/{id}/toggle-status")
+    public String toggleVoucherStatus(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        Optional<Voucher> voucherOpt = voucherRepository.findById(id);
+        if (voucherOpt.isPresent()) {
+            Voucher voucher = voucherOpt.get();
+            voucher.setIsActive(!voucher.getIsActive());
+            voucherRepository.save(voucher);
+            
+            String status = voucher.getIsActive() ? "kích hoạt" : "vô hiệu hóa";
+            redirectAttributes.addFlashAttribute("message", "Đã " + status + " voucher thành công!");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } else {
+            redirectAttributes.addFlashAttribute("message", "Không tìm thấy voucher!");
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+        return "redirect:/admin/vouchers";
+    }
+    
+    /**
+     * Delete voucher
+     */
+    @PostMapping("/vouchers/{id}/delete")
+    public String deleteVoucher(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        try {
+            Optional<Voucher> voucherOpt = voucherRepository.findById(id);
+            if (!voucherOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy voucher!");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/vouchers";
+            }
+            
+            Voucher voucher = voucherOpt.get();
+            
+            // Check if voucher has been used
+            if (voucher.getUsageCount() > 0) {
+                redirectAttributes.addFlashAttribute("message", 
+                    "Không thể xóa voucher '" + voucher.getCode() + "' vì đã có " + voucher.getUsageCount() + " lượt sử dụng!");
+                redirectAttributes.addFlashAttribute("messageType", "warning");
+                return "redirect:/admin/vouchers";
+            }
+            
+            voucherRepository.deleteById(id);
+            redirectAttributes.addFlashAttribute("message", "Đã xóa voucher '" + voucher.getCode() + "' thành công!");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("message", 
+                "Không thể xóa voucher: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+        return "redirect:/admin/vouchers";
     }
     
     @GetMapping("/profile")
@@ -369,31 +718,20 @@ public class AdminController {
         }
 
         try {
-            // Use system temp directory or a dedicated upload folder outside the project
-            String userHome = System.getProperty("user.home");
-            String uploadsDir = userHome + File.separator + "bad-shop-uploads" + File.separator + "avatars";
-            Path uploadPath = Paths.get(uploadsDir);
-            if (!Files.exists(uploadPath)) {
-                Files.createDirectories(uploadPath);
+            // Upload to Cloudinary and set secure URL as avatar
+            String url = cloudinaryService.uploadFile(avatar);
+            if (url == null) {
+                redirectAttributes.addFlashAttribute("message", "Không thể tải ảnh lên Cloudinary.");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/profile";
             }
 
-            String original = avatar.getOriginalFilename();
-            String ext = "";
-            if (original != null && original.contains(".")) {
-                ext = original.substring(original.lastIndexOf('.'));
-            }
-            String filename = user.getId() + "_" + System.currentTimeMillis() + ext;
-
-            Path filePath = uploadPath.resolve(filename);
-            avatar.transferTo(filePath.toFile());
-
-            // Set avatar URL path for serving (we'll need a controller to serve this)
-            user.setAvatar("/uploads/avatars/" + filename);
+            user.setAvatar(url);
             userRepository.save(user);
 
             redirectAttributes.addFlashAttribute("message", "Đã cập nhật ảnh đại diện thành công.");
             redirectAttributes.addFlashAttribute("messageType", "success");
-        } catch (IOException ex) {
+        } catch (Exception ex) {
             ex.printStackTrace();
             redirectAttributes.addFlashAttribute("message", "Lỗi khi tải ảnh lên: " + ex.getMessage());
             redirectAttributes.addFlashAttribute("messageType", "danger");
@@ -446,25 +784,29 @@ public class AdminController {
         }
         
         Store store = storeOpt.get();
-        model.addAttribute("store", store);
         
-        // Get store's products
-        int productCount = store.getProducts() != null ? store.getProducts().size() : 0;
-        model.addAttribute("productCount", productCount);
-        model.addAttribute("products", store.getProducts());
+        // Force initialization of lazy collections to avoid LazyInitializationException
+        List<Product> products = store.getProducts();
+        int productCount = 0;
+        if (products != null) {
+            productCount = products.size(); // This forces Hibernate to load the collection
+        }
         
-        // Get store's orders
-        int orderCount = store.getOrders() != null ? store.getOrders().size() : 0;
-        model.addAttribute("orderCount", orderCount);
-        
-        // Calculate total revenue
+        List<Order> orders = store.getOrders();
+        int orderCount = 0;
         BigDecimal totalRevenue = BigDecimal.ZERO;
-        if (store.getOrders() != null) {
-            totalRevenue = store.getOrders().stream()
+        if (orders != null) {
+            orderCount = orders.size(); // This forces Hibernate to load the collection
+            totalRevenue = orders.stream()
                 .filter(order -> order.getStatus() == Order.OrderStatus.DELIVERED)
                 .map(Order::getAmountFromStore)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         }
+        
+        model.addAttribute("store", store);
+        model.addAttribute("productCount", productCount);
+        model.addAttribute("products", products);
+        model.addAttribute("orderCount", orderCount);
         model.addAttribute("totalRevenue", totalRevenue);
         
         return "admin/store-details";
