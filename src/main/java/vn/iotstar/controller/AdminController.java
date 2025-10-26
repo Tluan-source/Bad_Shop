@@ -793,4 +793,27 @@ public class AdminController {
         redirectAttributes.addFlashAttribute("messageType", "success");
         return "redirect:/admin/users";
     }
+
+    // New: View order details (admin)
+    @GetMapping("/orders/{id}/details")
+    public String orderDetails(@PathVariable String id, Model model, Authentication authentication) {
+        model.addAttribute("username", authentication != null ? authentication.getName() : null);
+
+        Optional<Order> orderOpt = orderRepository.findById(id);
+        if (!orderOpt.isPresent()) {
+            model.addAttribute("error", "Không tìm thấy đơn hàng!");
+            return "redirect:/admin/orders";
+        }
+
+        Order order = orderOpt.get();
+        // Ensure orderItems are initialized to avoid LazyInitializationException in the view
+        if (order.getOrderItems() != null) {
+            order.getOrderItems().size();
+        }
+        model.addAttribute("order", order);
+        model.addAttribute("orderItems", order.getOrderItems() != null ? order.getOrderItems() : new java.util.ArrayList<>());
+
+        return "admin/order-details";
+    }
+
 }

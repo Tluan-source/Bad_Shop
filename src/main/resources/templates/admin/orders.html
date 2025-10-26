@@ -11,15 +11,15 @@
             <div class="d-flex justify-content-between align-items-center mb-4">
                 <h3><i class="fas fa-shopping-bag text-primary me-2"></i>Quản lý đơn hàng</h3>
                 <div>
-                    <select class="form-select d-inline-block me-2" style="width: auto;">
-                        <option selected>Tất cả trạng thái</option>
-                        <option>Chờ xử lý</option>
-                        <option>Đang xử lý</option>
-                        <option>Đang giao</option>
-                        <option>Hoàn thành</option>
-                        <option>Đã hủy</option>
+                    <select id="filterStatus" class="form-select d-inline-block me-2" style="width: auto;">
+                        <option value="" selected>Tất cả trạng thái</option>
+                        <option value="NOT_PROCESSED">Chờ xử lý</option>
+                        <option value="PROCESSING">Đang xử lý</option>
+                        <option value="SHIPPED">Đang giao</option>
+                        <option value="DELIVERED">Hoàn thành</option>
+                        <option value="CANCELLED">Đã hủy</option>
                     </select>
-                    <input type="text" class="admin-search" placeholder="Tìm mã đơn hàng...">
+                    <input id="searchOrder" type="text" class="admin-search" placeholder="Tìm mã đơn hàng...">
                 </div>
             </div>
 
@@ -107,7 +107,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr th:each="order : ${orders}">
+                        <tr th:each="order : ${orders}" th:attr="data-status=${order.status.name()}">
                             <td><strong th:text="${order.id}">#ORD001</strong></td>
                             <td>
                                 <div class="d-flex align-items-center">
@@ -139,9 +139,9 @@
                                 <br><small class="text-muted" th:text="${#temporals.format(order.createdAt, 'HH:mm')}">00:00</small>
                             </td>
                             <td>
-                                <button class="btn btn-sm btn-info" title="Xem chi tiết">
+                                <a th:href="@{/admin/orders/{id}/details(id=${order.id})}" class="btn btn-sm btn-info" title="Xem chi tiết">
                                     <i class="fas fa-eye"></i>
-                                </button>
+                                </a>
                             </td>
                         </tr>
                     </tbody>

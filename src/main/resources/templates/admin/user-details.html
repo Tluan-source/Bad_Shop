@@ -67,7 +67,9 @@
                                         <i class="fas fa-user-edit me-2"></i>Chỉnh sửa vai trò
                                     </button>
 
-                                    <button type="button" class="btn btn-outline-danger w-100 mt-2" th:onclick="'confirmRemoveAdminRole(\'' + ${user.fullName} + '\', \' ' + ${user.id} + '\')'">
+                                    <button type="button" class="btn btn-outline-danger w-100 mt-2" 
+                                            th:attr="data-user-name=${user.fullName}, data-user-id=${user.id}"
+                                            onclick="confirmRemoveAdminRole(this.getAttribute('data-user-name'), this.getAttribute('data-user-id'))">
                                         <i class="fas fa-user-slash me-2"></i>Gỡ vai trò Admin
                                     </button>
 

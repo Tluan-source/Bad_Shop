@@ -149,27 +149,40 @@ function initAdminSearch(searchInputId) {
     const searchInput = document.getElementById(searchInputId);
     if (!searchInput) return;
 
-    searchInput.addEventListener('keyup', function() {
-        const searchValue = this.value.toLowerCase();
+    // Also try to pick up a status filter select with id "filterStatus"
+    const statusSelect = document.getElementById('filterStatus');
+
+    function applyFilters() {
+        const searchValue = searchInput.value.toLowerCase();
+        const selectedStatus = statusSelect ? statusSelect.value : '';
         const tableRows = document.querySelectorAll('.admin-table tbody tr');
-        
+
         tableRows.forEach(row => {
             // Skip empty state rows
             if (row.querySelector('td[colspan]')) {
                 return;
             }
 
-            const text = row.textContent.toLowerCase();
-            if (text.includes(searchValue)) {
+            const textMatch = searchValue === '' || row.textContent.toLowerCase().includes(searchValue);
+            const rowStatus = (row.getAttribute('data-status') || '').toUpperCase();
+            const statusMatch = selectedStatus === '' || rowStatus === selectedStatus.toUpperCase();
+
+            if (textMatch && statusMatch) {
                 row.style.display = '';
             } else {
                 row.style.display = 'none';
             }
         });
 
-        // Refresh pagination after search
+        // Refresh pagination after filters change
         if (window.adminPagination) {
             window.adminPagination.refresh();
         }
-    });
+    }
+
+    // Wire events
+    searchInput.addEventListener('keyup', applyFilters);
+    if (statusSelect) {
+        statusSelect.addEventListener('change', applyFilters);
+    }
 }
