@@ -18,10 +18,10 @@ public class UserAddress {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
     
-    @Column(name = "full_name", nullable = false)
+    @Column(name = "full_name", nullable = false, columnDefinition = "NVARCHAR(255)")
     private String fullName;
     
-    @Column(nullable = false)
+    @Column(nullable = false, columnDefinition = "NVARCHAR(20)")
     private String phone;
     
     @Column(nullable = false, columnDefinition = "NVARCHAR(500)")
