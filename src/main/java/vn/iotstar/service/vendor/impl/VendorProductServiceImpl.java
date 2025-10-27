@@ -24,6 +24,7 @@ import vn.iotstar.service.vendor.VendorSecurityService;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -169,17 +170,39 @@ public class VendorProductServiceImpl implements VendorProductService {
         product.setIsSelling(updateDTO.getIsSelling());
         product.setUpdatedAt(LocalDateTime.now());
         
-        // Update images: priority order - newImages (upload to Cloudinary) > listImages (keep existing) > imageUrls (replace with new URLs)
+        // Update images: priority order - newImages (upload to Cloudinary and merge with remaining existing) > listImages (keep existing remaining) > imageUrls (replace with new URLs)
         if (updateDTO.getNewImages() != null && !updateDTO.getNewImages().isEmpty()) {
             try {
                 List<String> uploadedUrls = cloudinaryService.uploadFiles(updateDTO.getNewImages());
-                if (!uploadedUrls.isEmpty()) {
-                    product.setListImages(objectMapper.writeValueAsString(uploadedUrls));
+                // Determine remaining existing images (user may have removed some via the form)
+                List<String> remaining = new ArrayList<>();
+                try {
+                    if (updateDTO.getListImages() != null && !updateDTO.getListImages().isEmpty()) {
+                        // updateDTO.getListImages() is expected to be a JSON array string
+                        remaining = objectMapper.readValue(updateDTO.getListImages(),
+                                objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                    } else if (product.getListImages() != null && !product.getListImages().equals("[]")) {
+                        remaining = objectMapper.readValue(product.getListImages(),
+                                objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
+                    }
+                } catch (Exception ex) {
+                    // ignore parse errors, keep remaining as empty list
+                }
+
+                // Merge remaining existing images with newly uploaded URLs, avoid duplicates
+                LinkedHashSet<String> merged = new LinkedHashSet<>();
+                if (remaining != null) merged.addAll(remaining);
+                if (uploadedUrls != null) merged.addAll(uploadedUrls);
+
+                List<String> combined = new ArrayList<>(merged);
+                if (!combined.isEmpty()) {
+                    product.setListImages(objectMapper.writeValueAsString(combined));
                 }
             } catch (Exception e) {
                 // Keep existing images on upload failure
             }
         } else if (updateDTO.getListImages() != null) {
+            // If vendor removed some existing images (hidden listImages provided), keep that
             product.setListImages(updateDTO.getListImages());
         } else if (updateDTO.getImageUrls() != null && !updateDTO.getImageUrls().isEmpty()) {
             try {

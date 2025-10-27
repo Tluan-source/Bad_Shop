@@ -33,8 +33,8 @@
                             Sản phẩm chỉ hiển thị trên hệ thống sau khi được admin phê duyệt.
                         </div>
                         
-                        <form th:action="@{${isEdit ? '/vendor/products/' + product.id + '/update' : '/vendor/products/create'}}" 
-                              method="post" th:object="${productDTO}">
+                <form th:action="@{${isEdit ? '/vendor/products/' + product.id + '/update' : '/vendor/products/create'}}" 
+                    method="post" th:object="${productDTO}" enctype="multipart/form-data">
                             
                             <div class="row">
                                 <div class="col-md-8">
@@ -107,10 +107,162 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="imageUrls" class="form-label">URL hình ảnh sản phẩm (có thể thêm nhiều URL, mỗi URL một dòng)</label>
-                                <textarea class="form-control" id="imageUrls" rows="3" name="imageUrlsText"
-                                          placeholder="https://example.com/image1.jpg&#10;https://example.com/image2.jpg"></textarea>
-                                <small class="text-muted">Nhập URL hình ảnh, mỗi URL một dòng</small>
+                                <label class="form-label">Hình ảnh sản phẩm</label>
+                                <div class="mb-2">
+                                    <div th:if="${isEdit}">
+                                        <input id="newImagesInput" type="file" th:field="*{newImages}" multiple accept="image/*" class="form-control" />
+                                    </div>
+                                    <div th:unless="${isEdit}">
+                                        <input id="imagesInput" type="file" th:field="*{images}" multiple accept="image/*" class="form-control" />
+                                    </div>
+                                </div>
+                                <!-- Vendor uploads images via file input only (no manual URL input) -->
+                                <small class="text-muted">Chọn ảnh từ máy của bạn. Ảnh sẽ được upload lên Cloudinary khi lưu sản phẩm.</small>
+                                
+                                <!-- Preview ảnh hiện tại khi edit (với nút xóa) -->
+                                <div th:if="${isEdit && product != null && product.listImages != null && !product.listImages.equals('[]')}" class="mt-3">
+                                    <label class="form-label">Ảnh hiện tại:</label>
+                                    <!-- Hidden input bound to DTO.listImages (JSON string of remaining images) -->
+                                    <input type="hidden" th:field="*{listImages}" id="listImagesInput" />
+                                    <div class="d-flex flex-wrap gap-2" id="currentImagesPreview"></div>
+                                    <script th:inline="javascript">
+                                        /*<![CDATA[*/
+                                        var existingListImages = /*[[${product.listImages}]]*/ '[]';
+                                        try {
+                                            var existingImages = JSON.parse(existingListImages);
+                                        } catch (e) {
+                                            var existingImages = [];
+                                        }
+
+                                        // Initialize hidden input with existing JSON
+                                        var listInput = document.getElementById('listImagesInput');
+                                        if (listInput) listInput.value = JSON.stringify(existingImages);
+
+                                        var currentPreview = document.getElementById('currentImagesPreview');
+                                        function renderCurrentImages() {
+                                            currentPreview.innerHTML = '';
+                                            existingImages.forEach(function(url, idx) {
+                                                var wrapper = document.createElement('div');
+                                                wrapper.className = 'position-relative';
+                                                wrapper.style.width = '150px';
+                                                wrapper.style.height = '150px';
+
+                                                var img = document.createElement('img');
+                                                img.src = url;
+                                                img.className = 'img-thumbnail';
+                                                img.style.width = '100%';
+                                                img.style.height = '100%';
+                                                img.style.objectFit = 'cover';
+                                                wrapper.appendChild(img);
+
+                                                var btn = document.createElement('button');
+                                                btn.type = 'button';
+                                                btn.className = 'btn btn-sm btn-danger position-absolute';
+                                                btn.style.top = '4px';
+                                                btn.style.right = '4px';
+                                                btn.innerHTML = '<i class="fas fa-times"></i>';
+                                                btn.onclick = function(e) {
+                                                    e.preventDefault();
+                                                    existingImages.splice(idx, 1);
+                                                    if (listInput) listInput.value = JSON.stringify(existingImages);
+                                                    renderCurrentImages();
+                                                };
+                                                wrapper.appendChild(btn);
+
+                                                currentPreview.appendChild(wrapper);
+                                            });
+                                        }
+
+                                        // Initial render
+                                        renderCurrentImages();
+                                        /*]]>*/
+                                    </script>
+                                </div>
+
+                                <!-- Selected files preview (client-side before upload) -->
+                                <div class="mt-3">
+                                    <label class="form-label">Ảnh đã chọn (xem trước):</label>
+                                    <div id="selectedImagesPreview" class="d-flex flex-wrap gap-2"></div>
+                                </div>
+
+                                <script th:inline="javascript">
+                                    /*<![CDATA[*/
+                                    // Helper: create thumbnail card
+                                    function createThumb(url, index, onRemove) {
+                                        const wrapper = document.createElement('div');
+                                        wrapper.className = 'position-relative';
+                                        wrapper.style.width = '100px';
+                                        wrapper.style.height = '100px';
+
+                                        const img = document.createElement('img');
+                                        img.src = url;
+                                        img.className = 'img-thumbnail';
+                                        img.style.width = '100%';
+                                        img.style.height = '100%';
+                                        img.style.objectFit = 'cover';
+                                        wrapper.appendChild(img);
+
+                                        const btn = document.createElement('button');
+                                        btn.type = 'button';
+                                        btn.className = 'btn btn-sm btn-danger position-absolute';
+                                        btn.style.top = '4px';
+                                        btn.style.right = '4px';
+                                        btn.innerHTML = '<i class="fas fa-times"></i>';
+                                        btn.onclick = function(e) { e.preventDefault(); onRemove(index); };
+                                        wrapper.appendChild(btn);
+
+                                        return wrapper;
+                                    }
+
+                                    // Manage previews for a given input id
+                                    function setupMultiFilePreview(inputId) {
+                                        const input = document.getElementById(inputId);
+                                        if (!input) return;
+                                        const preview = document.getElementById('selectedImagesPreview');
+                                        let filesArray = [];
+
+                                        function refreshPreview() {
+                                            preview.innerHTML = '';
+                                            filesArray.forEach((file, idx) => {
+                                                const url = URL.createObjectURL(file);
+                                                const thumb = createThumb(url, idx, removeAtIndex);
+                                                preview.appendChild(thumb);
+                                            });
+                                        }
+
+                                        function removeAtIndex(i) {
+                                            filesArray.splice(i, 1);
+                                            // rebuild DataTransfer and assign back to input.files
+                                            const dt = new DataTransfer();
+                                            filesArray.forEach(f => dt.items.add(f));
+                                            input.files = dt.files;
+                                            refreshPreview();
+                                        }
+
+                                        input.addEventListener('change', function() {
+                                            // When user selects files, convert FileList to array
+                                            const newFiles = Array.from(input.files || []);
+                                            // Append newly selected files to existing selection so user can add more files
+                                            // Avoid exact same File object duplicates by name+size
+                                            newFiles.forEach(nf => {
+                                                const exists = filesArray.some(ef => ef.name === nf.name && ef.size === nf.size && ef.lastModified === nf.lastModified);
+                                                if (!exists) filesArray.push(nf);
+                                            });
+                                            // Rebuild the input.files from filesArray so that form submission contains all files
+                                            const dt = new DataTransfer();
+                                            filesArray.forEach(f => dt.items.add(f));
+                                            input.files = dt.files;
+                                            refreshPreview();
+                                        });
+                                    }
+
+                                    // Initialize for both possible inputs
+                                    document.addEventListener('DOMContentLoaded', function() {
+                                        setupMultiFilePreview('imagesInput');
+                                        setupMultiFilePreview('newImagesInput');
+                                    });
+                                    /*]]>*/
+                                </script>
                             </div>
 
             <hr>

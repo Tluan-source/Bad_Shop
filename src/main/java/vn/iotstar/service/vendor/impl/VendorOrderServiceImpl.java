@@ -69,6 +69,15 @@ public class VendorOrderServiceImpl implements VendorOrderService {
             .map(this::convertToDTO)
             .collect(Collectors.toList());
     }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VendorOrderDTO> getMyAssignedShipments(String storeId) {
+        List<Order> orders = orderRepository.findByStoreIdAndShipmentIsNotNullOrderByCreatedAtDesc(storeId);
+        return orders.stream()
+            .map(this::convertToDTO)
+            .collect(Collectors.toList());
+    }
     
     @Override
     @Transactional(readOnly = true)
@@ -319,6 +328,7 @@ public class VendorOrderServiceImpl implements VendorOrderService {
         
         // Shipment info
         if (order.getShipment() != null) {
+            dto.setShipmentId(order.getShipment().getId());
             dto.setShipmentStatus(order.getShipment().getStatus().name());
             if (order.getShipment().getShipper() != null) {
                 dto.setShipperName(order.getShipment().getShipper().getFullName());
@@ -340,7 +350,16 @@ public class VendorOrderServiceImpl implements VendorOrderService {
                 .map(VendorOrderItemDTO::getTotal)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
             dto.setTotalProductAmount(total);
+            // totalAmount = total products + shipping fee - discount
+            BigDecimal totalAmount = total.add(order.getShippingFee() != null ? order.getShippingFee() : BigDecimal.ZERO)
+                    .subtract(order.getDiscountAmount() != null ? order.getDiscountAmount() : BigDecimal.ZERO);
+            dto.setTotalAmount(totalAmount);
         }
+
+        // Convenience fields for templates
+        dto.setOrderId(order.getId());
+        if (order.getUser() != null) dto.setCustomerName(order.getUser().getFullName());
+        dto.setOrderDate(order.getCreatedAt());
         
         return dto;
     }

@@ -71,6 +71,9 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     // Find order with items
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.orderItems WHERE o.id = :orderId")
     Order findByIdWithItems(@Param("orderId") String orderId);
+
+       // Find orders that have an associated shipment (assigned to shipper)
+       List<Order> findByStoreIdAndShipmentIsNotNullOrderByCreatedAtDesc(String storeId);
     
     // Get top selling products by store
     @Query("SELECT p.id, p.name, p.sold, SUM(oi.total) as revenue " +

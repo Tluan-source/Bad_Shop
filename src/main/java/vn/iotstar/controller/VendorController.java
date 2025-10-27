@@ -380,10 +380,20 @@ public class VendorController {
     @PostMapping("/products/{id}/update")
     public String updateProduct(@PathVariable String id,
                                @Valid @ModelAttribute("productDTO") ProductUpdateDTO updateDTO,
+                               @RequestParam(value = "imageUrlsText", required = false) String imageUrlsText,
                                BindingResult result,
                                Authentication auth,
                                RedirectAttributes redirectAttributes,
                                Model model) {
+        // Chuyển đổi textarea imageUrlsText thành List<String> imageUrls
+        if (imageUrlsText != null && !imageUrlsText.trim().isEmpty()) {
+            List<String> urls = Arrays.stream(imageUrlsText.split("\\r?\\n"))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
+            updateDTO.setImageUrls(urls);
+        }
+        
         if (result.hasErrors()) {
             List<Category> categories = categoryRepository.findByIsActiveTrueOrderByNameAsc();
             model.addAttribute("categories", categories);
@@ -449,9 +459,18 @@ public class VendorController {
             orders = orderService.getMyOrders(storeId, pageable);
         }
         
-        model.addAttribute("orders", orders);
-        model.addAttribute("currentPage", page);
-        model.addAttribute("totalPages", orders.getTotalPages());
+    model.addAttribute("orders", orders);
+    model.addAttribute("currentPage", page);
+    model.addAttribute("totalPages", orders.getTotalPages());
+
+    // Also provide three vendor zones: new (NOT_PROCESSED), processing (PROCESSING), assigned to shipper (has shipment)
+    List<VendorOrderDTO> newOrders = orderService.getMyOrdersByStatus(storeId, Order.OrderStatus.NOT_PROCESSED);
+    List<VendorOrderDTO> processingOrders = orderService.getMyOrdersByStatus(storeId, Order.OrderStatus.PROCESSING);
+    List<VendorOrderDTO> assignedShipments = orderService.getMyAssignedShipments(storeId);
+
+    model.addAttribute("newOrders", newOrders);
+    model.addAttribute("processingOrders", processingOrders);
+    model.addAttribute("assignedShipments", assignedShipments);
         
         // Order counts by status
         model.addAttribute("newCount", orderService.countOrdersByStatus(storeId, Order.OrderStatus.NOT_PROCESSED));
