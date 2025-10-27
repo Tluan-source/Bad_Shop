@@ -521,6 +521,22 @@ WHEN NOT MATCHED THEN
     INSERT (id, name, category_ids, is_deleted)
     VALUES ('ST004', N'Độ căng dây', '["C1"]', 0);
 
+-- Kích thước quần / áo (ST005) - thêm cho category C5 (Quần Áo Thể Thao)
+MERGE INTO styles AS target
+USING (SELECT 'ST005' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, category_ids, is_deleted)
+    VALUES ('ST005', N'Kích thước quần/áo', '["C5"]', 0);
+
+-- Kích thước quần (ST006) - tách riêng cho quần trong category C5
+MERGE INTO styles AS target
+USING (SELECT 'ST006' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, category_ids, is_deleted)
+    VALUES ('ST006', N'Kích thước quần', '["C5"]', 0);
+
 -- =============================================
 -- STYLE VALUES (Giá trị cụ thể)
 -- =============================================
@@ -653,6 +669,78 @@ ON target.id = source.id
 WHEN NOT MATCHED THEN
     INSERT (id, name, style_id, is_deleted)
     VALUES ('SV018', N'30-32 lbs', 'ST004', 0);
+
+-- Kích thước quần / áo (giá trị cho ST005)
+MERGE INTO style_values AS target
+USING (SELECT 'SV019' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV019', N'S', 'ST005', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV020' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV020', N'M', 'ST005', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV021' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV021', N'L', 'ST005', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV022' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV022', N'XL', 'ST005', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV023' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV023', N'XXL', 'ST005', 0);
+
+-- Giá trị cho kích thước quần (ST006)
+MERGE INTO style_values AS target
+USING (SELECT 'SV024' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV024', N'28', 'ST006', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV025' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV025', N'30', 'ST006', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV026' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV026', N'32', 'ST006', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV027' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV027', N'34', 'ST006', 0);
+
+MERGE INTO style_values AS target
+USING (SELECT 'SV028' AS id) AS source
+ON target.id = source.id
+WHEN NOT MATCHED THEN
+    INSERT (id, name, style_id, is_deleted)
+    VALUES ('SV028', N'36', 'ST006', 0);
 
 -- =====================================================
 -- HƯỚNG DẪN ĐĂNG NHẬP:
