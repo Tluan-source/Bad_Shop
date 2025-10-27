@@ -1201,4 +1201,105 @@ public class AdminController {
         return "admin/order-details";
     }
 
+    /**
+     * Delete user
+     */
+    @PostMapping("/users/{id}/delete")
+    public String deleteUser(@PathVariable String id, RedirectAttributes redirectAttributes, Authentication authentication) {
+        try {
+            Optional<User> userOpt = userRepository.findById(id);
+            if (!userOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng!");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/users";
+            }
+
+            User user = userOpt.get();
+
+            // Prevent self-delete
+            if (authentication != null && authentication.getName() != null && authentication.getName().equals(user.getEmail())) {
+                redirectAttributes.addFlashAttribute("message", "Bạn không thể xóa chính mình.");
+                redirectAttributes.addFlashAttribute("messageType", "warning");
+                return "redirect:/admin/users";
+            }
+
+            // Prevent deleting the last admin
+            if (user.getRole() == User.UserRole.ADMIN) {
+                long adminCount = userRepository.findAll().stream()
+                        .filter(u -> u != null && u.getRole() == User.UserRole.ADMIN)
+                        .count();
+                if (adminCount <= 1) {
+                    redirectAttributes.addFlashAttribute("message", "Không thể xóa người dùng: hệ thống chỉ còn một ADMIN duy nhất.");
+                    redirectAttributes.addFlashAttribute("messageType", "warning");
+                    return "redirect:/admin/users";
+                }
+            }
+
+            // Prevent deletion if user has related data
+            if ((user.getStores() != null && !user.getStores().isEmpty()) ||
+                (user.getOrders() != null && !user.getOrders().isEmpty())) {
+                redirectAttributes.addFlashAttribute("message",
+                    "Không thể xóa người dùng vì tồn tại dữ liệu liên quan (cửa hàng hoặc đơn hàng). Hãy vô hiệu hóa thay vì xóa.");
+                redirectAttributes.addFlashAttribute("messageType", "warning");
+                return "redirect:/admin/users";
+            }
+
+            userRepository.deleteById(id);
+            redirectAttributes.addFlashAttribute("message", "Đã xóa người dùng thành công!");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("message", "Không thể xóa người dùng: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+        return "redirect:/admin/users";
+    }
+
+    /**
+     * Toggle user status (Active/Inactive)
+     */
+    @PostMapping("/users/{id}/toggle-status")
+    public String toggleUserStatus(@PathVariable String id, RedirectAttributes redirectAttributes, Authentication authentication) {
+        try {
+            Optional<User> userOpt = userRepository.findById(id);
+            if (!userOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng!");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/users";
+            }
+
+            User user = userOpt.get();
+
+            // Prevent self-toggle
+            if (authentication != null && authentication.getName() != null && authentication.getName().equals(user.getEmail())) {
+                redirectAttributes.addFlashAttribute("message", "Bạn không thể thay đổi trạng thái của chính mình.");
+                redirectAttributes.addFlashAttribute("messageType", "warning");
+                return "redirect:/admin/users";
+            }
+
+            // Toggle between ACTIVE and INACTIVE (don't change BANNED status here)
+            if (user.getStatus() == User.UserStatus.ACTIVE) {
+                user.setStatus(User.UserStatus.INACTIVE);
+            } else if (user.getStatus() == User.UserStatus.INACTIVE) {
+                user.setStatus(User.UserStatus.ACTIVE);
+            } else {
+                // If user is BANNED, don't allow toggle
+                redirectAttributes.addFlashAttribute("message", "Không thể thay đổi trạng thái người dùng đã bị cấm.");
+                redirectAttributes.addFlashAttribute("messageType", "warning");
+                return "redirect:/admin/users";
+            }
+
+            userRepository.save(user);
+
+            String status = user.getStatus() == User.UserStatus.ACTIVE ? "kích hoạt" : "vô hiệu hóa";
+            redirectAttributes.addFlashAttribute("message", "Đã " + status + " tài khoản người dùng thành công!");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("message", "Không thể thay đổi trạng thái người dùng: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+        return "redirect:/admin/users";
+    }
+
 }
