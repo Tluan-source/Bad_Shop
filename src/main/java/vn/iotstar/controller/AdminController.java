@@ -22,7 +22,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import vn.iotstar.entity.ActivityLog;
 import vn.iotstar.entity.Category;
 import vn.iotstar.entity.Order;
 import vn.iotstar.entity.Product;
@@ -34,6 +36,7 @@ import vn.iotstar.repository.OrderRepository;
 import vn.iotstar.repository.StoreRepository;
 import vn.iotstar.repository.UserRepository;
 import vn.iotstar.repository.VoucherRepository;
+import vn.iotstar.service.ActivityLogService;
 import vn.iotstar.service.AdminService;
 import vn.iotstar.service.CloudinaryService;
 import vn.iotstar.service.PasswordService;
@@ -65,6 +68,9 @@ public class AdminController {
     
     @Autowired
     private VoucherRepository voucherRepository;
+    
+    @Autowired
+    private ActivityLogService activityLogService;
     
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication authentication) {
@@ -357,6 +363,12 @@ public class AdminController {
         return "admin/reports";
     }
     
+    @GetMapping("/settings")
+    public String settings(Model model, Authentication authentication) {
+        model.addAttribute("username", authentication.getName());
+        return "admin/settings";
+    }
+    
     @GetMapping("/reports/export")
     public void exportReport(
             @RequestParam(required = false) String period,
@@ -598,13 +610,25 @@ public class AdminController {
     }
     
     @GetMapping("/profile")
-    public String profile(Model model, Authentication authentication) {
+    public String profile(Model model, Authentication authentication, HttpServletRequest request) {
         model.addAttribute("username", authentication.getName());
 
         // Load current user by email (authentication name assumed to be email)
         String email = authentication != null ? authentication.getName() : null;
         if (email != null) {
-            userRepository.findByEmail(email).ifPresent(u -> model.addAttribute("user", u));
+            Optional<User> userOpt = userRepository.findByEmail(email);
+            if (userOpt.isPresent()) {
+                User user = userOpt.get();
+                model.addAttribute("user", user);
+                
+                // Lấy lịch sử hoạt động gần đây (10 hoạt động gần nhất)
+                List<ActivityLog> recentActivities = activityLogService.getRecentActivities(user, 10);
+                model.addAttribute("recentActivities", recentActivities);
+                
+                // Ghi log xem profile
+                activityLogService.logActivity(user, ActivityLog.ActivityType.VIEW_DASHBOARD, 
+                    "Xem trang thông tin cá nhân", request);
+            }
         }
 
         return "admin/profile";
