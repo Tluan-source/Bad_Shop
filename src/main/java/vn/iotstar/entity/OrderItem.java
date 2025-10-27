@@ -24,6 +24,9 @@ public class OrderItem {
     @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
+    @Column(name = "style_value_ids", columnDefinition = "NVARCHAR(500)")
+    private String styleValueIds; // JSON array: ["styleValueId1", "styleValueId2"]
+
     private Integer quantity = 1;
 
     @Column(precision = 15, scale = 2)
