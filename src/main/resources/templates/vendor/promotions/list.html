@@ -87,25 +87,31 @@
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        <tr th:each="promo : ${promotions.content}">
+                                        <tr th:each="promo : ${promotions}">
                                             <td>
                                                 <strong th:text="${promo.name}">Flash Sale 12.12</strong>
                                                 <br>
                                                 <small class="text-muted" th:text="${promo.description}">Giảm giá sốc</small>
                                             </td>
                                             <td>
-                                                <span class="badge bg-info" th:if="${promo.discountType == 'PERCENTAGE'}">
+                                                <span class="badge bg-info" th:if="${promo.discountType == T(vn.iotstar.entity.Promotion.DiscountType).PERCENTAGE}">
                                                     <i class="fas fa-percent"></i> Phần trăm
                                                 </span>
-                                                <span class="badge bg-success" th:if="${promo.discountType == 'FIXED'}">
+                                                <span class="badge bg-success" th:if="${promo.discountType == T(vn.iotstar.entity.Promotion.DiscountType).FIXED_AMOUNT}">
                                                     <i class="fas fa-dollar-sign"></i> Cố định
+                                                </span>
+                                                <span class="badge bg-primary" th:if="${promo.discountType == T(vn.iotstar.entity.Promotion.DiscountType).FREE_SHIPPING}">
+                                                    <i class="fas fa-shipping-fast"></i> Miễn phí ship
                                                 </span>
                                             </td>
                                             <td>
-                                                <strong th:if="${promo.discountType == 'PERCENTAGE'}" 
+                                                <strong th:if="${promo.discountType == T(vn.iotstar.entity.Promotion.DiscountType).PERCENTAGE}" 
                                                         th:text="${promo.discountValue + '%'}">10%</strong>
-                                                <strong th:if="${promo.discountType == 'FIXED'}" 
+                                                <strong th:if="${promo.discountType == T(vn.iotstar.entity.Promotion.DiscountType).FIXED_AMOUNT}" 
                                                         th:text="${#numbers.formatDecimal(promo.discountValue, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}">50,000 VNĐ</strong>
+                                                <strong th:if="${promo.discountType == T(vn.iotstar.entity.Promotion.DiscountType).FREE_SHIPPING}">
+                                                    Miễn phí vận chuyển
+                                                </strong>
                                             </td>
                                             <td>
                                                 <small>
@@ -128,44 +134,32 @@
                                             </td>
                                             <td class="text-end">
                                                 <div class="btn-group" role="group">
-                                                    <a th:href="@{/vendor/promotions/{id}(id=${promo.promotionId})}" 
+                                                    <a th:href="@{/vendor/promotions/{id}(id=${promo.id})}" 
                                                        class="btn btn-sm btn-info"
                                                        title="Xem chi tiết">
                                                         <i class="fas fa-eye"></i>
                                                     </a>
-                                                    <a th:href="@{/vendor/promotions/{id}/edit(id=${promo.promotionId})}" 
+                                                    <a th:href="@{/vendor/promotions/edit/{id}(id=${promo.id})}" 
                                                        class="btn btn-sm btn-warning"
                                                        title="Chỉnh sửa">
                                                         <i class="fas fa-edit"></i>
                                                     </a>
-                                                    <button type="button" class="btn btn-sm btn-danger" 
-                                                            th:onclick="|deletePromotion('${promo.promotionId}')|"
-                                                            title="Xóa">
-                                                        <i class="fas fa-trash"></i>
-                                                    </button>
+                                                    <form th:action="@{/vendor/promotions/delete/{id}(id=${promo.id})}" 
+                                                          method="post" 
+                                                          style="display:inline;"
+                                                          onsubmit="return confirm('Bạn có chắc chắn muốn xóa chương trình khuyến mãi này?')">
+                                                        <button type="submit" class="btn btn-sm btn-danger" title="Xóa">
+                                                            <i class="fas fa-trash"></i>
+                                                        </button>
+                                                    </form>
                                                 </div>
                                             </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
-
-                            <!-- Pagination -->
-                            <nav th:if="${promotions.totalPages > 1}" aria-label="Promotion pagination" class="mt-3">
-                                <ul class="pagination justify-content-center">
-                                    <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
-                                        <a class="page-link" th:href="@{/vendor/promotions(page=${currentPage - 1})}">&laquo;</a>
-                                    </li>
-                                    <li th:each="i : ${#numbers.sequence(0, promotions.totalPages - 1)}" 
-                                        class="page-item" 
-                                        th:classappend="${i == currentPage} ? 'active'">
-                                        <a class="page-link" th:href="@{/vendor/promotions(page=${i})}" th:text="${i + 1}">1</a>
-                                    </li>
-                                    <li class="page-item" th:classappend="${currentPage == promotions.totalPages - 1} ? 'disabled'">
-                                        <a class="page-link" th:href="@{/vendor/promotions(page=${currentPage + 1})}">&raquo;</a>
-                                    </li>
-                                </ul>
-                            </nav>
+                            
+                            <!-- Pagination removed - using List instead of Page -->
                         </div>
                     </div>
                 </div>
@@ -174,23 +168,5 @@
     </div>
 
     <div th:replace="~{fragments/footer :: footer}"></div>
-
-    <script>
-        function deletePromotion(id) {
-            if (confirm('Bạn có chắc chắn muốn xóa chương trình khuyến mãi này?')) {
-                fetch('/vendor/promotions/' + id + '/delete', {
-                    method: 'POST'
-                }).then(response => {
-                    if (response.ok) {
-                        window.location.href = '/vendor/promotions?success=Đã xóa chương trình khuyến mãi thành công';
-                    } else {
-                        alert('Có lỗi xảy ra khi xóa chương trình khuyến mãi');
-                    }
-                }).catch(error => {
-                    alert('Có lỗi xảy ra: ' + error);
-                });
-            }
-        }
-    </script>
 </body>
 </html>

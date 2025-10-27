@@ -102,7 +102,7 @@ public class VendorProductServiceImpl implements VendorProductService {
         product.setPromotionalPrice(createDTO.getPromotionalPrice());
         product.setQuantity(createDTO.getQuantity());
         product.setSold(0);
-        product.setIsActive(false); // Admin needs to approve
+        product.setIsActive(true); // Tự động kích hoạt, không cần admin duyệt
         product.setIsSelling(createDTO.getIsSelling() != null ? createDTO.getIsSelling() : true);
         product.setCategory(category);
         product.setStore(store);
@@ -235,12 +235,8 @@ public class VendorProductServiceImpl implements VendorProductService {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> ResourceNotFoundException.product(productId));
         
-        // Soft delete
-        product.setIsActive(false);
-        product.setIsSelling(false);
-        product.setUpdatedAt(LocalDateTime.now());
-        
-        productRepository.save(product);
+        // Hard delete - xóa hoàn toàn khỏi database
+        productRepository.delete(product);
     }
     
     @Override

@@ -166,8 +166,9 @@ public class VendorAnalyticsServiceImpl implements VendorAnalyticsService {
                 Map<String, Object> product = new HashMap<>();
                 product.put("id", result[0]);
                 product.put("name", result[1]);
-                product.put("sold", result[2]);
-                product.put("revenue", result[3]);
+                product.put("soldCount", result[2]);
+                product.put("price", result[3]);
+                product.put("categoryName", result[4]);
                 return product;
             })
             .collect(Collectors.toList());

@@ -16,7 +16,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2><i class="fas fa-tags"></i> Chi tiết Khuyến mãi</h2>
                     <div>
-                        <a th:href="@{/vendor/promotions/{id}/edit(id=${promotion.promotionId})}" class="btn btn-warning">
+                        <a th:href="@{/vendor/promotions/{id}/edit(id=${promotion.id})}" class="btn btn-warning">
                             <i class="fas fa-edit"></i> Chỉnh sửa
                         </a>
                         <a th:href="@{/vendor/promotions}" class="btn btn-secondary">
@@ -95,38 +95,31 @@
 
                                 <div class="row">
                                     <div class="col-md-6 mb-3">
-                                        <strong><i class="fas fa-users"></i> Số lượng sử dụng:</strong>
-                                        <p th:if="${promotion.usageLimit != null && promotion.usageLimit > 0}">
-                                            <span th:text="${promotion.usageLimit} + ' lần'">100 lần</span>
-                                        </p>
-                                        <p th:unless="${promotion.usageLimit != null && promotion.usageLimit > 0}">
-                                            <span class="text-muted">Không giới hạn</span>
-                                        </p>
-                                    </div>
-                                    <div class="col-md-6 mb-3">
-                                        <strong><i class="fas fa-chart-line"></i> Đã sử dụng:</strong>
+                                        <strong><i class="fas fa-box-open"></i> Áp dụng cho:</strong>
                                         <p>
-                                            <span class="badge bg-primary" th:text="${promotion.usedCount != null ? promotion.usedCount : 0} + ' lần'">5 lần</span>
+                                            <span class="badge bg-success" th:if="${promotion.appliesTo != null && promotion.appliesTo.name() == 'ALL_PRODUCTS'}">
+                                                <i class="fas fa-check"></i> Tất cả sản phẩm
+                                            </span>
+                                            <span class="badge bg-warning" th:if="${promotion.appliesTo != null && promotion.appliesTo.name() == 'SPECIFIC_PRODUCTS'}">
+                                                <i class="fas fa-list"></i> Sản phẩm cụ thể
+                                            </span>
+                                            <span class="badge bg-info" th:if="${promotion.appliesTo != null && promotion.appliesTo.name() == 'CATEGORY'}">
+                                                <i class="fas fa-folder"></i> Danh mục
+                                            </span>
                                         </p>
                                     </div>
-                                </div>
-
-                                <div class="mb-3">
-                                    <strong><i class="fas fa-box-open"></i> Áp dụng:</strong>
-                                    <p>
-                                        <span class="badge bg-success" th:if="${promotion.applyToAll}">
-                                            <i class="fas fa-check"></i> Tất cả sản phẩm
-                                        </span>
-                                        <span class="badge bg-warning" th:unless="${promotion.applyToAll}">
-                                            <i class="fas fa-list"></i> Sản phẩm được chọn
-                                        </span>
-                                    </p>
+                                    <div class="col-md-6 mb-3" th:if="${promotion.productCount != null && promotion.productCount > 0}">
+                                        <strong><i class="fas fa-boxes"></i> Số sản phẩm áp dụng:</strong>
+                                        <p>
+                                            <span class="badge bg-primary" th:text="${promotion.productCount}">0</span>
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         <!-- Products Applied (if not apply to all) -->
-                        <div th:if="${!promotion.applyToAll && products != null && !products.empty}" class="card">
+                        <div th:if="${promotion.appliesTo != null && promotion.appliesTo.name() == 'SPECIFIC_PRODUCTS' && products != null && !products.empty}" class="card">
                             <div class="card-header">
                                 <h5 class="mb-0"><i class="fas fa-box"></i> Sản phẩm áp dụng</h5>
                             </div>
@@ -178,13 +171,23 @@
                                 <strong><i class="fas fa-chart-bar"></i> Thống kê</strong>
                             </div>
                             <div class="card-body">
-                                <div class="d-flex justify-content-between mb-2">
-                                    <span>Đã sử dụng:</span>
-                                    <strong th:text="${promotion.usedCount != null ? promotion.usedCount : 0}">0</strong>
+                                <div class="d-flex justify-content-between mb-2" th:if="${promotion.productCount != null}">
+                                    <span>Số sản phẩm áp dụng:</span>
+                                    <strong th:text="${promotion.productCount}">0</strong>
                                 </div>
-                                <div class="d-flex justify-content-between mb-2" th:if="${promotion.usageLimit != null && promotion.usageLimit > 0}">
-                                    <span>Còn lại:</span>
-                                    <strong th:text="${promotion.usageLimit - (promotion.usedCount != null ? promotion.usedCount : 0)}">100</strong>
+                                <div class="d-flex justify-content-between mb-2" th:if="${promotion.isExpired != null}">
+                                    <span>Đã hết hạn:</span>
+                                    <strong>
+                                        <span class="badge bg-danger" th:if="${promotion.isExpired}">Có</span>
+                                        <span class="badge bg-success" th:unless="${promotion.isExpired}">Không</span>
+                                    </strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2" th:if="${promotion.isUpcoming != null}">
+                                    <span>Sắp diễn ra:</span>
+                                    <strong>
+                                        <span class="badge bg-info" th:if="${promotion.isUpcoming}">Có</span>
+                                        <span class="badge bg-secondary" th:unless="${promotion.isUpcoming}">Không</span>
+                                    </strong>
                                 </div>
                                 <hr>
                                 <div class="d-flex justify-content-between mb-2">
@@ -200,11 +203,12 @@
 
                         <div class="card border-warning">
                             <div class="card-body text-center">
-                                <a th:href="@{/vendor/promotions/{id}/edit(id=${promotion.promotionId})}" class="btn btn-warning btn-block mb-2 w-100">
+                                <a th:href="@{/vendor/promotions/{id}/edit(id=${promotion.id})}" class="btn btn-warning btn-block mb-2 w-100">
                                     <i class="fas fa-edit"></i> Chỉnh sửa
                                 </a>
                                 <button type="button" class="btn btn-danger btn-block w-100" 
-                                        th:onclick="|deletePromotion('${promotion.promotionId}')|">
+                                        th:data-promotion-id="${promotion.id}"
+                                        onclick="deletePromotion(this.getAttribute('data-promotion-id'))">
                                     <i class="fas fa-trash"></i> Xóa
                                 </button>
                             </div>

@@ -52,13 +52,16 @@ public class Promotion {
     @Enumerated(EnumType.STRING)
     private AppliesTo appliesTo = AppliesTo.ALL_PRODUCTS;
     
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JoinTable(
         name = "promotion_products",
         joinColumns = @JoinColumn(name = "promotion_id"),
         inverseJoinColumns = @JoinColumn(name = "product_id")
     )
     private List<Product> products;
+    
+    @OneToMany(mappedBy = "promotion")
+    private List<Order> orders;
     
     @CreationTimestamp
     @Column(name = "created_at")
@@ -74,5 +77,61 @@ public class Promotion {
     
     public enum AppliesTo {
         ALL_PRODUCTS, SPECIFIC_PRODUCTS, CATEGORY
+    }
+    
+    // Helper methods
+    public boolean isExpired() {
+        if (endDate == null) return false;
+        return LocalDateTime.now().isAfter(endDate);
+    }
+    
+    public boolean isNotStarted() {
+        if (startDate == null) return false;
+        return LocalDateTime.now().isBefore(startDate);
+    }
+    
+    public boolean isAvailable() {
+        if (isActive == null) return false;
+        return isActive && !isExpired() && !isNotStarted();
+    }
+    
+    public boolean isApplicableToProduct(Product product) {
+        if (!isAvailable()) return false;
+        
+        switch (appliesTo) {
+            case ALL_PRODUCTS:
+                return true;
+            case SPECIFIC_PRODUCTS:
+                return products != null && products.contains(product);
+            case CATEGORY:
+                // Có thể mở rộng thêm logic kiểm tra category
+                return true;
+            default:
+                return false;
+        }
+    }
+    
+    public BigDecimal calculateDiscount(BigDecimal amount) {
+        if (!isAvailable()) return BigDecimal.ZERO;
+        
+        BigDecimal discount = BigDecimal.ZERO;
+        
+        switch (discountType) {
+            case PERCENTAGE:
+                discount = amount.multiply(discountValue).divide(BigDecimal.valueOf(100));
+                if (maxDiscount != null && maxDiscount.compareTo(BigDecimal.ZERO) > 0) {
+                    discount = discount.min(maxDiscount);
+                }
+                break;
+            case FIXED_AMOUNT:
+                discount = discountValue;
+                break;
+            case FREE_SHIPPING:
+                // Xử lý miễn phí ship ở logic Order
+                discount = BigDecimal.ZERO;
+                break;
+        }
+        
+        return discount;
     }
 }

@@ -30,12 +30,12 @@
 
                 <div class="card">
                     <div class="card-body">
-                        <form th:action="${isEdit ? '/vendor/promotions/' + promotionDTO.promotionId + '/update' : '/vendor/promotions/create'}" 
+                        <form th:action="${isEdit ? '/vendor/promotions/' + promotion.id + '/update' : '/vendor/promotions/create'}" 
                               method="post" th:object="${promotionDTO}">
                             
                             <div class="row">
                                 <!-- Form Info Section -->
-                                <div th:replace="~{vendor/promotions/fragments/form-info :: formInfo(${promotionDTO}, ${products})}"></div>
+                                <div th:replace="~{vendor/promotions/fragments/form-info :: formInfo}"></div>
                                 
                                 <!-- Form Settings Section -->
                                 <div th:replace="~{vendor/promotions/fragments/form-settings :: formSettings}"></div>
