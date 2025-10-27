@@ -50,6 +50,13 @@ public class VendorOrderDTO {
     private String shipmentStatus;
     private String shipperName;
     private String shippingProviderName;
+    private String shipmentId;
+
+    // Convenience fields for templates
+    private String orderId;
+    private String customerName;
+    private LocalDateTime orderDate;
+    private BigDecimal totalAmount;
     
     // Order items
     private List<VendorOrderItemDTO> orderItems;

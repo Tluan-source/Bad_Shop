@@ -140,33 +140,31 @@
                     <h4 class="mb-4"><i class="fas fa-history text-info me-2"></i>Lịch sử hoạt động gần đây</h4>
                     
                     <div class="timeline">
-                        <div class="d-flex mb-3">
-                            <i class="fas fa-circle text-success me-3 mt-1" style="font-size: 0.5rem;"></i>
-                            <div>
-                                <strong>Đăng nhập thành công</strong>
-                                <br><small class="text-muted">Hôm nay lúc 09:30 - IP: 192.168.1.1</small>
+                        <!-- Hiển thị dữ liệu động từ database -->
+                        <div th:if="${recentActivities != null and !recentActivities.isEmpty()}">
+                            <div th:each="activity : ${recentActivities}" class="d-flex mb-3">
+                                <i class="fas fa-circle me-3 mt-1" 
+                                   th:classappend="${'text-' + activity.activityType.badgeColor}" 
+                                   style="font-size: 0.5rem;"></i>
+                                <div class="flex-grow-1">
+                                    <strong th:text="${activity.activityType.displayName}">Hoạt động</strong>
+                                    <br>
+                                    <span th:text="${activity.description}">Mô tả hoạt động</span>
+                                    <br>
+                                    <small class="text-muted">
+                                        <span th:text="${#temporals.format(activity.createdAt, 'dd/MM/yyyy HH:mm')}">Thời gian</span>
+                                        <span th:if="${activity.ipAddress != null}">
+                                            - IP: <span th:text="${activity.ipAddress}">0.0.0.0</span>
+                                        </span>
+                                    </small>
+                                </div>
                             </div>
                         </div>
-                        <div class="d-flex mb-3">
-                            <i class="fas fa-circle text-primary me-3 mt-1" style="font-size: 0.5rem;"></i>
-                            <div>
-                                <strong>Cập nhật thông tin người dùng</strong>
-                                <br><small class="text-muted">Hôm qua lúc 15:20</small>
-                            </div>
-                        </div>
-                        <div class="d-flex mb-3">
-                            <i class="fas fa-circle text-warning me-3 mt-1" style="font-size: 0.5rem;"></i>
-                            <div>
-                                <strong>Thêm cửa hàng mới</strong>
-                                <br><small class="text-muted">2 ngày trước lúc 11:45</small>
-                            </div>
-                        </div>
-                        <div class="d-flex">
-                            <i class="fas fa-circle text-info me-3 mt-1" style="font-size: 0.5rem;"></i>
-                            <div>
-                                <strong>Xuất báo cáo thống kê</strong>
-                                <br><small class="text-muted">3 ngày trước lúc 14:00</small>
-                            </div>
+                        
+                        <!-- Thông báo nếu chưa có hoạt động nào -->
+                        <div th:if="${recentActivities == null or recentActivities.isEmpty()}" class="text-center text-muted py-4">
+                            <i class="fas fa-info-circle fa-2x mb-2"></i>
+                            <p>Chưa có hoạt động nào được ghi nhận.</p>
                         </div>
                     </div>
                 </div>

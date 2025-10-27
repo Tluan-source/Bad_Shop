@@ -31,6 +31,11 @@ public interface VendorOrderService {
     List<VendorOrderDTO> getMyOrdersByStatus(String storeId, Order.OrderStatus status);
     
     Page<VendorOrderDTO> getMyOrdersByStatus(String storeId, Order.OrderStatus status, Pageable pageable);
+
+    /**
+     * Get orders that already have an assigned shipment (i.e., a shipper has been allocated)
+     */
+    List<VendorOrderDTO> getMyAssignedShipments(String storeId);
     
     /**
      * Get order detail
