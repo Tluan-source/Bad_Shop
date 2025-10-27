@@ -1,6 +1,7 @@
 package vn.iotstar.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,33 +17,43 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import vn.iotstar.dto.vendor.ProductCreateDTO;
 import vn.iotstar.dto.vendor.ProductUpdateDTO;
+import vn.iotstar.dto.vendor.PromotionCreateDTO;
+import vn.iotstar.dto.vendor.StoreRegistrationDTO;
 import vn.iotstar.dto.vendor.StoreUpdateDTO;
 import vn.iotstar.dto.vendor.VendorDashboardStatsDTO;
 import vn.iotstar.dto.vendor.VendorOrderDTO;
 import vn.iotstar.dto.vendor.VendorProductDTO;
+import vn.iotstar.dto.vendor.VendorPromotionDTO;
 import vn.iotstar.dto.vendor.VendorStoreDTO;
 import vn.iotstar.entity.Category;
 import vn.iotstar.entity.Order;
 import vn.iotstar.entity.Style;
 import vn.iotstar.entity.StyleValue;
 import vn.iotstar.entity.User;
+import vn.iotstar.entity.Promotion;
 import vn.iotstar.repository.CategoryRepository;
 import vn.iotstar.repository.StyleRepository;
 import vn.iotstar.repository.StyleValueRepository;
+import vn.iotstar.repository.PromotionRepository;
 import vn.iotstar.service.UserService;
 import vn.iotstar.service.vendor.VendorAnalyticsService;
 import vn.iotstar.service.vendor.VendorOrderService;
 import vn.iotstar.service.vendor.VendorProductService;
 import vn.iotstar.service.vendor.VendorSecurityService;
 import vn.iotstar.service.vendor.VendorStoreService;
+import vn.iotstar.service.vendor.VendorRegistrationService;
+import vn.iotstar.service.CloudinaryService;
+import vn.iotstar.service.vendor.VendorPromotionService;
 
 /**
  * Main Vendor Controller - handles all vendor operations
@@ -80,6 +91,18 @@ public class VendorController {
     
     @Autowired
     private StyleValueRepository styleValueRepository;
+    
+    @Autowired
+    private VendorRegistrationService vendorRegistrationService;
+    
+    @Autowired
+    private CloudinaryService cloudinaryService;
+    
+    @Autowired
+    private VendorPromotionService promotionService;
+    
+    @Autowired
+    private PromotionRepository promotionRepository;
     
     // ========================================
     // DASHBOARD
@@ -601,5 +624,326 @@ public class VendorController {
         // TODO: Add transaction history
         
         return "vendor/wallet";
+    }
+    
+    // ========================================
+    // PROMOTIONS MANAGEMENT
+    // ========================================
+    
+    @GetMapping("/promotions")
+    public String promotions(@RequestParam(defaultValue = "0") int page,
+                            @RequestParam(defaultValue = "10") int size,
+                            Model model, 
+                            Authentication auth) {
+        User user = userService.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String storeId = securityService.getCurrentVendorStoreId(user.getId());
+        
+        Pageable pageable = PageRequest.of(page, size);
+        Page<VendorPromotionDTO> promotions = promotionService.getMyPromotions(storeId, pageable);
+        
+        model.addAttribute("promotions", promotions);
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", promotions.getTotalPages());
+        
+        // Get active promotions count
+        List<VendorPromotionDTO> activePromotions = promotionService.getActivePromotions(storeId);
+        model.addAttribute("activeCount", activePromotions.size());
+        
+        return "vendor/promotions/list";
+    }
+    
+    @GetMapping("/promotions/new")
+    public String addPromotionForm(Model model, Authentication auth) {
+        User user = userService.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String storeId = securityService.getCurrentVendorStoreId(user.getId());
+        
+        model.addAttribute("promotionDTO", new PromotionCreateDTO());
+        model.addAttribute("isEdit", false);
+        
+        // Load products for selection
+        List<VendorProductDTO> products = productService.getMyProducts(storeId);
+        model.addAttribute("products", products);
+        
+        return "vendor/promotions/form";
+    }
+    
+    @PostMapping("/promotions/create")
+    public String createPromotion(@Valid @ModelAttribute("promotionDTO") PromotionCreateDTO promotionDTO,
+                                  BindingResult result,
+                                  Authentication auth,
+                                  RedirectAttributes redirectAttributes,
+                                  Model model) {
+        User user = userService.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String storeId = securityService.getCurrentVendorStoreId(user.getId());
+        
+        if (result.hasErrors()) {
+            model.addAttribute("isEdit", false);
+            List<VendorProductDTO> products = productService.getMyProducts(storeId);
+            model.addAttribute("products", products);
+            return "vendor/promotions/form";
+        }
+        
+        try {
+            promotionService.createPromotion(promotionDTO, storeId);
+            redirectAttributes.addFlashAttribute("success", "Tạo chương trình khuyến mãi thành công!");
+            return "redirect:/vendor/promotions";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("isEdit", false);
+            List<VendorProductDTO> products = productService.getMyProducts(storeId);
+            model.addAttribute("products", products);
+            return "vendor/promotions/form";
+        }
+    }
+    
+    @GetMapping("/promotions/{id}")
+    public String promotionDetail(@PathVariable String id,
+                                  Model model,
+                                  Authentication auth) {
+        User user = userService.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String storeId = securityService.getCurrentVendorStoreId(user.getId());
+        
+        VendorPromotionDTO promotion = promotionService.getPromotionDetail(id, storeId);
+        model.addAttribute("promotion", promotion);
+        
+        return "vendor/promotions/detail";
+    }
+    
+    @GetMapping("/promotions/{id}/edit")
+    public String editPromotionForm(@PathVariable String id, 
+                                   Model model, 
+                                   Authentication auth) {
+        User user = userService.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String storeId = securityService.getCurrentVendorStoreId(user.getId());
+        
+        // Get promotion entity to access product IDs
+        Promotion promotionEntity = promotionRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Promotion not found"));
+        
+        // Security check
+        if (!promotionEntity.getStore().getId().equals(storeId)) {
+            throw new RuntimeException("Access denied");
+        }
+        
+        VendorPromotionDTO promotion = promotionService.getPromotionDetail(id, storeId);
+        
+        // Convert to DTO for form
+        PromotionCreateDTO promotionDTO = new PromotionCreateDTO();
+        promotionDTO.setName(promotion.getName());
+        promotionDTO.setDescription(promotion.getDescription());
+        promotionDTO.setDiscountType(promotion.getDiscountType());
+        promotionDTO.setDiscountValue(promotion.getDiscountValue());
+        promotionDTO.setMaxDiscount(promotion.getMaxDiscount());
+        promotionDTO.setMinOrderAmount(promotion.getMinOrderAmount());
+        promotionDTO.setStartDate(promotion.getStartDate());
+        promotionDTO.setEndDate(promotion.getEndDate());
+        promotionDTO.setAppliesTo(promotion.getAppliesTo());
+        promotionDTO.setIsActive(promotion.getIsActive());
+        
+        // IMPORTANT: Set productIds from the promotion entity
+        if (promotionEntity.getProducts() != null && !promotionEntity.getProducts().isEmpty()) {
+            List<String> productIds = promotionEntity.getProducts().stream()
+                    .map(product -> product.getId())
+                    .collect(Collectors.toList());
+            promotionDTO.setProductIds(productIds);
+        }
+        
+        model.addAttribute("promotionDTO", promotionDTO);
+        model.addAttribute("promotion", promotion);
+        model.addAttribute("isEdit", true);
+        
+        // Load products for selection
+        List<VendorProductDTO> products = productService.getMyProducts(storeId);
+        model.addAttribute("products", products);
+        
+        return "vendor/promotions/form";
+    }
+    
+    @PostMapping("/promotions/{id}/update")
+    public String updatePromotion(@PathVariable String id,
+                                  @Valid @ModelAttribute("promotionDTO") PromotionCreateDTO promotionDTO,
+                                  BindingResult result,
+                                  Authentication auth,
+                                  RedirectAttributes redirectAttributes,
+                                  Model model) {
+        User user = userService.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String storeId = securityService.getCurrentVendorStoreId(user.getId());
+        
+        if (result.hasErrors()) {
+            model.addAttribute("isEdit", true);
+            VendorPromotionDTO promotion = promotionService.getPromotionDetail(id, storeId);
+            model.addAttribute("promotion", promotion);
+            List<VendorProductDTO> products = productService.getMyProducts(storeId);
+            model.addAttribute("products", products);
+            return "vendor/promotions/form";
+        }
+        
+        try {
+            promotionService.updatePromotion(id, promotionDTO, storeId);
+            redirectAttributes.addFlashAttribute("success", "Cập nhật khuyến mãi thành công!");
+            return "redirect:/vendor/promotions";
+        } catch (Exception e) {
+            model.addAttribute("error", e.getMessage());
+            model.addAttribute("isEdit", true);
+            VendorPromotionDTO promotion = promotionService.getPromotionDetail(id, storeId);
+            model.addAttribute("promotion", promotion);
+            List<VendorProductDTO> products = productService.getMyProducts(storeId);
+            model.addAttribute("products", products);
+            return "vendor/promotions/form";
+        }
+    }
+    
+    @PostMapping("/promotions/{id}/toggle")
+    public String togglePromotionStatus(@PathVariable String id,
+                                        @RequestParam boolean isActive,
+                                        Authentication auth,
+                                        RedirectAttributes redirectAttributes) {
+        try {
+            User user = userService.findByEmail(auth.getName())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            String storeId = securityService.getCurrentVendorStoreId(user.getId());
+            
+            promotionService.togglePromotionStatus(id, storeId, isActive);
+            
+            redirectAttributes.addFlashAttribute("success", 
+                isActive ? "Đã kích hoạt khuyến mãi!" : "Đã tắt khuyến mãi!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+        
+        return "redirect:/vendor/promotions";
+    }
+    
+    @PostMapping("/promotions/{id}/delete")
+    public String deletePromotion(@PathVariable String id, 
+                                  Authentication auth,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            User user = userService.findByEmail(auth.getName())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            String storeId = securityService.getCurrentVendorStoreId(user.getId());
+            
+            promotionService.deletePromotion(id, storeId);
+            
+            redirectAttributes.addFlashAttribute("success", "Xóa chương trình khuyến mãi thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
+        
+        return "redirect:/vendor/promotions";
+    }
+    
+    // ========================================
+    // REVENUE MANAGEMENT
+    // ========================================
+    
+    @GetMapping("/revenue")
+    public String revenue(@RequestParam(required = false) String startDate,
+                         @RequestParam(required = false) String endDate,
+                         @RequestParam(required = false) String status,
+                         @RequestParam(defaultValue = "0") int page,
+                         Model model, 
+                         Authentication auth) {
+        User user = userService.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String storeId = securityService.getCurrentVendorStoreId(user.getId());
+        
+        // Get revenue summary
+        // TODO: Create revenue service methods
+        model.addAttribute("totalRevenue", 0);
+        model.addAttribute("pendingRevenue", 0);
+        model.addAttribute("paidRevenue", 0);
+        model.addAttribute("walletBalance", 0);
+        
+        // Get transactions
+        // TODO: Get transaction list with filters
+        // Page<Transaction> transactions = revenueService.getTransactions(storeId, startDate, endDate, status, page);
+        // model.addAttribute("transactions", transactions);
+        
+        model.addAttribute("startDate", startDate);
+        model.addAttribute("endDate", endDate);
+        model.addAttribute("status", status);
+        model.addAttribute("currentPage", page);
+        
+        return "vendor/revenue";
+    }
+    
+    @GetMapping("/revenue/export")
+    public void exportRevenue(@RequestParam(required = false) String startDate,
+                             @RequestParam(required = false) String endDate,
+                             Authentication auth,
+                             HttpServletResponse response) throws IOException {
+        User user = userService.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String storeId = securityService.getCurrentVendorStoreId(user.getId());
+        
+        // TODO: Export to Excel
+        response.setContentType("application/vnd.ms-excel");
+        response.setHeader("Content-Disposition", "attachment; filename=revenue-report.xlsx");
+        
+        // Implementation needed
+    }
+    
+    // ========================================
+    // VENDOR REGISTRATION (for non-vendors)
+    // ========================================
+    
+    @GetMapping("/register")
+    public String registerForm(Model model, Authentication auth) {
+        User user = userService.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Check if already vendor
+        if (user.getRole() == User.UserRole.VENDOR) {
+            return "redirect:/vendor/dashboard";
+        }
+        
+        // Check if has pending registration
+        if (vendorRegistrationService.hasPendingRegistration(user.getId())) {
+            model.addAttribute("hasPending", true);
+            model.addAttribute("message", "Bạn đã đăng ký. Vui lòng đợi admin phê duyệt.");
+        }
+        
+        model.addAttribute("storeRegistration", new StoreRegistrationDTO());
+        
+        return "vendor/register";
+    }
+    
+    @PostMapping("/register")
+    public String registerStore(@Valid @ModelAttribute("storeRegistration") StoreRegistrationDTO storeDTO,
+                               BindingResult result,
+                               @RequestParam(required = false) MultipartFile logoFile,
+                               @RequestParam(required = false) MultipartFile licenseFile,
+                               Authentication auth,
+                               RedirectAttributes redirectAttributes,
+                               Model model) {
+        
+        if (result.hasErrors()) {
+            return "vendor/register";
+        }
+        
+        User user = userService.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        try {
+            // Register vendor
+            String storeId = vendorRegistrationService.registerVendor(user, storeDTO, logoFile, licenseFile);
+            
+            redirectAttributes.addFlashAttribute("success", 
+                "Đăng ký thành công! Cửa hàng của bạn đang chờ admin phê duyệt. " +
+                "Bạn sẽ nhận được email thông báo khi được duyệt.");
+            
+            return "redirect:/";
+            
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi: " + e.getMessage());
+            return "vendor/register";
+        }
     }
 }

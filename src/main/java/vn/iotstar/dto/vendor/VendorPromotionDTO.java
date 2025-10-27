@@ -29,6 +29,7 @@ public class VendorPromotionDTO {
     private Boolean isActive;
     private Promotion.AppliesTo appliesTo;
     private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
     
     // Store info
     private String storeId;
@@ -38,4 +39,5 @@ public class VendorPromotionDTO {
     private Boolean isExpired;
     private Boolean isUpcoming;
     private Integer appliedProductCount;
+    private Integer productCount; // Number of products in this promotion
 }

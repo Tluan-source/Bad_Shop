@@ -85,7 +85,8 @@ public class ActivityLog {
         CHANGE_PASSWORD("Đổi mật khẩu", "warning"),
         UPLOAD_AVATAR("Tải lên ảnh đại diện", "primary"),
         VIEW_DASHBOARD("Xem dashboard", "info"),
-        VIEW_REPORT("Xem báo cáo", "info");
+        VIEW_REPORT("Xem báo cáo", "info"),
+        ADMIN_ACTION("Hành động quản trị", "primary");
         
         private final String displayName;
         private final String badgeColor;

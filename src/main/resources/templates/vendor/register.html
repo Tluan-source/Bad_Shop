@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/head :: head}">
+    <title>Đăng ký làm Người bán - Badminton Marketplace</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container mt-5 mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white text-center py-4">
+                        <h3><i class="fas fa-store-alt"></i> Đăng ký làm Người bán</h3>
+                        <p class="mb-0">Bắt đầu kinh doanh cùng Badminton Marketplace</p>
+                    </div>
+                    <div class="card-body p-4">
+                        <!-- Benefits Section -->
+                        <div class="alert alert-info">
+                            <h5><i class="fas fa-gift"></i> Lợi ích khi trở thành Người bán:</h5>
+                            <ul class="mb-0">
+                                <li>Tiếp cận hàng triệu khách hàng tiềm năng</li>
+                                <li>Công cụ quản lý shop chuyên nghiệp</li>
+                                <li>Hỗ trợ marketing và khuyến mãi</li>
+                                <li>Thanh toán nhanh chóng, minh bạch</li>
+                                <li>Hoa hồng cạnh tranh chỉ 5-10%</li>
+                            </ul>
+                        </div>
+
+                        <form th:action="@{/vendor/register}" method="post" th:object="${storeRegistration}" enctype="multipart/form-data">
+                            <h5 class="mb-3 mt-4"><i class="fas fa-info-circle"></i> Thông tin Cửa hàng</h5>
+                            
+                            <div class="mb-3">
+                                <label for="storeName" class="form-label">Tên cửa hàng <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="storeName" th:field="*{storeName}" 
+                                       placeholder="VD: Cửa hàng Cầu lông ABC" required>
+                                <small class="text-muted">Tên này sẽ hiển thị công khai trên marketplace</small>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="description" class="form-label">Mô tả cửa hàng <span class="text-danger">*</span></label>
+                                <textarea class="form-control" id="description" rows="4" th:field="*{description}" 
+                                          placeholder="Giới thiệu về cửa hàng, sản phẩm kinh doanh..." required></textarea>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="phone" class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+                                    <input type="tel" class="form-control" id="phone" th:field="*{phone}" 
+                                           placeholder="0123456789" pattern="[0-9]{10,11}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="email" class="form-label">Email liên hệ <span class="text-danger">*</span></label>
+                                    <input type="email" class="form-control" id="email" th:field="*{email}" 
+                                           placeholder="shop@example.com" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="address" class="form-label">Địa chỉ cửa hàng <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="address" th:field="*{address}" 
+                                       placeholder="Số nhà, đường, phường/xã" required>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-4 mb-3">
+                                    <label for="city" class="form-label">Tỉnh/Thành phố <span class="text-danger">*</span></label>
+                                    <select class="form-select" id="city" th:field="*{city}" required>
+                                        <option value="">-- Chọn --</option>
+                                        <option value="Hà Nội">Hà Nội</option>
+                                        <option value="Hồ Chí Minh">Hồ Chí Minh</option>
+                                        <option value="Đà Nẵng">Đà Nẵng</option>
+                                        <option value="Cần Thơ">Cần Thơ</option>
+                                        <option value="Hải Phòng">Hải Phòng</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="district" class="form-label">Quận/Huyện <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="district" th:field="*{district}" required>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <label for="ward" class="form-label">Phường/Xã <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="ward" th:field="*{ward}" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="logo" class="form-label">Logo cửa hàng</label>
+                                <input type="file" class="form-control" id="logo" name="logoFile" accept="image/*">
+                                <small class="text-muted">Định dạng: JPG, PNG. Kích thước tối đa: 2MB</small>
+                            </div>
+
+                            <h5 class="mb-3 mt-4"><i class="fas fa-file-alt"></i> Thông tin Pháp lý</h5>
+
+                            <div class="mb-3">
+                                <label for="businessType" class="form-label">Loại hình kinh doanh <span class="text-danger">*</span></label>
+                                <select class="form-select" id="businessType" th:field="*{businessType}" required>
+                                    <option value="">-- Chọn --</option>
+                                    <option value="INDIVIDUAL">Cá nhân</option>
+                                    <option value="COMPANY">Công ty</option>
+                                    <option value="HOUSEHOLD">Hộ kinh doanh</option>
+                                </select>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="taxCode" class="form-label">Mã số thuế</label>
+                                <input type="text" class="form-control" id="taxCode" th:field="*{taxCode}" 
+                                       placeholder="Nhập mã số thuế (nếu có)">
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="businessLicense" class="form-label">Giấy phép kinh doanh</label>
+                                <input type="file" class="form-control" id="businessLicense" name="licenseFile" accept="image/*,application/pdf">
+                                <small class="text-muted">Định dạng: JPG, PNG, PDF. Kích thước tối đa: 5MB</small>
+                            </div>
+
+                            <h5 class="mb-3 mt-4"><i class="fas fa-university"></i> Thông tin Thanh toán</h5>
+
+                            <div class="mb-3">
+                                <label for="bankName" class="form-label">Tên ngân hàng <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" id="bankName" th:field="*{bankName}" 
+                                       placeholder="VD: Vietcombank, Techcombank..." required>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="bankAccountNumber" class="form-label">Số tài khoản <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="bankAccountNumber" th:field="*{bankAccountNumber}" required>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="bankAccountName" class="form-label">Tên chủ tài khoản <span class="text-danger">*</span></label>
+                                    <input type="text" class="form-control" id="bankAccountName" th:field="*{bankAccountName}" required>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="bankBranch" class="form-label">Chi nhánh</label>
+                                <input type="text" class="form-control" id="bankBranch" th:field="*{bankBranch}" 
+                                       placeholder="VD: Chi nhánh Đống Đa, Hà Nội">
+                            </div>
+
+                            <div class="form-check mb-4">
+                                <input class="form-check-input" type="checkbox" id="agreeTerms" required>
+                                <label class="form-check-label" for="agreeTerms">
+                                    Tôi đồng ý với <a href="#" target="_blank">Điều khoản dịch vụ</a> và 
+                                    <a href="#" target="_blank">Chính sách bán hàng</a> của Badminton Marketplace
+                                </label>
+                            </div>
+
+                            <div class="d-grid gap-2">
+                                <button type="submit" class="btn btn-primary btn-lg">
+                                    <i class="fas fa-check-circle"></i> Đăng ký ngay
+                                </button>
+                                <a th:href="@{/}" class="btn btn-outline-secondary">
+                                    <i class="fas fa-arrow-left"></i> Quay lại trang chủ
+                                </a>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Help Section -->
+                <div class="card mt-4">
+                    <div class="card-body text-center">
+                        <h5><i class="fas fa-question-circle"></i> Cần hỗ trợ?</h5>
+                        <p>Liên hệ với chúng tôi:</p>
+                        <p>
+                            <i class="fas fa-phone"></i> Hotline: 1900-xxxx<br>
+                            <i class="fas fa-envelope"></i> Email: support@badmintonmarket.com
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

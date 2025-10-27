@@ -54,14 +54,16 @@ public class VendorAnalyticsServiceImpl implements VendorAnalyticsService {
         
         // Order stats by status
         stats.setNewOrders(orderRepository.countByStoreIdAndStatus(storeId, Order.OrderStatus.NOT_PROCESSED));
+        stats.setPendingOrders(stats.getNewOrders()); // Alias for newOrders
         stats.setProcessingOrders(orderRepository.countByStoreIdAndStatus(storeId, Order.OrderStatus.PROCESSING));
         stats.setShippingOrders(orderRepository.countByStoreIdAndStatus(storeId, Order.OrderStatus.SHIPPED));
         stats.setDeliveredOrders(orderRepository.countByStoreIdAndStatus(storeId, Order.OrderStatus.DELIVERED));
         stats.setCancelledOrders(orderRepository.countByStoreIdAndStatus(storeId, Order.OrderStatus.CANCELLED));
+        stats.setReturnedOrders(orderRepository.countByStoreIdAndStatus(storeId, Order.OrderStatus.RETURNED));
         
         Long totalOrders = stats.getNewOrders() + stats.getProcessingOrders() + 
                           stats.getShippingOrders() + stats.getDeliveredOrders() + 
-                          stats.getCancelledOrders();
+                          stats.getCancelledOrders() + stats.getReturnedOrders();
         stats.setTotalOrders(totalOrders);
         
         // Revenue stats
@@ -177,10 +179,21 @@ public class VendorAnalyticsServiceImpl implements VendorAnalyticsService {
         Map<String, BigDecimal> summary = new HashMap<>();
         
         LocalDateTime now = LocalDateTime.now();
-        LocalDateTime startOfMonth = now.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
         
-        BigDecimal totalRevenue = orderRepository.calculateTotalRevenue(storeId);
+        // Today
+        LocalDateTime startOfDay = now.truncatedTo(ChronoUnit.DAYS);
+        BigDecimal todayRevenue = orderRepository.calculateRevenueByDateRange(storeId, startOfDay, now);
+        
+        // This week
+        LocalDateTime startOfWeek = now.minusDays(7);
+        BigDecimal weekRevenue = orderRepository.calculateRevenueByDateRange(storeId, startOfWeek, now);
+        
+        // This month
+        LocalDateTime startOfMonth = now.withDayOfMonth(1).truncatedTo(ChronoUnit.DAYS);
         BigDecimal monthRevenue = orderRepository.calculateRevenueByDateRange(storeId, startOfMonth, now);
+        
+        // Total
+        BigDecimal totalRevenue = orderRepository.calculateTotalRevenue(storeId);
         
         // Calculate total commission paid
         List<Order> allOrders = orderRepository.findByStoreIdOrderByCreatedAtDesc(storeId)
@@ -195,6 +208,11 @@ public class VendorAnalyticsServiceImpl implements VendorAnalyticsService {
         BigDecimal profit = (totalRevenue != null ? totalRevenue : BigDecimal.ZERO)
             .subtract(totalCommission != null ? totalCommission : BigDecimal.ZERO);
         
+        // Put values with keys that match template expectations
+        summary.put("today", todayRevenue != null ? todayRevenue : BigDecimal.ZERO);
+        summary.put("thisWeek", weekRevenue != null ? weekRevenue : BigDecimal.ZERO);
+        summary.put("thisMonth", monthRevenue != null ? monthRevenue : BigDecimal.ZERO);
+        summary.put("total", totalRevenue != null ? totalRevenue : BigDecimal.ZERO);
         summary.put("totalRevenue", totalRevenue != null ? totalRevenue : BigDecimal.ZERO);
         summary.put("monthRevenue", monthRevenue != null ? monthRevenue : BigDecimal.ZERO);
         summary.put("totalCommission", totalCommission);

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/head :: head}">
+    <title>Chi tiết Khuyến mãi - Badminton Marketplace</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div th:replace="~{vendor/fragments/sidebar :: sidebar('promotions')}"></div>
+
+            <!-- Main content -->
+            <div class="col-md-10">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-tags"></i> Chi tiết Khuyến mãi</h2>
+                    <div>
+                        <a th:href="@{/vendor/promotions/{id}/edit(id=${promotion.promotionId})}" class="btn btn-warning">
+                            <i class="fas fa-edit"></i> Chỉnh sửa
+                        </a>
+                        <a th:href="@{/vendor/promotions}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Quay lại
+                        </a>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- Promotion Info -->
+                        <div class="card mb-4">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0"><i class="fas fa-info-circle"></i> Thông tin chương trình</h5>
+                            </div>
+                            <div class="card-body">
+                                <h4 th:text="${promotion.name}">Flash Sale 12.12</h4>
+                                <p class="text-muted" th:text="${promotion.description}">Giảm giá sốc cho tất cả sản phẩm</p>
+                                
+                                <hr>
+                                
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <strong><i class="fas fa-percent"></i> Loại giảm giá:</strong>
+                                        <p>
+                                            <span class="badge bg-info" th:if="${promotion.discountType == 'PERCENTAGE'}">
+                                                <i class="fas fa-percent"></i> Phần trăm
+                                            </span>
+                                            <span class="badge bg-success" th:if="${promotion.discountType == 'FIXED'}">
+                                                <i class="fas fa-dollar-sign"></i> Cố định
+                                            </span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <strong><i class="fas fa-tag"></i> Giá trị giảm:</strong>
+                                        <p>
+                                            <span class="badge bg-danger fs-5" th:if="${promotion.discountType == 'PERCENTAGE'}" 
+                                                  th:text="${promotion.discountValue + '%'}">10%</span>
+                                            <span class="badge bg-danger fs-5" th:if="${promotion.discountType == 'FIXED'}" 
+                                                  th:text="${#numbers.formatDecimal(promotion.discountValue, 0, 'COMMA', 0, 'POINT') + ' VNĐ'}">50,000 VNĐ</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <strong><i class="fas fa-calendar-alt"></i> Ngày bắt đầu:</strong>
+                                        <p th:text="${#temporals.format(promotion.startDate, 'dd/MM/yyyy HH:mm')}">01/12/2025 00:00</p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <strong><i class="fas fa-calendar-check"></i> Ngày kết thúc:</strong>
+                                        <p th:text="${#temporals.format(promotion.endDate, 'dd/MM/yyyy HH:mm')}">31/12/2025 23:59</p>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <strong><i class="fas fa-shopping-cart"></i> Đơn hàng tối thiểu:</strong>
+                                        <p th:if="${promotion.minOrderAmount != null && promotion.minOrderAmount > 0}">
+                                            <span th:text="${#numbers.formatDecimal(promotion.minOrderAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">100,000 VNĐ</span>
+                                        </p>
+                                        <p th:unless="${promotion.minOrderAmount != null && promotion.minOrderAmount > 0}">
+                                            <span class="text-muted">Không giới hạn</span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <strong><i class="fas fa-coins"></i> Giảm tối đa:</strong>
+                                        <p th:if="${promotion.maxDiscount != null && promotion.maxDiscount > 0}">
+                                            <span th:text="${#numbers.formatDecimal(promotion.maxDiscount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">500,000 VNĐ</span>
+                                        </p>
+                                        <p th:unless="${promotion.maxDiscount != null && promotion.maxDiscount > 0}">
+                                            <span class="text-muted">Không giới hạn</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <strong><i class="fas fa-users"></i> Số lượng sử dụng:</strong>
+                                        <p th:if="${promotion.usageLimit != null && promotion.usageLimit > 0}">
+                                            <span th:text="${promotion.usageLimit} + ' lần'">100 lần</span>
+                                        </p>
+                                        <p th:unless="${promotion.usageLimit != null && promotion.usageLimit > 0}">
+                                            <span class="text-muted">Không giới hạn</span>
+                                        </p>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <strong><i class="fas fa-chart-line"></i> Đã sử dụng:</strong>
+                                        <p>
+                                            <span class="badge bg-primary" th:text="${promotion.usedCount != null ? promotion.usedCount : 0} + ' lần'">5 lần</span>
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <strong><i class="fas fa-box-open"></i> Áp dụng:</strong>
+                                    <p>
+                                        <span class="badge bg-success" th:if="${promotion.applyToAll}">
+                                            <i class="fas fa-check"></i> Tất cả sản phẩm
+                                        </span>
+                                        <span class="badge bg-warning" th:unless="${promotion.applyToAll}">
+                                            <i class="fas fa-list"></i> Sản phẩm được chọn
+                                        </span>
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Products Applied (if not apply to all) -->
+                        <div th:if="${!promotion.applyToAll && products != null && !products.empty}" class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0"><i class="fas fa-box"></i> Sản phẩm áp dụng</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Sản phẩm</th>
+                                                <th>Giá gốc</th>
+                                                <th>Giá sau giảm</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr th:each="product : ${products}">
+                                                <td>
+                                                    <strong th:text="${product.name}">Product name</strong>
+                                                </td>
+                                                <td th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">100,000 VNĐ</td>
+                                                <td>
+                                                    <span class="text-danger fw-bold" th:text="${#numbers.formatDecimal(product.promotionalPrice, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">90,000 VNĐ</span>
+                                                </td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Status & Stats -->
+                    <div class="col-md-4">
+                        <div class="card mb-3">
+                            <div class="card-body text-center">
+                                <h5>Trạng thái</h5>
+                                <h3>
+                                    <span class="badge bg-success" th:if="${promotion.isActive}">
+                                        <i class="fas fa-check-circle"></i> Đang hoạt động
+                                    </span>
+                                    <span class="badge bg-secondary" th:unless="${promotion.isActive}">
+                                        <i class="fas fa-times-circle"></i> Không hoạt động
+                                    </span>
+                                </h3>
+                            </div>
+                        </div>
+
+                        <div class="card mb-3">
+                            <div class="card-header bg-light">
+                                <strong><i class="fas fa-chart-bar"></i> Thống kê</strong>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Đã sử dụng:</span>
+                                    <strong th:text="${promotion.usedCount != null ? promotion.usedCount : 0}">0</strong>
+                                </div>
+                                <div class="d-flex justify-content-between mb-2" th:if="${promotion.usageLimit != null && promotion.usageLimit > 0}">
+                                    <span>Còn lại:</span>
+                                    <strong th:text="${promotion.usageLimit - (promotion.usedCount != null ? promotion.usedCount : 0)}">100</strong>
+                                </div>
+                                <hr>
+                                <div class="d-flex justify-content-between mb-2">
+                                    <span>Ngày tạo:</span>
+                                    <small th:text="${promotion.createdAt != null ? #temporals.format(promotion.createdAt, 'dd/MM/yyyy') : '-'}">01/11/2025</small>
+                                </div>
+                                <div class="d-flex justify-content-between" th:if="${promotion.updatedAt != null}">
+                                    <span>Cập nhật:</span>
+                                    <small th:text="${#temporals.format(promotion.updatedAt, 'dd/MM/yyyy')}">15/11/2025</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card border-warning">
+                            <div class="card-body text-center">
+                                <a th:href="@{/vendor/promotions/{id}/edit(id=${promotion.promotionId})}" class="btn btn-warning btn-block mb-2 w-100">
+                                    <i class="fas fa-edit"></i> Chỉnh sửa
+                                </a>
+                                <button type="button" class="btn btn-danger btn-block w-100" 
+                                        th:onclick="|deletePromotion('${promotion.promotionId}')|">
+                                    <i class="fas fa-trash"></i> Xóa
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <script>
+        function deletePromotion(id) {
+            if (confirm('Bạn có chắc chắn muốn xóa chương trình khuyến mãi này?')) {
+                fetch('/vendor/promotions/' + id + '/delete', {
+                    method: 'POST'
+                }).then(response => {
+                    if (response.ok) {
+                        window.location.href = '/vendor/promotions?success=Đã xóa chương trình khuyến mãi thành công';
+                    } else {
+                        alert('Có lỗi xảy ra khi xóa chương trình khuyến mãi');
+                    }
+                }).catch(error => {
+                    alert('Có lỗi xảy ra: ' + error);
+                });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/head :: head}">
+    <title>Quản lý Sản phẩm - Admin</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div class="col-md-2">
+                <div class="list-group">
+                    <a th:href="@{/admin/dashboard}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a th:href="@{/admin/users}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-users"></i> Quản lý User
+                    </a>
+                    <a th:href="@{/admin/stores}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-store"></i> Quản lý Shop
+                    </a>
+                    <a th:href="@{/admin/products}" class="list-group-item list-group-item-action active">
+                        <i class="fas fa-box"></i> Quản lý Sản phẩm
+                    </a>
+                    <a th:href="@{/admin/categories}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-tags"></i> Danh mục
+                    </a>
+                    <a th:href="@{/admin/orders}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-shopping-cart"></i> Đơn hàng
+                    </a>
+                    <a th:href="@{/admin/vouchers}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-ticket-alt"></i> Voucher
+                    </a>
+                    <a th:href="@{/admin/reports}" class="list-group-item list-group-item-action">
+                        <i class="fas fa-chart-bar"></i> Báo cáo
+                    </a>
+                </div>
+            </div>
+
+            <div class="col-md-10">
+                <h2 class="mb-4"><i class="fas fa-box"></i> Quản lý Sản phẩm</h2>
+
+                <!-- Alert Messages -->
+                <div th:if="${message}" th:class="'alert alert-' + ${messageType} + ' alert-dismissible fade show'" role="alert">
+                    <span th:text="${message}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Tổng sản phẩm</h6>
+                                <h3 th:text="${totalProducts}">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-dark">
+                            <div class="card-body">
+                                <h6 class="card-title">Chờ duyệt</h6>
+                                <h3 th:text="${pendingProducts}">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Đã duyệt</h6>
+                                <h3 th:text="${approvedProducts}">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-danger text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Bị từ chối</h6>
+                                <h3 th:text="${rejectedProducts}">0</h3>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter & Search -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form method="get" th:action="@{/admin/products}" class="row g-3">
+                            <div class="col-md-4">
+                                <input type="text" name="search" class="form-control" 
+                                       th:value="${search}" placeholder="Tìm tên sản phẩm...">
+                            </div>
+                            <div class="col-md-3">
+                                <select name="status" class="form-select">
+                                    <option value="">-- Tất cả trạng thái --</option>
+                                    <option value="pending" th:selected="${status == 'pending'}">Chờ duyệt</option>
+                                    <option value="approved" th:selected="${status == 'approved'}">Đã duyệt</option>
+                                    <option value="rejected" th:selected="${status == 'rejected'}">Bị từ chối</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <select name="storeId" class="form-select">
+                                    <option value="">-- Tất cả shop --</option>
+                                    <option th:each="store : ${stores}" 
+                                            th:value="${store.id}" 
+                                            th:text="${store.name}"
+                                            th:selected="${storeId == store.id}">
+                                        Shop Name
+                                    </option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search"></i> Tìm kiếm
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Products Table -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Ảnh</th>
+                                        <th>Tên sản phẩm</th>
+                                        <th>Cửa hàng</th>
+                                        <th>Danh mục</th>
+                                        <th class="text-end">Giá</th>
+                                        <th class="text-center">Tồn kho</th>
+                                        <th class="text-center">Trạng thái</th>
+                                        <th class="text-center">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:if="${#lists.isEmpty(products)}">
+                                        <td colspan="8" class="text-center text-muted py-4">
+                                            <i class="fas fa-box-open fa-3x mb-2"></i>
+                                            <p>Không có sản phẩm nào</p>
+                                        </td>
+                                    </tr>
+                                    <tr th:each="product : ${products}">
+                                        <td>
+                                            <img th:src="${product.listImages != null && !product.listImages.isEmpty() ? product.listImages.get(0) : '/images/default-product.png'}" 
+                                                 alt="Product" style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px;">
+                                        </td>
+                                        <td>
+                                            <strong th:text="${product.name}">Product Name</strong>
+                                            <br>
+                                            <small class="text-muted">ID: <span th:text="${product.id}">P123</span></small>
+                                        </td>
+                                        <td>
+                                            <span th:text="${product.store != null ? product.store.name : 'N/A'}">Store Name</span>
+                                        </td>
+                                        <td>
+                                            <span th:text="${product.category != null ? product.category.name : 'N/A'}">Category</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <strong th:text="${#numbers.formatDecimal(product.price, 0, 0) + ' VNĐ'}">0 VNĐ</strong>
+                                            <br>
+                                            <small class="text-muted" th:if="${product.promotionalPrice != null && product.promotionalPrice.compareTo(product.price) < 0}">
+                                                KM: <span th:text="${#numbers.formatDecimal(product.promotionalPrice, 0, 0)}">0</span> VNĐ
+                                            </small>
+                                        </td>
+                                        <td class="text-center">
+                                            <span th:text="${product.quantity}">0</span>
+                                        </td>
+                                        <td class="text-center">
+                                            <span th:if="${!product.isActive}" class="badge bg-warning">
+                                                <i class="fas fa-clock"></i> Chờ duyệt
+                                            </span>
+                                            <span th:if="${product.isActive && product.isSelling}" class="badge bg-success">
+                                                <i class="fas fa-check"></i> Đang bán
+                                            </span>
+                                            <span th:if="${product.isActive && !product.isSelling}" class="badge bg-secondary">
+                                                <i class="fas fa-pause"></i> Ngừng bán
+                                            </span>
+                                        </td>
+                                        <td class="text-center">
+                                            <div class="btn-group" role="group">
+                                                <a th:href="@{/admin/products/{id}/details(id=${product.id})}" 
+                                                   class="btn btn-sm btn-info" title="Xem chi tiết">
+                                                    <i class="fas fa-eye"></i>
+                                                </a>
+                                                <button th:if="${!product.isActive}" 
+                                                        type="button" 
+                                                        class="btn btn-sm btn-success" 
+                                                        title="Duyệt sản phẩm"
+                                                        th:onclick="|approveProduct('${product.id}')|">
+                                                    <i class="fas fa-check"></i>
+                                                </button>
+                                                <button type="button" 
+                                                        class="btn btn-sm btn-danger" 
+                                                        title="Từ chối/Xóa"
+                                                        th:onclick="|rejectProduct('${product.id}', '${product.name}')|">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Pagination -->
+                        <nav th:if="${totalPages > 1}">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                                    <a class="page-link" th:href="@{/admin/products(page=${currentPage - 1}, search=${search}, status=${status}, storeId=${storeId})}">
+                                        Trước
+                                    </a>
+                                </li>
+                                <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                                    th:classappend="${i == currentPage ? 'active' : ''}">
+                                    <a class="page-link" th:href="@{/admin/products(page=${i}, search=${search}, status=${status}, storeId=${storeId})}"
+                                       th:text="${i + 1}">1</a>
+                                </li>
+                                <li class="page-item" th:classappend="${currentPage == totalPages - 1 ? 'disabled' : ''}">
+                                    <a class="page-link" th:href="@{/admin/products(page=${currentPage + 1}, search=${search}, status=${status}, storeId=${storeId})}">
+                                        Sau
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <!-- Reject Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Từ chối sản phẩm</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form id="rejectForm" method="post">
+                    <div class="modal-body">
+                        <p>Bạn có chắc muốn từ chối sản phẩm: <strong id="productName"></strong>?</p>
+                        <div class="mb-3">
+                            <label class="form-label">Lý do từ chối:</label>
+                            <textarea name="reason" class="form-control" rows="3" placeholder="Nhập lý do từ chối..."></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-danger">Từ chối</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function approveProduct(id) {
+            if (confirm('Bạn có chắc muốn duyệt sản phẩm này?')) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '/admin/products/' + id + '/approve';
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function rejectProduct(id, name) {
+            document.getElementById('productName').textContent = name;
+            document.getElementById('rejectForm').action = '/admin/products/' + id + '/reject';
+            new bootstrap.Modal(document.getElementById('rejectModal')).show();
+        }
+    </script>
+</body>
+</html>

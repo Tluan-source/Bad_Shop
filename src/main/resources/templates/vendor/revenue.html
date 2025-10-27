@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/head :: head}">
+    <title>Quản lý Doanh thu - Badminton Marketplace</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div th:replace="~{vendor/fragments/sidebar :: sidebar('revenue')}"></div>
+
+            <!-- Main content -->
+            <div class="col-md-10">
+                <h2 class="mb-4"><i class="fas fa-money-bill-wave"></i> Quản lý Doanh thu</h2>
+
+                <!-- Summary Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3">
+                        <div class="card bg-success text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Tổng doanh thu</h6>
+                                <h3 th:text="${#numbers.formatDecimal((totalRevenue != null ? totalRevenue : 0) / 1000000, 1, 1) + 'M'}">0M</h3>
+                                <small>Tất cả thời gian</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-primary text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Chờ thanh toán</h6>
+                                <h3 th:text="${#numbers.formatDecimal((pendingRevenue != null ? pendingRevenue : 0) / 1000000, 1, 1) + 'M'}">0M</h3>
+                                <small>Đơn hàng đã giao</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-info text-white">
+                            <div class="card-body">
+                                <h6 class="card-title">Đã thanh toán</h6>
+                                <h3 th:text="${#numbers.formatDecimal((paidRevenue != null ? paidRevenue : 0) / 1000000, 1, 1) + 'M'}">0M</h3>
+                                <small>Đã chuyển vào ví</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card bg-warning text-dark">
+                            <div class="card-body">
+                                <h6 class="card-title">Số dư ví</h6>
+                                <h3 th:text="${#numbers.formatDecimal((walletBalance != null ? walletBalance : 0) / 1000000, 1, 1) + 'M'}">0M</h3>
+                                <small><a th:href="@{/vendor/wallet}" class="text-dark"><u>Xem chi tiết</u></a></small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Section -->
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <form method="get" class="row g-3">
+                            <div class="col-md-3">
+                                <label class="form-label">Từ ngày</label>
+                                <input type="date" class="form-control" name="startDate" th:value="${startDate}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Đến ngày</label>
+                                <input type="date" class="form-control" name="endDate" th:value="${endDate}">
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">Trạng thái</label>
+                                <select class="form-select" name="status">
+                                    <option value="">Tất cả</option>
+                                    <option value="PENDING">Chờ thanh toán</option>
+                                    <option value="PAID">Đã thanh toán</option>
+                                    <option value="PROCESSING">Đang xử lý</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label">&nbsp;</label>
+                                <button type="submit" class="btn btn-primary w-100">
+                                    <i class="fas fa-search"></i> Tìm kiếm
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Revenue Transactions -->
+                <div class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-list"></i> Lịch sử giao dịch</h5>
+                        <button class="btn btn-success btn-sm" onclick="exportExcel()">
+                            <i class="fas fa-file-excel"></i> Xuất Excel
+                        </button>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${transactions == null || #lists.isEmpty(transactions)}" class="text-center text-muted py-5">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p>Chưa có giao dịch nào</p>
+                        </div>
+
+                        <div th:unless="${transactions == null || #lists.isEmpty(transactions)}">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã đơn hàng</th>
+                                            <th>Ngày giao dịch</th>
+                                            <th class="text-end">Tổng tiền</th>
+                                            <th class="text-end">Phí (10%)</th>
+                                            <th class="text-end">Thực nhận</th>
+                                            <th>Trạng thái</th>
+                                            <th>Ngày thanh toán</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="tx : ${transactions}">
+                                            <td>
+                                                <a th:href="@{/vendor/orders/{id}(id=${tx.orderId})}" 
+                                                   th:text="${tx.orderCode}">
+                                                    #ORDER123
+                                                </a>
+                                            </td>
+                                            <td th:text="${#temporals.format(tx.transactionDate, 'dd/MM/yyyy HH:mm')}">
+                                                01/01/2025 10:00
+                                            </td>
+                                            <td class="text-end" th:text="${#numbers.formatDecimal(tx.totalAmount, 0, 0) + ' VNĐ'}">
+                                                1,000,000 VNĐ
+                                            </td>
+                                            <td class="text-end text-danger" th:text="'-' + ${#numbers.formatDecimal(tx.feeAmount, 0, 0) + ' VNĐ'}">
+                                                -100,000 VNĐ
+                                            </td>
+                                            <td class="text-end">
+                                                <strong th:text="${#numbers.formatDecimal(tx.netAmount, 0, 0) + ' VNĐ'}">
+                                                    900,000 VNĐ
+                                                </strong>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-warning" th:if="${tx.status == 'PENDING'}">
+                                                    <i class="fas fa-clock"></i> Chờ thanh toán
+                                                </span>
+                                                <span class="badge bg-success" th:if="${tx.status == 'PAID'}">
+                                                    <i class="fas fa-check"></i> Đã thanh toán
+                                                </span>
+                                                <span class="badge bg-info" th:if="${tx.status == 'PROCESSING'}">
+                                                    <i class="fas fa-spinner"></i> Đang xử lý
+                                                </span>
+                                            </td>
+                                            <td th:text="${tx.paidDate != null ? #temporals.format(tx.paidDate, 'dd/MM/yyyy') : '-'}">
+                                                -
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-light">
+                                            <td colspan="2"><strong>Tổng cộng</strong></td>
+                                            <td class="text-end"><strong th:text="${#numbers.formatDecimal(totalAmount, 0, 0) + ' VNĐ'}">0 VNĐ</strong></td>
+                                            <td class="text-end text-danger"><strong th:text="'-' + ${#numbers.formatDecimal(totalFee, 0, 0) + ' VNĐ'}">0 VNĐ</strong></td>
+                                            <td class="text-end"><strong th:text="${#numbers.formatDecimal(totalNet, 0, 0) + ' VNĐ'}">0 VNĐ</strong></td>
+                                            <td colspan="2"></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+
+                            <!-- Pagination -->
+                            <nav th:if="${totalPages > 1}">
+                                <ul class="pagination justify-content-center">
+                                    <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                                        <a class="page-link" th:href="@{/vendor/revenue(page=${currentPage - 1})}">Trước</a>
+                                    </li>
+                                    <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                                        th:classappend="${i == currentPage ? 'active' : ''}">
+                                        <a class="page-link" th:href="@{/vendor/revenue(page=${i})}" th:text="${i + 1}">1</a>
+                                    </li>
+                                    <li class="page-item" th:classappend="${currentPage == totalPages - 1 ? 'disabled' : ''}">
+                                        <a class="page-link" th:href="@{/vendor/revenue(page=${currentPage + 1})}">Sau</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <script>
+        function exportExcel() {
+            window.location.href = '/vendor/revenue/export';
+        }
+    </script>
+</body>
+</html>

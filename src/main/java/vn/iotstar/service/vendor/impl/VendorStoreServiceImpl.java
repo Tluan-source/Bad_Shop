@@ -67,8 +67,21 @@ public class VendorStoreServiceImpl implements VendorStoreService {
         Store store = storeRepository.findById(storeId)
             .orElseThrow(() -> ResourceNotFoundException.store(storeId));
         
+        // Check if email is being changed and if it's already taken by another store
+        if (updateDTO.getEmail() != null && !updateDTO.getEmail().trim().isEmpty()) {
+            if (store.getEmail() == null || !store.getEmail().equals(updateDTO.getEmail())) {
+                if (storeRepository.existsByEmailAndIdNot(updateDTO.getEmail(), storeId)) {
+                    throw new IllegalArgumentException("Email này đã được sử dụng bởi cửa hàng khác");
+                }
+            }
+            store.setEmail(updateDTO.getEmail());
+        }
+        
         // Update fields
         store.setName(updateDTO.getName());
+        if (updateDTO.getPhone() != null) {
+            store.setPhone(updateDTO.getPhone());
+        }
         store.setBio(updateDTO.getBio());
         
         if (updateDTO.getFeaturedImages() != null) {
@@ -101,6 +114,8 @@ public class VendorStoreServiceImpl implements VendorStoreService {
         // Basic info
         dto.setId(store.getId());
         dto.setName(store.getName());
+        dto.setEmail(store.getEmail());
+        dto.setPhone(store.getPhone());
         dto.setBio(store.getBio());
         dto.setSlug(store.getSlug());
         dto.setFeaturedImages(store.getFeaturedImages());

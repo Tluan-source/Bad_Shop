@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head>
     <title>Admin Header</title>
 </head>
@@ -31,6 +31,11 @@
                     <li class="nav-item">
                         <a class="nav-link" th:href="@{/admin/stores}">
                             <i class="fas fa-store me-1"></i>Quản lý Stores
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/admin/shipping}">
+                            <i class="fas fa-truck me-1"></i>Nhà vận chuyển
                         </a>
                     </li>
                     <li class="nav-item">
