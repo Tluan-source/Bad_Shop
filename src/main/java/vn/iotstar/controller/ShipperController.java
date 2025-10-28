@@ -49,8 +49,13 @@ public class ShipperController {
         
         Pageable pageable = PageRequest.of(page, 10, Sort.by("createdAt").descending());
         
+        // 🔄 Xử lý status cũ (backward compatibility)
+        if ("ACCEPTED".equals(status) || "ASSIGNED".equals(status)) {
+            status = "PROCESSING";
+        }
+        
         // 📊 Tính tổng số cho các trạng thái
-        // Chờ nhận = Order có status PROCESSING (chưa có shipment hoặc shipment chưa assign shipper)
+        // Chờ nhận = Tất cả Orders có status PROCESSING
         long totalPending = orderRepository.countByStatus(Order.OrderStatus.PROCESSING);
         long totalDelivering = shipmentRepository.countByShipper_IdAndStatus(shipperId, ShipmentStatus.DELIVERING);
         long totalDelivered = shipmentRepository.countByShipper_IdAndStatus(shipperId, ShipmentStatus.DELIVERED);
@@ -65,9 +70,9 @@ public class ShipperController {
         // ✅ Có chọn trạng thái cụ thể → chỉ hiển thị bảng tương ứng
         if (status != null && !status.isEmpty()) {
             switch (status) {
-                case "PENDING" -> {
-                    // Lấy các Order có status PROCESSING (chờ shipper nhận)
-                    pendingOrders = getFilteredOrders(keyword, fromDate, toDate, pageable);
+                case "PROCESSING" -> {
+                    // Load Orders có status PROCESSING (chờ shipper nhận)
+                    pendingOrders = getFilteredPendingOrders(keyword, fromDate, toDate, pageable);
                     totalPages = pendingOrders.getTotalPages();
                 }
                 case "DELIVERING" -> {
@@ -86,9 +91,9 @@ public class ShipperController {
         }
         // ✅ Không chọn trạng thái → mặc định hiển thị tab "Chờ nhận"
         else {
-            pendingOrders = getFilteredOrders(keyword, fromDate, toDate, pageable);
+            pendingOrders = getFilteredPendingOrders(keyword, fromDate, toDate, pageable);
             totalPages = pendingOrders.getTotalPages();
-            status = "PENDING"; // Set default active tab
+            status = "PROCESSING"; // Set default active tab
         }
 
         model.addAttribute("pendingOrders", pendingOrders);
@@ -109,28 +114,31 @@ public class ShipperController {
 
         return "shipper/dashboard";
     }
-
-    /** 📦 Hàm lọc Orders PROCESSING (chờ nhận) */
-    private Page<Order> getFilteredOrders(
+    
+    /** 📦 Hàm lọc Orders chờ nhận (status = PROCESSING) */
+    private Page<Order> getFilteredPendingOrders(
             String keyword,
             LocalDate fromDate,
             LocalDate toDate,
             Pageable pageable
     ) {
-        // Lọc các Order có status = PROCESSING
+        // 🔍 Lọc theo thời gian
         if (fromDate != null && toDate != null) {
             return orderRepository.findByStatusAndCreatedAtBetween(
                     Order.OrderStatus.PROCESSING, 
                     fromDate.atStartOfDay(), 
                     toDate.atTime(23, 59, 59), 
                     pageable);
-        } else if (!keyword.isEmpty()) {
-            // Tìm kiếm theo keyword (ID, address, phone, customer name)
-            return orderRepository.findByStatusAndKeyword(
+        }
+        // 🔍 Lọc theo keyword
+        else if (!keyword.isEmpty()) {
+            return orderRepository.searchByStatusAndKeyword(
                     Order.OrderStatus.PROCESSING, 
                     keyword, 
                     pageable);
-        } else {
+        }
+        // Mặc định không có điều kiện đặc biệt
+        else {
             return orderRepository.findByStatus(Order.OrderStatus.PROCESSING, pageable);
         }
     }
@@ -172,30 +180,33 @@ public class ShipperController {
         }
     }
 
-    /** ✅ Nhận đơn (tạo shipment mới & đổi trạng thái Order) */
-    @PostMapping("/accept/{orderId}")
-    public String acceptOrder(@PathVariable String orderId, Authentication auth) {
-        Order order = orderRepository.findById(orderId).orElse(null);
+    /** ✅ Nhận đơn (tạo shipment mới hoặc cập nhật shipment có sẵn & đổi trạng thái) */
+    @PostMapping("/accept/{id}")
+    public String acceptOrder(@PathVariable String id, Authentication auth) {
+        // ID ở đây là Order ID
+        Order order = orderRepository.findById(id).orElse(null);
         if (order != null && order.getStatus() == Order.OrderStatus.PROCESSING) {
-            // Lấy shipper hiện tại
+            // Lấy user ID thực sự từ database
             String email = auth.getName();
             User shipper = userRepository.findByEmail(email).orElseThrow();
             
-            // Tạo hoặc cập nhật Shipment
             Shipment shipment = order.getShipment();
+            
+            // Nếu chưa có Shipment, tạo mới
             if (shipment == null) {
                 shipment = new Shipment();
-                shipment.setId("SH" + System.currentTimeMillis()); // Generate ID
+                shipment.setId(java.util.UUID.randomUUID().toString());
                 shipment.setOrder(order);
                 shipment.setShippingFee(order.getShippingFee());
             }
             
+            // Cập nhật thông tin shipper và status
+            shipment.setShipper(shipper);
             shipment.setStatus(ShipmentStatus.DELIVERING);
             shipment.setAssignedAt(LocalDateTime.now());
-            shipment.setShipper(shipper);
             shipmentRepository.save(shipment);
 
-            // Cập nhật Order status
+            // Order -> SHIPPED
             order.setStatus(Order.OrderStatus.SHIPPED);
             orderRepository.save(order);
         }
@@ -223,11 +234,13 @@ public class ShipperController {
     public String failed(@PathVariable String id, @RequestParam(value = "note", required = false) String note) {
         Shipment shipment = shipmentRepository.findById(id).orElse(null);
         if (shipment != null) {
+            // Shipment -> FAILED
             shipment.setStatus(ShipmentStatus.FAILED);
             shipment.setDeliveredAt(LocalDateTime.now());
             shipment.setNote(note);
             shipmentRepository.save(shipment);
 
+            // Order -> CANCELLED
             Order order = shipment.getOrder();
             order.setStatus(Order.OrderStatus.CANCELLED);
             orderRepository.save(order);
