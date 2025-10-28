@@ -47,43 +47,58 @@ public class ShipperController {
         User currentUser = userRepository.findByEmail(email).orElseThrow();
         String shipperId = currentUser.getId();
         
-        Pageable pageable = PageRequest.of(page, 3, Sort.by("createdAt").descending());
-        boolean showAll = (status == null || status.isEmpty());
+        Pageable pageable = PageRequest.of(page, 10, Sort.by("createdAt").descending());
+        
+        // 📊 Luôn tải tổng số của tất cả 4 trạng thái (cho cards tổng quan)
+        long totalPending = shipmentRepository.countByStatusAndShipperIsNull(ShipmentStatus.ACCEPTED);
+        long totalDelivering = shipmentRepository.countByShipper_IdAndStatus(shipperId, ShipmentStatus.DELIVERING);
+        long totalDelivered = shipmentRepository.countByShipper_IdAndStatus(shipperId, ShipmentStatus.DELIVERED);
+        long totalFailed = shipmentRepository.countByShipper_IdAndStatus(shipperId, ShipmentStatus.FAILED);
 
         Page<Shipment> pending = Page.empty();
         Page<Shipment> delivering = Page.empty();
         Page<Shipment> delivered = Page.empty();
         Page<Shipment> failed = Page.empty();
+        int totalPages = 0;
 
-        // ✅ Không lọc trạng thái → hiển thị cả 4 danh sách
-        if (showAll) {
-            pending = getFilteredShipments(null, ShipmentStatus.ACCEPTED, keyword, fromDate, toDate, pageable);
-            delivering = getFilteredShipments(shipperId, ShipmentStatus.DELIVERING, keyword, fromDate, toDate, pageable);
-            delivered = getFilteredShipments(shipperId, ShipmentStatus.DELIVERED, keyword, fromDate, toDate, pageable);
-            failed = getFilteredShipments(shipperId, ShipmentStatus.FAILED, keyword, fromDate, toDate, pageable);
-        }
         // ✅ Có chọn trạng thái cụ thể → chỉ hiển thị bảng tương ứng
-        else {
+        if (status != null && !status.isEmpty()) {
             ShipmentStatus selectedStatus = ShipmentStatus.valueOf(status);
             switch (selectedStatus) {
-                case ACCEPTED -> pending = getFilteredShipments(null, selectedStatus, keyword, fromDate, toDate, pageable);
-                case DELIVERING -> delivering = getFilteredShipments(shipperId, selectedStatus, keyword, fromDate, toDate, pageable);
-                case DELIVERED -> delivered = getFilteredShipments(shipperId, selectedStatus, keyword, fromDate, toDate, pageable);
-                case FAILED -> failed = getFilteredShipments(shipperId, selectedStatus, keyword, fromDate, toDate, pageable);
+                case ACCEPTED -> {
+                    pending = getFilteredShipments(null, selectedStatus, keyword, fromDate, toDate, pageable);
+                    totalPages = pending.getTotalPages();
+                }
+                case DELIVERING -> {
+                    delivering = getFilteredShipments(shipperId, selectedStatus, keyword, fromDate, toDate, pageable);
+                    totalPages = delivering.getTotalPages();
+                }
+                case DELIVERED -> {
+                    delivered = getFilteredShipments(shipperId, selectedStatus, keyword, fromDate, toDate, pageable);
+                    totalPages = delivered.getTotalPages();
+                }
+                case FAILED -> {
+                    failed = getFilteredShipments(shipperId, selectedStatus, keyword, fromDate, toDate, pageable);
+                    totalPages = failed.getTotalPages();
+                }
             }
         }
-
-        int totalPages = Math.max(
-                Math.max(pending.getTotalPages(), delivering.getTotalPages()),
-                Math.max(delivered.getTotalPages(), failed.getTotalPages())
-        );
+        // ✅ Không chọn trạng thái → mặc định hiển thị tab "Chờ nhận"
+        else {
+            pending = getFilteredShipments(null, ShipmentStatus.ACCEPTED, keyword, fromDate, toDate, pageable);
+            totalPages = pending.getTotalPages();
+            status = "ACCEPTED"; // Set default active tab
+        }
 
         model.addAttribute("pendingShipments", pending);
         model.addAttribute("delivering", delivering);
         model.addAttribute("delivered", delivered);
         model.addAttribute("failed", failed);
+        model.addAttribute("totalPending", totalPending);
+        model.addAttribute("totalDelivering", totalDelivering);
+        model.addAttribute("totalDelivered", totalDelivered);
+        model.addAttribute("totalFailed", totalFailed);
         model.addAttribute("status", status);
-        model.addAttribute("showAll", showAll);
         model.addAttribute("totalPages", totalPages);
         model.addAttribute("currentPage", page);
         model.addAttribute("keyword", keyword);
