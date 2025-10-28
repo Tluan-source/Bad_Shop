@@ -29,19 +29,14 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/css/**", "/js/**", "/images/**", "/uploads/**", "/register", "/login", 
-                    "/products", "/products/**", "/stores", "/stores/**", "/categories", "/categories/**", 
-                    "/verify-otp", "/forgot", "/reset").permitAll()
+                    "/products", "/stores", "/stores/**", "/categories", "/categories/**", 
+                    "/verify-otp", "/forgot", "/reset", "/payment/**", "/checkout/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/vendor/**").hasAnyRole("VENDOR", "ADMIN")
                 .requestMatchers("/shipper/**").hasRole("SHIPPER")
-                .requestMatchers("/user/**").hasAnyRole("USER", "ADMIN", "VENDOR", "SHIPPER")
+                .requestMatchers("/user/**", "/cart/**", "/favorites/**").hasAnyRole("USER", "ADMIN", "VENDOR", "SHIPPER")
                 .anyRequest().authenticated()
-                
-                // ============================================================
-                // DEVELOPMENT MODE - CHO PHÉP TẤT CẢ ĐỂ TEST
-                // COMMENT DÒNG NÀY KHI DEPLOY/DEMO
-                // ============================================================
-                // .anyRequest().permitAll()
+            
             )
             .formLogin(form -> form
                 .loginPage("/login")
@@ -53,7 +48,11 @@ public class SecurityConfig {
                 .logoutSuccessUrl("/login?logout=true")
                 .permitAll()
             )
-            .authenticationProvider(authenticationProvider());
+            .authenticationProvider(authenticationProvider())
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
+                .ignoringRequestMatchers("/checkout/from-cart")
+            );
         
         return http.build();
     }
