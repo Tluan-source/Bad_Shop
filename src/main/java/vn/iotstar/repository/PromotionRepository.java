@@ -1,6 +1,7 @@
 package vn.iotstar.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -34,4 +35,9 @@ public interface PromotionRepository extends JpaRepository<Promotion, String> {
     
     // Find promotions by apply type
     List<Promotion> findByStoreIdAndAppliesTo(String storeId, Promotion.AppliesTo appliesTo);
+    
+    // Delete promotion products relationship
+    @Modifying(clearAutomatically = true)
+    @Query(value = "DELETE FROM promotion_products WHERE promotion_id = :promotionId", nativeQuery = true)
+    void deletePromotionProducts(@Param("promotionId") String promotionId);
 }

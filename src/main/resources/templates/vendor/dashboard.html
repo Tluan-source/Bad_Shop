@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head th:replace="~{fragments/head :: head}">
     <title>Vendor Dashboard - Badminton Marketplace</title>
 </head>
-<body>
-    <div th:replace="~{fragments/header-vendor :: header-vendor}"></div>
+<body class="vendor-dashboard-page">
+    <div th:replace="~{fragments/header :: header}"></div>
 
     <div class="container-fluid mt-4">
         <div class="row">
@@ -14,118 +14,243 @@
             <!-- Main content -->
             <div class="col-md-10">
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="fas fa-check-circle"></i> Chào mừng <strong sec:authentication="name">Vendor</strong> đến với trang quản lý cửa hàng!
+                    <i class="fas fa-check-circle"></i> Chào mừng <strong th:text="${username}">Vendor</strong> đến với trang quản lý cửa hàng!
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
 
-        <h2>Dashboard - Tổng quan cửa hàng</h2>
-
-        <!-- Statistics Cards -->
-        <div class="row mt-4">
-            <div class="col-md-3">
-                <div class="card text-white bg-success mb-3">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h5 class="card-title">Sản phẩm</h5>
-                                <h2>45</h2>
-                            </div>
-                            <div>
-                                <i class="fas fa-box fa-3x"></i>
-                            </div>
-                        </div>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-tachometer-alt"></i> Dashboard - Tổng quan cửa hàng</h2>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="location.reload()">
+                            <i class="fas fa-sync-alt"></i> Làm mới
+                        </button>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-info mb-3">
+                </div>
+
+                <!-- Statistics Cards -->
+                <div class="row mt-4">
+                    <!-- Total Products -->
+                    <div class="col-md-3 mb-3">
+                        <div class="card stats-card border-success">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between">
+                                <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h5 class="card-title">Doanh thu tháng</h5>
-                                        <h2 th:text="${#numbers.formatDecimal(stats.monthRevenue / 1000000, 0, 0)} + 'M'">0M</h2>
+                                        <div class="stats-label">Sản phẩm</div>
+                                        <div class="stats-value text-success" th:text="${stats.totalProducts}">0</div>
+                                        <small class="text-muted">Tổng số sản phẩm</small>
                                     </div>
-                                    <div>
-                                        <i class="fas fa-dollar-sign fa-3x"></i>
+                                    <div class="stats-icon text-success">
+                                        <i class="fas fa-box"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-md-3">
-                        <div class="card text-white bg-primary mb-3">
+
+                    <!-- Total Orders -->
+                    <div class="col-md-3 mb-3">
+                        <div class="card stats-card border-warning">
                             <div class="card-body">
-                                <div class="d-flex justify-content-between">
+                                <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <h5 class="card-title">Doanh thu tổng</h5>
-                                        <h2 th:text="${#numbers.formatDecimal(stats.totalRevenue / 1000000, 0, 0)} + 'M'">0M</h2>
+                                        <div class="stats-label">Đơn hàng</div>
+                                        <div class="stats-value text-warning" th:text="${stats.totalOrders}">0</div>
+                                        <small class="text-muted">Tổng đơn hàng</small>
                                     </div>
+                                    <div class="stats-icon text-warning">
+                                        <i class="fas fa-shopping-cart"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Month Revenue -->
+                    <div class="col-md-3 mb-3">
+                        <div class="card stats-card border-info">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
                                     <div>
-                                        <i class="fas fa-chart-line fa-3x"></i>
+                                        <div class="stats-label">Doanh thu tháng</div>
+                                        <div class="stats-value text-info">
+                                            <span th:text="${stats.monthRevenue}">0</span> 
+                                        </div>
+                                        <small class="text-muted">VNĐ</small>
+                                    </div>
+                                    <div class="stats-icon text-info">
+                                        <i class="fas fa-dollar-sign"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Total Revenue -->
+                    <div class="col-md-3 mb-3">
+                        <div class="card stats-card border-primary">
+                            <div class="card-body">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <div class="stats-label">Tổng doanh thu</div>
+                                        <div class="stats-value">
+                                            <span th:text="${stats.totalRevenue}">0</span> 
+                                        </div>
+                                        <small class="text-muted">VNĐ</small>
+                                    </div>
+                                    <div class="stats-icon">
+                                        <i class="fas fa-chart-line"></i>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-white bg-primary mb-3">
-                    <div class="card-body">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Mã đơn</th>
-                                    <th>Sản phẩm</th>
-                                    <th>Số lượng</th>
-                                    <th>Tổng tiền</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr th:if="${#lists.isEmpty(recentOrders)}">
-                                    <td colspan="6" class="text-center text-muted">Chưa có đơn hàng nào</td>
-                                </tr>
-                                <tr th:each="order : ${recentOrders}">
-                                    <td th:text="${order.orderId}">#ORD001</td>
-                                    <td th:text="${order.customerName}">Customer</td>
-                                    <td th:text="${#lists.size(order.items)}">1</td>
-                                    <td th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</td>
-                                    <td>
-                                        <span th:if="${order.status == 'PENDING'}" class="badge bg-warning">Chờ xử lý</span>
-                                        <span th:if="${order.status == 'PROCESSING'}" class="badge bg-info">Đang xử lý</span>
-                                        <span th:if="${order.status == 'SHIPPED'}" class="badge bg-primary">Đang giao</span>
-                                        <span th:if="${order.status == 'DELIVERED'}" class="badge bg-success">Hoàn thành</span>
-                                        <span th:if="${order.status == 'CANCELLED'}" class="badge bg-danger">Đã hủy</span>
-                                    </td>
-                                    <td>
-                                        <a th:href="@{/vendor/orders/{id}(id=${order.orderId})}" class="btn btn-sm btn-primary">Xem</a>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                <!-- Order Status Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-2 mb-3">
+                        <div class="card border-warning">
+                            <div class="card-body text-center">
+                                <h3 class="text-warning" th:text="${stats.pendingOrders}">0</h3>
+                                <p class="mb-0 small">Chờ xác nhận</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <div class="card border-info">
+                            <div class="card-body text-center">
+                                <h3 class="text-info" th:text="${stats.processingOrders}">0</h3>
+                                <p class="mb-0 small">Đang xử lý</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <div class="card border-primary">
+                            <div class="card-body text-center">
+                                <h3 class="text-primary" th:text="${stats.shippingOrders}">0</h3>
+                                <p class="mb-0 small">Đang giao</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <div class="card border-success">
+                            <div class="card-body text-center">
+                                <h3 class="text-success" th:text="${stats.deliveredOrders}">0</h3>
+                                <p class="mb-0 small">Đã giao</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <div class="card border-danger">
+                            <div class="card-body text-center">
+                                <h3 class="text-danger" th:text="${stats.cancelledOrders}">0</h3>
+                                <p class="mb-0 small">Đã hủy</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-2 mb-3">
+                        <div class="card border-secondary">
+                            <div class="card-body text-center">
+                                <h3 class="text-secondary" th:text="${stats.returnedOrders}">0</h3>
+                                <p class="mb-0 small">Trả hàng</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
 
-                <!-- Top Products -->
-                <div class="card mt-4">
-                    <div class="card-header">
-                        <h5><i class="fas fa-fire"></i> Sản phẩm bán chạy</h5>
+                <!-- Recent Orders -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="fas fa-clock"></i> Đơn hàng gần đây</h5>
+                        <a th:href="@{/vendor/orders}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-list"></i> Xem tất cả
+                        </a>
                     </div>
                     <div class="card-body">
-                        <div th:if="${#lists.isEmpty(topProducts)}" class="text-center text-muted py-3">
-                            Chưa có sản phẩm bán chạy
+                        <div th:if="${#lists.isEmpty(recentOrders)}" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p>Chưa có đơn hàng nào</p>
                         </div>
-                        <div class="row" th:unless="${#lists.isEmpty(topProducts)}">
-                            <div class="col-md-4" th:each="product : ${topProducts}">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6 th:text="${product.name}">Product Name</h6>
-                                        <p class="text-muted mb-1">Đã bán: <span th:text="${product.soldCount}">0</span></p>
-                                        <p class="text-success fw-bold" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</p>
-                                    </div>
-                                </div>
+                        <div th:unless="${#lists.isEmpty(recentOrders)}" class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Mã đơn</th>
+                                        <th>Khách hàng</th>
+                                        <th>Ngày đặt</th>
+                                        <th class="text-end">Tổng tiền</th>
+                                        <th>Trạng thái</th>
+                                        <th>Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="order : ${recentOrders}">
+                                        <td>
+                                            <a th:href="@{/vendor/orders/{id}(id=${order.orderId})}" 
+                                               th:text="${order.orderId}" class="text-decoration-none fw-bold">ORD001</a>
+                                        </td>
+                                        <td th:text="${order.customerName}">Customer</td>
+                                        <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">01/01/2024</td>
+                                        <td class="text-end">
+                                            <strong>
+                                                <span th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')}">0</span> VNĐ
+                                            </strong>
+                                        </td>
+                                        <td>
+                                            <span th:if="${order.status.name() == 'NOT_PROCESSED'}" class="badge bg-warning">Chờ xác nhận</span>
+                                            <span th:if="${order.status.name() == 'PROCESSING'}" class="badge bg-info">Đang xử lý</span>
+                                            <span th:if="${order.status.name() == 'SHIPPED'}" class="badge bg-primary">Đang giao</span>
+                                            <span th:if="${order.status.name() == 'DELIVERED'}" class="badge bg-success">Đã giao</span>
+                                            <span th:if="${order.status.name() == 'CANCELLED'}" class="badge bg-danger">Đã hủy</span>
+                                        </td>
+                                        <td>
+                                            <a th:href="@{/vendor/orders/{id}(id=${order.orderId})}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> Xem
+                                            </a>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-plus-circle fa-3x text-primary mb-3"></i>
+                                <h5>Thêm sản phẩm mới</h5>
+                                <p class="text-muted">Tạo sản phẩm mới để bán trên shop</p>
+                                <a th:href="@{/vendor/products/new}" class="btn btn-primary">
+                                    <i class="fas fa-plus"></i> Thêm sản phẩm
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-tags fa-3x text-success mb-3"></i>
+                                <h5>Tạo khuyến mãi</h5>
+                                <p class="text-muted">Tạo chương trình khuyến mãi mới</p>
+                                <a th:href="@{/vendor/promotions/add}" class="btn btn-success">
+                                    <i class="fas fa-plus"></i> Tạo khuyến mãi
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="card">
+                            <div class="card-body text-center">
+                                <i class="fas fa-chart-bar fa-3x text-info mb-3"></i>
+                                <h5>Xem báo cáo</h5>
+                                <p class="text-muted">Xem thống kê và phân tích chi tiết</p>
+                                <a th:href="@{/vendor/analytics}" class="btn btn-info">
+                                    <i class="fas fa-chart-line"></i> Xem báo cáo
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -134,6 +259,9 @@
         </div>
     </div>
 
-    <div th:replace="~{fragments/footer-vendor :: footer-vendor}"></div>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <!-- Vendor JavaScript -->
+    <script th:src="@{/js/vendor.js}"></script>
 </body>
 </html>

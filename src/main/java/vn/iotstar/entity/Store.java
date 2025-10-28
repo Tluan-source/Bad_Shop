@@ -11,7 +11,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
-@Table(name = "stores")
+@Table(name = "stores", 
+       uniqueConstraints = @UniqueConstraint(columnNames = "email", name = "uk_store_email"))
 @Data
 public class Store {
     @Id
@@ -19,6 +20,12 @@ public class Store {
     
     @Column(nullable = false, columnDefinition = "NVARCHAR(255)")
     private String name;
+    
+    @Column(unique = true, length = 255)
+    private String email;
+    
+    @Column(length = 20)
+    private String phone;
     
     @Column(columnDefinition = "NVARCHAR(1000)")
     private String bio;

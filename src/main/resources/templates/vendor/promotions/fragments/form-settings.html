@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+    <div th:fragment="formSettings" class="col-md-4">
+        <h5 class="mb-3"><i class="fas fa-cog"></i> Cài đặt</h5>
+        
+        <div class="card bg-light">
+            <div class="card-body">
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="isActive" th:field="*{isActive}" />
+                        <label class="form-check-label" for="isActive">
+                            <strong>Kích hoạt</strong>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3">
+                    <small>
+                        <i class="fas fa-info-circle"></i>
+                        <strong>Lưu ý:</strong> Chương trình sẽ tự động kích hoạt vào ngày bắt đầu 
+                        và kết thúc vào ngày kết thúc đã chọn.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

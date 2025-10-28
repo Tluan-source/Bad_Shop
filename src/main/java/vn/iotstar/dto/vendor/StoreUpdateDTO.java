@@ -19,6 +19,12 @@ public class StoreUpdateDTO {
     @Size(min = 3, max = 200, message = "Tên cửa hàng phải từ 3 đến 200 ký tự")
     private String name;
     
+    @Email(message = "Email không hợp lệ")
+    private String email;
+    
+    @Pattern(regexp = "^(\\+84|0)[0-9]{9,10}$", message = "Số điện thoại không hợp lệ")
+    private String phone;
+    
     @Size(max = 1000, message = "Mô tả không được vượt quá 1000 ký tự")
     private String bio;
     

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head th:replace="~{fragments/head :: head}">
     <title>Quản lý danh mục - Admin</title>
 </head>
@@ -58,11 +58,13 @@
                                 </button>
                                 <form th:action="@{/admin/categories/{id}/toggle-status(id=${category.id})}" 
                                       method="post" class="flex-fill">
-                                    <button type="submit" class="btn btn-sm btn-info w-100">
-                                        <i class="fas" th:classappend="${category.isActive != null and category.isActive ? 'fa-ban' : 'fa-check'}"></i>
+                                    <button type="submit" class="btn btn-sm btn-info w-100"
+                                            th:title="${category.isActive != null and category.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}">
+                                        <i class="fas" th:classappend="${category.isActive != null and category.isActive ? 'fa-ban me-1' : 'fa-check me-1'}"></i>
+                                        <span th:text="${category.isActive != null and category.isActive ? 'Khóa' : 'Mở'}">Toggle</span>
                                     </button>
                                 </form>
-                                <button class="btn btn-sm btn-danger" 
+                                <button class="btn btn-sm btn-danger flex-fill" 
                                         th:attr="data-category-name=${category.name}, data-category-id=${category.id}"
                                         onclick="confirmDeleteCategory(this.getAttribute('data-category-name'), this.getAttribute('data-category-id'))">
                                     <i class="fas fa-trash"></i>

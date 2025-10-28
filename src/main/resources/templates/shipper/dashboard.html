@@ -1,198 +1,401 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head th:replace="~{fragments/head :: head}">
-    <title>Shipper Dashboard - Badminton Marketplace</title>
+<title>Shipper Dashboard - Badminton Marketplace</title>
 </head>
 <body>
-    <div th:replace="~{fragments/header-shipper :: header-shipper}"></div>
+	<div th:replace="~{fragments/header-shipper :: header-shipper}"></div>
 
-    <div class="container-fluid mt-4">
-        <!-- Main content -->
-        <div class="alert alert-success alert-dismissible fade show" role="alert">
-            <i class="fas fa-check-circle"></i> Chào mừng <strong sec:authentication="name">Shipper</strong> đến với trang quản lý giao hàng!
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
+	<div class="container-fluid mt-4">
+		<div class="alert alert-success alert-dismissible fade show"
+			role="alert">
+			<i class="fas fa-check-circle"></i> Chào mừng <strong
+				sec:authentication="name">Shipper</strong> đến với trang quản lý
+			giao hàng!
+			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+		</div>
 
-        <h2>Dashboard - Tổng quan giao hàng</h2>
+		<h2 class="mb-4">Dashboard - Tổng quan giao hàng</h2>
 
-        <!-- Statistics Cards -->
-        <div class="row mt-4">
-            <div class="col-md-3">
-                <div class="card text-white bg-warning mb-3">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h5 class="card-title">Cần giao</h5>
-                                <h2>8</h2>
-                            </div>
-                            <div>
-                                <i class="fas fa-box fa-3x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-white bg-info mb-3">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h5 class="card-title">Đang giao</h5>
-                                <h2>5</h2>
-                            </div>
-                            <div>
-                                <i class="fas fa-truck fa-3x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-white bg-success mb-3">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h5 class="card-title">Đã giao</h5>
-                                <h2>127</h2>
-                            </div>
-                            <div>
-                                <i class="fas fa-check-circle fa-3x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="card text-white bg-primary mb-3">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between">
-                            <div>
-                                <h5 class="card-title">Thu nhập tháng</h5>
-                                <h2>3.8M</h2>
-                            </div>
-                            <div>
-                                <i class="fas fa-dollar-sign fa-3x"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+		<!-- 🔍 Form tìm kiếm - Đơn giản và gọn gàng -->
+		<form class="row g-3 mb-4" method="get" th:action="@{/shipper/dashboard}">
+			<!-- Hidden input để giữ trạng thái hiện tại khi tìm kiếm -->
+			<input type="hidden" name="status" th:value="${status}">
+			
+			<div class="col-12 col-md-5">
+				<div class="input-group">
+					<span class="input-group-text bg-primary text-white">
+						<i class="fas fa-search"></i>
+					</span>
+					<input type="text" name="keyword" class="form-control form-control-lg"
+						placeholder="Tìm theo mã đơn, tên khách hàng hoặc địa chỉ..." th:value="${keyword}">
+				</div>
+			</div>
+			<div class="col-6 col-md-2">
+				<input type="date" name="fromDate" class="form-control form-control-lg"
+					placeholder="Từ ngày" th:value="${fromDate}">
+			</div>
+			<div class="col-6 col-md-2">
+				<input type="date" name="toDate" class="form-control form-control-lg"
+					placeholder="Đến ngày" th:value="${toDate}">
+			</div>
+			<div class="col-12 col-md-3">
+				<button type="submit" class="btn btn-primary btn-lg w-100">
+					<i class="fas fa-filter me-2"></i>Lọc kết quả
+				</button>
+			</div>
+		</form>
 
-        <!-- Pending Deliveries -->
-        <div class="card mt-4">
-            <div class="card-header bg-warning text-white">
-                <h5><i class="fas fa-tasks"></i> Đơn hàng cần giao hôm nay</h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Mã đơn</th>
-                            <th>Địa chỉ giao hàng</th>
-                            <th>SĐT người nhận</th>
-                            <th>COD</th>
-                            <th>Trạng thái</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>#ORD101</td>
-                            <td>123 Nguyễn Huệ, Q.1, TP.HCM</td>
-                            <td>0901234567</td>
-                            <td>4,990,000 VNĐ</td>
-                            <td><span class="badge bg-warning">Chờ lấy hàng</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-primary">Nhận đơn</button>
-                            </td>
-                        </tr>
-                        <tr>
-                            <td>#ORD102</td>
-                            <td>456 Lê Lợi, Q.3, TP.HCM</td>
-                            <td>0912345678</td>
-                            <td>1,650,000 VNĐ</td>
-                            <td><span class="badge bg-warning">Chờ lấy hàng</span></td>
-                            <td>
-                                <button class="btn btn-sm btn-primary">Nhận đơn</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+		<!-- 📦 Tổng quan - Responsive Cards -->
+		<div class="row mt-3">
+			<div class="col-6 col-md-3 mb-3">
+				<div class="card text-white bg-warning shadow h-100">
+					<div class="card-body d-flex justify-content-between align-items-center">
+						<div>
+							<h6 class="mb-1">Chờ nhận</h6>
+							<h3 class="mb-0" th:text="${totalPending}">0</h3>
+						</div>
+						<i class="fas fa-box fa-2x d-none d-sm-block"></i>
+					</div>
+				</div>
+			</div>
+			<div class="col-6 col-md-3 mb-3">
+				<div class="card text-white bg-info shadow h-100">
+					<div class="card-body d-flex justify-content-between align-items-center">
+						<div>
+							<h6 class="mb-1">Đang giao</h6>
+							<h3 class="mb-0" th:text="${totalDelivering}">0</h3>
+						</div>
+						<i class="fas fa-truck fa-2x d-none d-sm-block"></i>
+					</div>
+				</div>
+			</div>
+			<div class="col-6 col-md-3 mb-3">
+				<div class="card text-white bg-success shadow h-100">
+					<div class="card-body d-flex justify-content-between align-items-center">
+						<div>
+							<h6 class="mb-1">Đã giao</h6>
+							<h3 class="mb-0" th:text="${totalDelivered}">0</h3>
+						</div>
+						<i class="fas fa-check-circle fa-2x d-none d-sm-block"></i>
+					</div>
+				</div>
+			</div>
+			<div class="col-6 col-md-3 mb-3">
+				<div class="card text-white bg-danger shadow h-100">
+					<div class="card-body d-flex justify-content-between align-items-center">
+						<div>
+							<h6 class="mb-1">Thất bại</h6>
+							<h3 class="mb-0" th:text="${totalFailed}">0</h3>
+						</div>
+						<i class="fas fa-times-circle fa-2x d-none d-sm-block"></i>
+					</div>
+				</div>
+			</div>
+		</div>
 
-        <!-- Active Deliveries -->
-        <div class="card mt-4">
-            <div class="card-header bg-info text-white">
-                <h5><i class="fas fa-truck"></i> Đơn hàng đang giao</h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Mã đơn</th>
-                            <th>Địa chỉ</th>
-                            <th>SĐT</th>
-                            <th>COD</th>
-                            <th>Thời gian nhận</th>
-                            <th>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>#ORD098</td>
-                            <td>789 Võ Văn Tần, Q.3, TP.HCM</td>
-                            <td>0923456789</td>
-                            <td>1,990,000 VNĐ</td>
-                            <td>10:30 AM</td>
-                            <td>
-                                <button class="btn btn-sm btn-success">Giao thành công</button>
-                                <button class="btn btn-sm btn-danger">Giao thất bại</button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
+		<!-- ✨ Tab Navigation cho các trạng thái - Phóng to và dễ click -->
+		<div class="card shadow mt-4">
+			<!-- Tab Headers - Lớn hơn và rõ ràng hơn -->
+			<div class="card-header bg-light p-0">
+				<ul class="nav nav-tabs card-header-tabs fs-5" id="shipmentTabs" role="tablist">
+					<li class="nav-item flex-fill" role="presentation">
+						<a class="nav-link text-center py-3" 
+							th:href="@{/shipper/dashboard(status='ACCEPTED', keyword=${keyword}, fromDate=${fromDate}, toDate=${toDate})}"
+							th:classappend="${status == 'ACCEPTED'} ? 'active' : ''">
+							<i class="fas fa-box fa-lg me-2" th:classappend="${status == 'ACCEPTED'} ? 'text-white' : 'text-warning'"></i> 
+							<span class="fw-bold">Chờ nhận</span>
+						</a>
+					</li>
+					<li class="nav-item flex-fill" role="presentation">
+						<a class="nav-link text-center py-3"
+							th:href="@{/shipper/dashboard(status='DELIVERING', keyword=${keyword}, fromDate=${fromDate}, toDate=${toDate})}"
+							th:classappend="${status == 'DELIVERING'} ? 'active' : ''">
+							<i class="fas fa-truck fa-lg me-2" th:classappend="${status == 'DELIVERING'} ? 'text-white' : 'text-info'"></i> 
+							<span class="fw-bold">Đang giao</span>
+						</a>
+					</li>
+					<li class="nav-item flex-fill" role="presentation">
+						<a class="nav-link text-center py-3"
+							th:href="@{/shipper/dashboard(status='DELIVERED', keyword=${keyword}, fromDate=${fromDate}, toDate=${toDate})}"
+							th:classappend="${status == 'DELIVERED'} ? 'active' : ''">
+							<i class="fas fa-check-circle fa-lg me-2" th:classappend="${status == 'DELIVERED'} ? 'text-white' : 'text-success'"></i> 
+							<span class="fw-bold">Đã giao</span>
+						</a>
+					</li>
+					<li class="nav-item flex-fill" role="presentation">
+						<a class="nav-link text-center py-3"
+							th:href="@{/shipper/dashboard(status='FAILED', keyword=${keyword}, fromDate=${fromDate}, toDate=${toDate})}"
+							th:classappend="${status == 'FAILED'} ? 'active' : ''">
+							<i class="fas fa-times-circle fa-lg me-2" th:classappend="${status == 'FAILED'} ? 'text-white' : 'text-danger'"></i> 
+							<span class="fw-bold">Thất bại</span>
+						</a>
+					</li>
+				</ul>
+			</div>
 
-        <!-- Recent Success Deliveries -->
-        <div class="card mt-4">
-            <div class="card-header bg-success text-white">
-                <h5><i class="fas fa-check-circle"></i> Giao hàng thành công gần đây</h5>
-            </div>
-            <div class="card-body">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Mã đơn</th>
-                            <th>Địa chỉ</th>
-                            <th>COD</th>
-                            <th>Thu nhập</th>
-                            <th>Thời gian</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <td>#ORD095</td>
-                            <td>321 Cách Mạng Tháng 8, Q.10</td>
-                            <td>3,500,000 VNĐ</td>
-                            <td class="text-success fw-bold">35,000 VNĐ</td>
-                            <td>9:15 AM</td>
-                        </tr>
-                        <tr>
-                            <td>#ORD094</td>
-                            <td>654 Hai Bà Trưng, Q.1</td>
-                            <td>165,000 VNĐ</td>
-                            <td class="text-success fw-bold">20,000 VNĐ</td>
-                            <td>8:45 AM</td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
+			<!-- Tab Content -->
+			<div class="tab-content" id="shipmentTabsContent">
+				<!-- 🟡 Tab Chờ nhận -->
+				<div class="tab-pane fade show active" id="pending" role="tabpanel" 
+					th:if="${status == 'ACCEPTED'}">
+					<div class="card-body p-0">
+						<div class="table-responsive">
+							<table class="table table-hover align-middle mb-0">
+								<thead class="table-light">
+									<tr>
+										<th class="ps-3">Mã đơn</th>
+										<th>Khách hàng</th>
+										<th class="d-none d-md-table-cell">Địa chỉ</th>
+										<th>COD</th>
+										<th class="d-none d-lg-table-cell">Ngày tạo</th>
+										<th class="text-end pe-3">Thao tác</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="ship : ${pendingShipments.content}">
+										<td class="ps-3" th:text="${ship.order.id}">#ORD</td>
+										<td th:text="${ship.order.user.fullName}">Tên</td>
+										<td class="d-none d-md-table-cell" th:text="${ship.order.address}">Địa chỉ</td>
+										<td th:text="${#numbers.formatDecimal(ship.order.amountFromUser,0,'POINT',0,'COMMA')} + ' ₫'"></td>
+										<td class="d-none d-lg-table-cell" th:text="${#temporals.format(ship.createdAt,'dd/MM/yyyy')}">Ngày</td>
+										<td class="text-end pe-3">
+											<a th:href="@{'/shipper/shipment/' + ${ship.id}}"
+												class="btn btn-sm btn-outline-secondary">
+												<i class="fas fa-eye"></i>
+											</a>
+											<form th:action="@{'/shipper/accept/' + ${ship.id}}"
+												method="post" class="d-inline">
+												<button type="submit" class="btn btn-sm btn-warning">
+													<i class="fas fa-handshake"></i> <span class="d-none d-sm-inline">Nhận</span>
+												</button>
+											</form>
+										</td>
+									</tr>
+									<tr th:if="${#lists.isEmpty(pendingShipments.content)}">
+										<td colspan="6" class="text-center text-muted py-4">
+											<i class="fas fa-inbox fa-2x mb-2"></i><br>
+											Không có đơn hàng chờ nhận
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
 
-    <div th:replace="~{fragments/footer-shipper :: footer-shipper}"></div>
+				<!-- 🔵 Tab Đang giao -->
+				<div class="tab-pane fade show active" id="delivering" role="tabpanel"
+					th:if="${status == 'DELIVERING'}">
+					<div class="card-body p-0">
+						<div class="table-responsive">
+							<table class="table table-hover align-middle mb-0">
+								<thead class="table-light">
+									<tr>
+										<th class="ps-3">Mã đơn</th>
+										<th>Khách hàng</th>
+										<th class="d-none d-md-table-cell">Địa chỉ</th>
+										<th>COD</th>
+										<th class="d-none d-lg-table-cell">Thời gian nhận</th>
+										<th class="text-end pe-3">Thao tác</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="ship : ${delivering.content}">
+										<td class="ps-3" th:text="${ship.order.id}">#ORD</td>
+										<td th:text="${ship.order.user.fullName}">Tên</td>
+										<td class="d-none d-md-table-cell" th:text="${ship.order.address}">Địa chỉ</td>
+										<td th:text="${#numbers.formatDecimal(ship.order.amountFromUser,0,'POINT',0,'COMMA')} + ' ₫'"></td>
+										<td class="d-none d-lg-table-cell" th:text="${#temporals.format(ship.acceptedAt,'HH:mm dd/MM')}">Giờ</td>
+										<td class="text-end pe-3">
+											<a th:href="@{'/shipper/shipment/' + ${ship.id}}"
+												class="btn btn-sm btn-outline-secondary">
+												<i class="fas fa-eye"></i>
+											</a>
+											<form th:action="@{'/shipper/delivered/' + ${ship.id}}"
+												method="post" class="d-inline">
+												<button type="submit" class="btn btn-sm btn-success" title="Đã giao">
+													<i class="fas fa-check"></i>
+												</button>
+											</form>
+											<button type="button" class="btn btn-sm btn-danger" 
+												data-bs-toggle="modal" 
+												th:attr="data-bs-target='#failModal' + ${ship.id}"
+												title="Giao thất bại">
+												<i class="fas fa-times"></i>
+											</button>
+											
+											<!-- Modal cho ghi chú thất bại -->
+											<div class="modal fade" th:id="'failModal' + ${ship.id}" tabindex="-1">
+												<div class="modal-dialog modal-dialog-centered">
+													<div class="modal-content">
+														<div class="modal-header">
+															<h5 class="modal-title">Ghi chú giao hàng thất bại</h5>
+															<button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+														</div>
+														<form th:action="@{'/shipper/failed/' + ${ship.id}}" method="post">
+															<div class="modal-body">
+																<textarea name="note" class="form-control" rows="3" 
+																	placeholder="Nhập lý do giao hàng thất bại..." required></textarea>
+															</div>
+															<div class="modal-footer">
+																<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+																<button type="submit" class="btn btn-danger">
+																	<i class="fas fa-times"></i> Xác nhận thất bại
+																</button>
+															</div>
+														</form>
+													</div>
+												</div>
+											</div>
+										</td>
+									</tr>
+									<tr th:if="${#lists.isEmpty(delivering.content)}">
+										<td colspan="6" class="text-center text-muted py-4">
+											<i class="fas fa-inbox fa-2x mb-2"></i><br>
+											Không có đơn hàng đang giao
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+
+				<!-- 🟢 Tab Đã giao -->
+				<div class="tab-pane fade show active" id="delivered" role="tabpanel"
+					th:if="${status == 'DELIVERED'}">
+					<div class="card-body p-0">
+						<div class="table-responsive">
+							<table class="table table-hover align-middle mb-0">
+								<thead class="table-light">
+									<tr>
+										<th class="ps-3">Mã đơn</th>
+										<th>Khách hàng</th>
+										<th class="d-none d-md-table-cell">Địa chỉ</th>
+										<th>COD</th>
+										<th class="d-none d-lg-table-cell">Ngày giao</th>
+										<th class="text-end pe-3">Xem</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="ship : ${delivered.content}">
+										<td class="ps-3" th:text="${ship.order.id}">#ORD</td>
+										<td th:text="${ship.order.user.fullName}">Tên</td>
+										<td class="d-none d-md-table-cell" th:text="${ship.order.address}">Địa chỉ</td>
+										<td th:text="${#numbers.formatDecimal(ship.order.amountFromUser,0,'POINT',0,'COMMA')} + ' ₫'"></td>
+										<td class="d-none d-lg-table-cell" th:text="${#temporals.format(ship.deliveredAt,'dd/MM/yyyy HH:mm')}">Ngày</td>
+										<td class="text-end pe-3">
+											<a th:href="@{'/shipper/shipment/' + ${ship.id}}"
+												class="btn btn-sm btn-outline-secondary">
+												<i class="fas fa-eye"></i> <span class="d-none d-sm-inline">Chi tiết</span>
+											</a>
+										</td>
+									</tr>
+									<tr th:if="${#lists.isEmpty(delivered.content)}">
+										<td colspan="6" class="text-center text-muted py-4">
+											<i class="fas fa-inbox fa-2x mb-2"></i><br>
+											Không có đơn hàng đã giao
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+
+				<!-- 🔴 Tab Thất bại -->
+				<div class="tab-pane fade show active" id="failed" role="tabpanel"
+					th:if="${status == 'FAILED'}">
+					<div class="card-body p-0">
+						<div class="table-responsive">
+							<table class="table table-hover align-middle mb-0">
+								<thead class="table-light">
+									<tr>
+										<th class="ps-3">Mã đơn</th>
+										<th>Khách hàng</th>
+										<th class="d-none d-md-table-cell">Địa chỉ</th>
+										<th>COD</th>
+										<th class="d-none d-lg-table-cell">Ngày cập nhật</th>
+										<th class="d-none d-xl-table-cell">Ghi chú</th>
+										<th class="text-end pe-3">Xem</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="ship : ${failed.content}">
+										<td class="ps-3" th:text="${ship.order.id}">#ORD</td>
+										<td th:text="${ship.order.user.fullName}">Tên</td>
+										<td class="d-none d-md-table-cell" th:text="${ship.order.address}">Địa chỉ</td>
+										<td th:text="${#numbers.formatDecimal(ship.order.amountFromUser,0,'POINT',0,'COMMA')} + ' ₫'"></td>
+										<td class="d-none d-lg-table-cell" th:text="${#temporals.format(ship.updatedAt,'dd/MM/yyyy HH:mm')}">Ngày</td>
+										<td class="d-none d-xl-table-cell">
+											<small th:text="${ship.note != null ? ship.note : 'Không có ghi chú'}"></small>
+										</td>
+										<td class="text-end pe-3">
+											<a th:href="@{'/shipper/shipment/' + ${ship.id}}"
+												class="btn btn-sm btn-outline-secondary">
+												<i class="fas fa-eye"></i> <span class="d-none d-sm-inline">Chi tiết</span>
+											</a>
+										</td>
+									</tr>
+									<tr th:if="${#lists.isEmpty(failed.content)}">
+										<td colspan="7" class="text-center text-muted py-4">
+											<i class="fas fa-inbox fa-2x mb-2"></i><br>
+											Không có đơn hàng thất bại
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- 🔽 Phân trang -->
+			<div class="card-footer bg-light" th:if="${totalPages > 1}">
+				<nav>
+					<ul class="pagination justify-content-center mb-0">
+						<li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+							<a class="page-link" 
+							   th:href="@{/shipper/dashboard(page=0, keyword=${keyword}, status=${status}, fromDate=${fromDate}, toDate=${toDate})}"
+							   aria-label="First">
+								<i class="fas fa-angle-double-left"></i>
+							</a>
+						</li>
+						<li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+							<a class="page-link" 
+							   th:href="@{/shipper/dashboard(page=${currentPage - 1}, keyword=${keyword}, status=${status}, fromDate=${fromDate}, toDate=${toDate})}"
+							   aria-label="Previous">
+								<i class="fas fa-angle-left"></i>
+							</a>
+						</li>
+						<li th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+							class="page-item"
+							th:classappend="${i == currentPage} ? 'active'">
+							<a class="page-link"
+								th:href="@{/shipper/dashboard(page=${i}, keyword=${keyword}, status=${status}, fromDate=${fromDate}, toDate=${toDate})}"
+								th:text="${i + 1}"></a>
+						</li>
+						<li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+							<a class="page-link" 
+							   th:href="@{/shipper/dashboard(page=${currentPage + 1}, keyword=${keyword}, status=${status}, fromDate=${fromDate}, toDate=${toDate})}"
+							   aria-label="Next">
+								<i class="fas fa-angle-right"></i>
+							</a>
+						</li>
+						<li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+							<a class="page-link" 
+							   th:href="@{/shipper/dashboard(page=${totalPages - 1}, keyword=${keyword}, status=${status}, fromDate=${fromDate}, toDate=${toDate})}"
+							   aria-label="Last">
+								<i class="fas fa-angle-double-right"></i>
+							</a>
+						</li>
+					</ul>
+				</nav>
+			</div>
+		</div>
+	</div>
+
+	<div th:replace="~{fragments/footer-shipper :: footer-shipper}"></div>
 </body>
 </html>
