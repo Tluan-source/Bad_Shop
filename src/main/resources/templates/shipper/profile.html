@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+	xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/head :: head}">
+<title>Thông tin cá nhân - Shipper</title>
+</head>
+<body>
+	<div th:replace="~{fragments/header-shipper :: header-shipper}"></div>
+
+	<div class="container mt-4">
+		<div class="row">
+			<!-- Sidebar -->
+			<div class="col-md-3">
+				<div class="card shadow-sm">
+					<div class="card-body text-center">
+						<div class="mb-3">
+							<i class="fas fa-user-circle fa-5x text-info"></i>
+						</div>
+						<h5 class="mb-1" th:text="${user.fullName}">Tên shipper</h5>
+						<p class="text-muted mb-2" th:text="${user.email}">email@example.com</p>
+						<span class="badge bg-info">
+							<i class="fas fa-shipping-fast"></i> Shipper
+						</span>
+					</div>
+				</div>
+				
+				<div class="card shadow-sm mt-3">
+					<div class="card-body">
+						<h6 class="mb-3"><i class="fas fa-chart-bar"></i> Thống kê nhanh</h6>
+						<div class="d-flex justify-content-between mb-2">
+							<span class="text-muted">Tổng đơn:</span>
+							<strong th:text="${stats.totalShipments ?: 0}">0</strong>
+						</div>
+						<div class="d-flex justify-content-between mb-2">
+							<span class="text-muted">Thành công:</span>
+							<strong class="text-success" th:text="${stats.successCount ?: 0}">0</strong>
+						</div>
+						<div class="d-flex justify-content-between mb-2">
+							<span class="text-muted">Thất bại:</span>
+							<strong class="text-danger" th:text="${stats.failedCount ?: 0}">0</strong>
+						</div>
+						<hr>
+						<div class="d-flex justify-content-between">
+							<span class="text-muted">Tổng thu nhập:</span>
+							<strong class="text-warning" th:text="${#numbers.formatDecimal(stats.totalEarnings ?: 0, 0, 'POINT', 0, 'COMMA')} + ' ₫'">0 ₫</strong>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Main content -->
+			<div class="col-md-9">
+				<!-- Thông báo -->
+				<div th:if="${message}" class="alert alert-success alert-dismissible fade show" role="alert">
+					<i class="fas fa-check-circle"></i> <span th:text="${message}">Thành công</span>
+					<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+				</div>
+				
+				<div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+					<i class="fas fa-exclamation-circle"></i> <span th:text="${error}">Lỗi</span>
+					<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+				</div>
+
+				<!-- Thông tin cá nhân -->
+				<div class="card shadow-sm mb-4">
+					<div class="card-header bg-light">
+						<h5 class="mb-0"><i class="fas fa-id-card"></i> Thông tin cá nhân</h5>
+					</div>
+					<div class="card-body">
+						<form method="post" th:action="@{/shipper/profile}" th:object="${user}">
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">Mã nhân viên</label>
+								<div class="col-sm-9">
+									<input type="text" class="form-control-plaintext" readonly th:value="${user.id}">
+								</div>
+							</div>
+							
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">Họ và tên <span class="text-danger">*</span></label>
+								<div class="col-sm-9">
+									<input type="text" class="form-control" name="fullName" 
+										   th:value="${user.fullName}" required>
+								</div>
+							</div>
+							
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">Email <span class="text-danger">*</span></label>
+								<div class="col-sm-9">
+									<input type="email" class="form-control" name="email" 
+										   th:value="${user.email}" required>
+								</div>
+							</div>
+							
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">Số điện thoại <span class="text-danger">*</span></label>
+								<div class="col-sm-9">
+									<input type="tel" class="form-control" name="phone" 
+										   th:value="${user.phone}" pattern="[0-9]{10}" required>
+									<small class="text-muted">Định dạng: 10 chữ số</small>
+								</div>
+							</div>
+							
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">Trạng thái</label>
+								<div class="col-sm-9">
+									<span th:if="${user.status.name() == 'ACTIVE'}" class="badge bg-success">
+										<i class="fas fa-check-circle"></i> Đang hoạt động
+									</span>
+									<span th:if="${user.status.name() != 'ACTIVE'}" class="badge bg-danger">
+										<i class="fas fa-ban"></i> <span th:text="${user.status.name()}">Trạng thái</span>
+									</span>
+								</div>
+							</div>
+							
+							<div class="row mb-3">
+								<label class="col-sm-3 col-form-label">Ngày tham gia</label>
+								<div class="col-sm-9">
+									<input type="text" class="form-control-plaintext" readonly 
+										   th:value="${#temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm')}">
+								</div>
+							</div>
+							
+							<div class="row">
+								<div class="col-sm-9 offset-sm-3">
+									<button type="submit" class="btn btn-primary">
+										<i class="fas fa-save"></i> Cập nhật thông tin
+									</button>
+									<a th:href="@{/shipper/dashboard}" class="btn btn-secondary">
+										<i class="fas fa-arrow-left"></i> Quay lại
+									</a>
+								</div>
+							</div>
+						</form>
+					</div>
+				</div>
+
+				<!-- Lịch sử hoạt động gần đây -->
+				<div class="card shadow-sm">
+					<div class="card-header bg-light">
+						<h5 class="mb-0"><i class="fas fa-history"></i> Hoạt động gần đây (10 giao dịch)</h5>
+					</div>
+					<div class="card-body">
+						<div class="table-responsive">
+							<table class="table table-sm table-hover">
+								<thead>
+									<tr>
+										<th>Thời gian</th>
+										<th>Mã đơn</th>
+										<th>Khách hàng</th>
+										<th>Trạng thái</th>
+										<th>Phí giao</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr th:each="shipment : ${recentActivities}">
+										<td th:text="${#temporals.format(shipment.createdAt, 'dd/MM HH:mm')}">27/10 10:30</td>
+										<td>
+											<a th:href="@{'/shipper/shipment/' + ${shipment.id}}" 
+											   th:text="${shipment.order.id}">ORD001</a>
+										</td>
+										<td th:text="${shipment.order.user.fullName}">Khách hàng</td>
+										<td>
+											<span th:if="${shipment.status.name() == 'DELIVERED'}" class="badge bg-success">
+												<i class="fas fa-check"></i> Thành công
+											</span>
+											<span th:if="${shipment.status.name() == 'FAILED'}" class="badge bg-danger">
+												<i class="fas fa-times"></i> Thất bại
+											</span>
+											<span th:if="${shipment.status.name() == 'DELIVERING'}" class="badge bg-info">
+												<i class="fas fa-truck"></i> Đang giao
+											</span>
+											<span th:if="${shipment.status.name() == 'ACCEPTED'}" class="badge bg-warning">
+												<i class="fas fa-clock"></i> Đã nhận
+											</span>
+										</td>
+										<td class="text-success fw-bold" 
+										    th:text="${#numbers.formatDecimal(shipment.shippingFee, 0, 'POINT', 0, 'COMMA')} + ' ₫'">
+											30,000 ₫
+										</td>
+									</tr>
+									<tr th:if="${#lists.isEmpty(recentActivities)}">
+										<td colspan="5" class="text-center text-muted">
+											Chưa có hoạt động nào
+										</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>
