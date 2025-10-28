@@ -210,11 +210,16 @@
                                                             th:text="${item.product.name}"
                                                        ></h6>
                                                        <!-- Product attributes -->
-                                                       <p class="text-muted mb-1" th:if="${item.styleValueNames != null and !item.styleValueNames.isEmpty()}">
+                                                       <p
+                                                            class="text-muted mb-1"
+                                                            th:if="${item.styleValueNames != null and !item.styleValueNames.isEmpty()}"
+                                                       >
                                                             <small>
                                                                  <i class="fas fa-tags me-1"></i>
-                                                                 Thuộc tính: 
-                                                                 <span th:text="${#strings.listJoin(item.styleValueNames, ', ')}"></span>
+                                                                 Thuộc tính:
+                                                                 <span
+                                                                      th:text="${#strings.listJoin(item.styleValueNames, ', ')}"
+                                                                 ></span>
                                                             </small>
                                                        </p>
                                                        <p class="text-muted mb-1">
