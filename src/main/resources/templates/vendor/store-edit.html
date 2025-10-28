@@ -23,7 +23,7 @@
                 <!-- Edit Store Form -->
                 <div class="card">
                     <div class="card-body">
-                        <form th:action="@{/vendor/store/update}" method="post" th:object="${store}">
+                        <form th:action="@{/vendor/store/update}" method="post" th:object="${storeDTO}" enctype="multipart/form-data">
                             <div class="mb-3">
                                 <label for="name" class="form-label">Tên cửa hàng <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="name" th:field="*{name}" 
@@ -32,10 +32,11 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="email" class="form-label">Email <span class="text-danger">*</span></label>
-                                <input type="email" class="form-control" id="email" th:field="*{email}" 
+                                <label for="email" class="form-label">Email cửa hàng <span class="text-danger">*</span></label>
+                                <input type="email" class="form-control" id="email" th:field="*{email}"
                                        th:classappend="${#fields.hasErrors('email')} ? 'is-invalid' : ''" required>
                                 <div class="invalid-feedback" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+                                <div class="form-text">Email này sẽ là liên hệ chính của cửa hàng.</div>
                             </div>
 
                             <div class="mb-3">
@@ -46,18 +47,26 @@
                             </div>
 
                             <div class="mb-3">
-                                <label for="address" class="form-label">Địa chỉ <span class="text-danger">*</span></label>
-                                <textarea class="form-control" id="address" rows="2" th:field="*{address}" 
-                                          th:classappend="${#fields.hasErrors('address')} ? 'is-invalid' : ''" required></textarea>
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('address')}" th:errors="*{address}"></div>
+                                <label for="bio" class="form-label">Mô tả cửa hàng</label>
+                                <textarea class="form-control" id="bio" rows="4" th:field="*{bio}" 
+                                          th:classappend="${#fields.hasErrors('bio')} ? 'is-invalid' : ''"></textarea>
+                                <div class="invalid-feedback" th:if="${#fields.hasErrors('bio')}" th:errors="*{bio}"></div>
+                              
                             </div>
 
                             <div class="mb-3">
-                                <label for="description" class="form-label">Mô tả cửa hàng</label>
-                                <textarea class="form-control" id="description" rows="4" th:field="*{description}" 
-                                          th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"></textarea>
-                                <div class="invalid-feedback" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
-                                <small class="form-text text-muted">Tối đa 500 ký tự</small>
+                                <label for="featuredImagesFiles" class="form-label">Ảnh cửa hàng (chọn từ máy)</label>
+                                <input type="file" class="form-control" id="featuredImagesFiles" name="featuredImagesFiles" multiple accept="image/*">
+
+                            </div>
+                            <!-- Existing and preview thumbnails -->
+                            <input type="hidden" id="existingFeaturedImagesJson" name="existingFeaturedImages" th:value="${storeDTO.featuredImages}" />
+                            <div class="mb-3">
+                                <label class="form-label">Ảnh hiện tại</label>
+                                <div id="existingImages" class="d-flex gap-2 mb-2"></div>
+
+                                <label class="form-label">Xem trước ảnh mới</label>
+                                <div id="newImagePreview" class="d-flex gap-2"></div>
                             </div>
 
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
@@ -76,5 +85,130 @@
     </div>
 
     <div th:replace="~{fragments/footer :: footer}"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const existingJsonInput = document.getElementById('existingFeaturedImagesJson');
+            const existingContainer = document.getElementById('existingImages');
+            const newPreview = document.getElementById('newImagePreview');
+            const fileInput = document.getElementById('featuredImagesFiles');
+
+            // Manage existing images array (kept images)
+            let existingArr = [];
+            if (existingJsonInput) {
+                const val = existingJsonInput.value;
+                if (val && val.trim() !== '') {
+                    try {
+                        const arr = JSON.parse(val);
+                        if (Array.isArray(arr)) existingArr = arr.slice();
+                    } catch (e) {
+                        existingArr = [];
+                    }
+                }
+            }
+
+            function renderExisting() {
+                existingContainer.innerHTML = '';
+                if (!existingArr || existingArr.length === 0) {
+                    existingContainer.innerHTML = '<small class="text-muted">Chưa có ảnh</small>';
+                    existingJsonInput.value = '[]';
+                    return;
+                }
+                existingArr.forEach((url, idx) => {
+                    const wrapper = document.createElement('div');
+                    wrapper.style.position = 'relative';
+                    wrapper.style.width = '100px';
+                    wrapper.style.height = '100px';
+
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+                    img.className = 'img-thumbnail';
+
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = 'btn btn-sm btn-danger';
+                    btn.style.position = 'absolute';
+                    btn.style.top = '4px';
+                    btn.style.right = '4px';
+                    btn.style.padding = '2px 6px';
+                    btn.innerText = 'x';
+                    btn.addEventListener('click', function() {
+                        existingArr.splice(idx, 1);
+                        existingJsonInput.value = JSON.stringify(existingArr);
+                        renderExisting();
+                    });
+
+                    wrapper.appendChild(img);
+                    wrapper.appendChild(btn);
+                    existingContainer.appendChild(wrapper);
+                });
+                existingJsonInput.value = JSON.stringify(existingArr);
+            }
+
+            renderExisting();
+
+            // Manage file input with DataTransfer so we can remove selected files
+            let dt = new DataTransfer();
+
+            function renderNewPreview() {
+                newPreview.innerHTML = '';
+                const files = Array.from(dt.files || []);
+                if (files.length === 0) {
+                    newPreview.innerHTML = '<small class="text-muted">Không có ảnh được chọn</small>';
+                    return;
+                }
+                files.forEach((file, idx) => {
+                    if (!file.type.startsWith('image/')) return;
+                    const wrapper = document.createElement('div');
+                    wrapper.style.position = 'relative';
+                    wrapper.style.width = '100px';
+                    wrapper.style.height = '100px';
+
+                    const reader = new FileReader();
+                    reader.onload = function(ev) {
+                        const img = document.createElement('img');
+                        img.src = ev.target.result;
+                        img.style.width = '100%';
+                        img.style.height = '100%';
+                        img.style.objectFit = 'cover';
+                        img.className = 'img-thumbnail';
+
+                        const btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.className = 'btn btn-sm btn-danger';
+                        btn.style.position = 'absolute';
+                        btn.style.top = '4px';
+                        btn.style.right = '4px';
+                        btn.style.padding = '2px 6px';
+                        btn.innerText = 'x';
+                        btn.addEventListener('click', function() {
+                            // remove file from DataTransfer and re-render
+                            dt.items.remove(idx);
+                            fileInput.files = dt.files;
+                            renderNewPreview();
+                        });
+
+                        wrapper.appendChild(img);
+                        wrapper.appendChild(btn);
+                        newPreview.appendChild(wrapper);
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+
+            if (fileInput) {
+                fileInput.addEventListener('change', function(e) {
+                    // rebuild dt from selected files (keeps any previously removed)
+                    dt = new DataTransfer();
+                    const files = Array.from(e.target.files || []);
+                    files.forEach(f => dt.items.add(f));
+                    fileInput.files = dt.files;
+                    renderNewPreview();
+                });
+            }
+        });
+    </script>
 </body>
 </html>

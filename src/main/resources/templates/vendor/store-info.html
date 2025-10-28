@@ -64,8 +64,8 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="info-item">
-                                    <label class="text-muted small"><i class="fas fa-phone"></i> Số điện thoại</label>
-                                    <p th:text="${store.ownerPhone != null ? store.ownerPhone : 'Chưa cập nhật'}">Phone</p>
+                                    <label class="text-muted small"><i class="fas fa-phone"></i> Số điện thoại cửa hàng </label>
+                                    <p th:text="${store.phone != null ? store.phone : 'Chưa cập nhật'}">Phone</p>
                                 </div>
                             </div>
                         </div>
@@ -79,8 +79,8 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="info-item">
-                                    <label class="text-muted small"><i class="fas fa-envelope"></i> Email chủ shop</label>
-                                    <p th:text="${store.ownerEmail}">email@example.com</p>
+                                    <label class="text-muted small"><i class="fas fa-envelope"></i> Email cửa hàng</label>
+                                    <p th:text="${store.email != null ? store.email : ('Chưa cập nhật')}">email@example.com</p>
                                 </div>
                             </div>
                         </div>
@@ -96,25 +96,23 @@
                             </div>
                         </div>
 
+                        <!-- Store images gallery -->
                         <div class="row mb-3">
-                            <div class="col-md-6">
+                            <div class="col-md-12">
                                 <div class="info-item">
-                                    <label class="text-muted small"><i class="fas fa-medal"></i> Điểm tích lũy</label>
-                                    <p><span class="badge bg-warning text-dark fs-6" th:text="${store.point} + ' điểm'">0 điểm</span></p>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="info-item">
-                                    <label class="text-muted small"><i class="fas fa-wallet"></i> Ví điện tử (E-Wallet)</label>
-                                    <p class="text-success fw-bold" th:text="${#numbers.formatDecimal(store.eWallet, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</p>
+                                    <label class="text-muted small"><i class="fas fa-image"></i> Ảnh cửa hàng</label>
+                                    <input type="hidden" id="storeFeaturedImagesJson" th:value="${store.featuredImages}" />
+                                    <div id="storeImagesGallery" class="d-flex flex-wrap gap-2 mt-2"></div>
                                 </div>
                             </div>
                         </div>
 
+                       
+
                         <div class="row mb-3">
                             <div class="col-md-6">
                                 <div class="info-item">
-                                    <label class="text-muted small"><i class="fas fa-percent"></i> Hoa hồng</label>
+                                    <label class="text-muted small"><i class="fas fa-percent"></i> Chiết khấu</label>
                                     <p th:if="${store.commissionName != null}">
                                         <span th:text="${store.commissionName}">Commission</span>
                                         <span class="text-muted">
@@ -151,6 +149,49 @@
     </div>
 
     <div th:replace="~{fragments/footer :: footer}"></div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const input = document.getElementById('storeFeaturedImagesJson');
+            const gallery = document.getElementById('storeImagesGallery');
+            if (!gallery) return;
+            gallery.innerHTML = '';
+            if (!input) {
+                gallery.innerHTML = '<small class="text-muted">Chưa có ảnh</small>';
+                return;
+            }
+            const val = input.value;
+            if (!val || val.trim() === '') {
+                gallery.innerHTML = '<small class="text-muted">Chưa có ảnh</small>';
+                return;
+            }
+            try {
+                const arr = JSON.parse(val);
+                if (!Array.isArray(arr) || arr.length === 0) {
+                    gallery.innerHTML = '<small class="text-muted">Chưa có ảnh</small>';
+                    return;
+                }
+                arr.forEach(url => {
+                    const wrapper = document.createElement('div');
+                    wrapper.style.width = '120px';
+                    wrapper.style.height = '120px';
+                    wrapper.style.overflow = 'hidden';
+
+                    const img = document.createElement('img');
+                    img.src = url;
+                    img.alt = 'Ảnh cửa hàng';
+                    img.className = 'img-thumbnail';
+                    img.style.width = '100%';
+                    img.style.height = '100%';
+                    img.style.objectFit = 'cover';
+
+                    wrapper.appendChild(img);
+                    gallery.appendChild(wrapper);
+                });
+            } catch (e) {
+                gallery.innerHTML = '<small class="text-muted">Chưa có ảnh</small>';
+            }
+        });
+    </script>
     
     <style>
         .info-item {

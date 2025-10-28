@@ -1,6 +1,8 @@
 package vn.iotstar.service.vendor.impl;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -35,6 +37,11 @@ public class VendorOrderServiceImpl implements VendorOrderService {
     
     @Autowired
     private ProductRepository productRepository;
+
+    @Autowired
+    private vn.iotstar.repository.StyleValueRepository styleValueRepository;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
     
     @Autowired
     private UserRepository userRepository;
@@ -423,6 +430,24 @@ public class VendorOrderServiceImpl implements VendorOrderService {
         dto.setQuantity(item.getQuantity());
         dto.setPrice(item.getPrice());
         dto.setTotal(item.getTotal());
+
+        // Parse styleValueIds JSON and resolve names
+        if (item.getStyleValueIds() != null && !item.getStyleValueIds().isEmpty()) {
+            try {
+                java.util.List<String> ids = objectMapper.readValue(item.getStyleValueIds(), new TypeReference<java.util.List<String>>(){});
+                if (ids != null && !ids.isEmpty()) {
+                    java.util.List<String> names = styleValueRepository.findAllById(ids).stream()
+                            .map(sv -> sv.getStyle().getName() + ": " + sv.getName())
+                            .toList();
+                    dto.setStyleValueNames(names);
+                }
+            } catch (Exception e) {
+                // ignore parse errors
+                dto.setStyleValueNames(java.util.List.of());
+            }
+        } else {
+            dto.setStyleValueNames(java.util.List.of());
+        }
         
         return dto;
     }

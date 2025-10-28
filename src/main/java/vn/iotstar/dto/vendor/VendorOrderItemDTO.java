@@ -19,6 +19,7 @@ public class VendorOrderItemDTO {
     private String productId;
     private String productName;
     private String productImage;
+    private java.util.List<String> styleValueNames;
     private Integer quantity;
     private BigDecimal price;
     private BigDecimal total;
