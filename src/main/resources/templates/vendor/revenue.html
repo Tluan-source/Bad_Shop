@@ -117,22 +117,22 @@
                                     <tbody>
                                         <tr th:each="tx : ${transactions}">
                                             <td>
-                                                <a th:href="@{/vendor/orders/{id}(id=${tx.orderId})}" 
-                                                   th:text="${tx.orderCode}">
+                                                <a th:href="@{/vendor/orders/detail/{id}(id=${tx.orderId})}" 
+                                                   th:text="'#' + ${#strings.length(tx.orderId) > 8 ? #strings.substring(tx.orderId, 0, 8) : tx.orderId}">
                                                     #ORDER123
                                                 </a>
                                             </td>
-                                            <td th:text="${#temporals.format(tx.transactionDate, 'dd/MM/yyyy HH:mm')}">
+                                            <td th:text="${tx.date != null ? #temporals.format(tx.date, 'dd/MM/yyyy HH:mm') : '-'}">
                                                 01/01/2025 10:00
                                             </td>
-                                            <td class="text-end" th:text="${#numbers.formatDecimal(tx.totalAmount, 0, 0) + ' VNĐ'}">
+                                            <td class="text-end" th:text="${tx.amount != null ? #numbers.formatDecimal(tx.amount, 0, 'COMMA', 0, 'POINT') + ' VNĐ' : '0 VNĐ'}">
                                                 1,000,000 VNĐ
                                             </td>
-                                            <td class="text-end text-danger" th:text="'-' + ${#numbers.formatDecimal(tx.feeAmount, 0, 0) + ' VNĐ'}">
+                                            <td class="text-end text-danger" th:text="${tx.commission != null ? '-' + #numbers.formatDecimal(tx.commission, 0, 'COMMA', 0, 'POINT') + ' VNĐ' : '0 VNĐ'}">
                                                 -100,000 VNĐ
                                             </td>
                                             <td class="text-end">
-                                                <strong th:text="${#numbers.formatDecimal(tx.netAmount, 0, 0) + ' VNĐ'}">
+                                                <strong th:text="${tx.net != null ? #numbers.formatDecimal(tx.net, 0, 'COMMA', 0, 'POINT') + ' VNĐ' : '0 VNĐ'}">
                                                     900,000 VNĐ
                                                 </strong>
                                             </td>
@@ -147,9 +147,7 @@
                                                     <i class="fas fa-spinner"></i> Đang xử lý
                                                 </span>
                                             </td>
-                                            <td th:text="${tx.paidDate != null ? #temporals.format(tx.paidDate, 'dd/MM/yyyy') : '-'}">
-                                                -
-                                            </td>
+                                            <td>-</td>
                                         </tr>
                                     </tbody>
                                     <tfoot>

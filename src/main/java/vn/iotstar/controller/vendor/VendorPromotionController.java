@@ -8,8 +8,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import vn.iotstar.entity.Promotion;
+import vn.iotstar.entity.Product;
 import vn.iotstar.entity.Store;
 import vn.iotstar.entity.User;
+import vn.iotstar.repository.ProductRepository;
 import vn.iotstar.repository.StoreRepository;
 import vn.iotstar.service.PromotionService;
 import vn.iotstar.service.UserService;
@@ -29,6 +31,7 @@ public class VendorPromotionController {
     private final PromotionService promotionService;
     private final StoreRepository storeRepository;
     private final UserService userService;
+    private final ProductRepository productRepository;
     
     /**
      * Get current vendor's store
@@ -52,24 +55,46 @@ public class VendorPromotionController {
         Store store = getCurrentStore(auth);
         List<Promotion> promotions = promotionService.getPromotionsByStore(store.getId());
         
+        // Calculate statistics
+        long activeCount = promotions.stream()
+                .filter(p -> p.getIsActive() != null && p.getIsActive() && !p.isExpired() && !p.isUpcoming())
+                .count();
+        
+        long upcomingCount = promotions.stream()
+                .filter(p -> p.isUpcoming())
+                .count();
+        
+        long expiredCount = promotions.stream()
+                .filter(p -> p.isExpired())
+                .count();
+        
         model.addAttribute("promotions", promotions);
         model.addAttribute("store", store);
+        model.addAttribute("activeCount", activeCount);
+        model.addAttribute("upcomingCount", upcomingCount);
+        model.addAttribute("expiredCount", expiredCount);
+        
         return "vendor/promotions/list";
     }
     
     /**
      * Show create promotion form
      */
-    @GetMapping("/create")
+    @GetMapping({"/create", "/new"})
     public String showCreateForm(Authentication auth, Model model) {
         Store store = getCurrentStore(auth);
+        
+        // Get all active products of the store
+        List<Product> products = productRepository.findByStoreIdAndIsActiveTrue(store.getId());
         
         model.addAttribute("promotion", new Promotion());
         model.addAttribute("discountTypes", Promotion.DiscountType.values());
         model.addAttribute("appliesTo", Promotion.AppliesTo.values());
         model.addAttribute("store", store);
+        model.addAttribute("products", products);
+        model.addAttribute("isEdit", false);
         
-        return "vendor/promotions/create";
+        return "vendor/promotions/form";
     }
     
     /**
@@ -84,9 +109,15 @@ public class VendorPromotionController {
             promotionService.createPromotion(promotion, store);
             return "redirect:/vendor/promotions?success=created";
         } catch (Exception e) {
+            Store store = getCurrentStore(auth);
+            List<Product> products = productRepository.findByStoreIdAndIsActiveTrue(store.getId());
+            
             model.addAttribute("error", e.getMessage());
             model.addAttribute("promotion", promotion);
-            return "vendor/promotions/create";
+            model.addAttribute("products", products);
+            model.addAttribute("store", store);
+            model.addAttribute("isEdit", false);
+            return "vendor/promotions/form";
         }
     }
     
@@ -101,12 +132,17 @@ public class VendorPromotionController {
             Store store = getCurrentStore(auth);
             Promotion promotion = promotionService.getPromotionById(id, store.getId());
             
+            // Get all active products of the store
+            List<Product> products = productRepository.findByStoreIdAndIsActiveTrue(store.getId());
+            
             model.addAttribute("promotion", promotion);
             model.addAttribute("discountTypes", Promotion.DiscountType.values());
             model.addAttribute("appliesTo", Promotion.AppliesTo.values());
             model.addAttribute("store", store);
+            model.addAttribute("products", products);
+            model.addAttribute("isEdit", true);
             
-            return "vendor/promotions/edit";
+            return "vendor/promotions/form";
         } catch (Exception e) {
             return "redirect:/vendor/promotions?error=" + e.getMessage();
         }
@@ -126,9 +162,15 @@ public class VendorPromotionController {
             promotionService.updatePromotion(id, promotion);
             return "redirect:/vendor/promotions?success=updated";
         } catch (Exception e) {
+            Store store = getCurrentStore(auth);
+            List<Product> products = productRepository.findByStoreIdAndIsActiveTrue(store.getId());
+            
             model.addAttribute("error", e.getMessage());
             model.addAttribute("promotion", promotion);
-            return "vendor/promotions/edit";
+            model.addAttribute("products", products);
+            model.addAttribute("store", store);
+            model.addAttribute("isEdit", true);
+            return "vendor/promotions/form";
         }
     }
     
@@ -152,7 +194,7 @@ public class VendorPromotionController {
     /**
      * View promotion detail
      */
-    @GetMapping("/{id}")
+    @GetMapping("/detail/{id}")
     public String viewPromotion(Authentication auth,
                                @PathVariable String id,
                                Model model) {

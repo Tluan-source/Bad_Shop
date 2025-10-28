@@ -4,10 +4,13 @@
           <title>Chi tiết sản phẩm - Badminton Marketplace</title>
      </head>
      <body>
+          <!-- Link to external CSS -->
+          <link th:href="@{/css/product-detail.css}" rel="stylesheet" />
+
           <div th:replace="~{fragments/header :: header}"></div>
 
           <!-- Breadcrumb -->
-          <section class="breadcrumb-section py-3 bg-light">
+          <section class="py-3 bg-light">
                <div class="container">
                     <nav aria-label="breadcrumb">
                          <ol class="breadcrumb mb-0">
@@ -24,232 +27,476 @@
           </section>
 
           <!-- Product Detail Section -->
-          <section class="product-detail-section py-5">
+          <section style="background: #f5f5f5; padding: 30px 0">
                <div class="container">
-                    <div class="row">
-                         <!-- Product Images -->
-                         <div class="col-lg-5 mb-4">
-                              <div class="product-detail-image">
-                                   <img
-                                        th:src="${product.firstImage}"
-                                        class="img-fluid rounded shadow"
-                                        th:alt="${product.name}"
-                                   />
-                              </div>
-                         </div>
+                    <div class="bg-white shadow-sm">
+                         <div class="row g-0">
+                              <!-- Left: Image Gallery -->
+                              <div class="col-lg-5 p-4">
+                                   <!-- Main Image -->
+                                   <div
+                                        class="image-container"
+                                        style="
+                                             border: 1px solid #e8e8e8;
+                                             background: white;
+                                             height: 450px;
+                                             display: flex;
+                                             align-items: center;
+                                             justify-content: center;
+                                             position: relative;
+                                             margin-bottom: 15px;
+                                             overflow: hidden;
+                                        "
+                                   >
+                                        <img
+                                             id="mainImage"
+                                             th:src="${product.firstImage}"
+                                             th:alt="${product.name}"
+                                             style="
+                                                  max-width: 100%;
+                                                  max-height: 100%;
+                                                  object-fit: contain;
+                                             "
+                                        />
 
-                         <!-- Product Info -->
-                         <div class="col-lg-7">
-                              <div class="product-detail-info">
-                                   <h1 class="product-title mb-3" th:text="${product.name}">
-                                        Tên sản phẩm
+                                        <!-- Prev/Next Buttons -->
+                                        <button
+                                             onclick="changeImage(-1)"
+                                             style="
+                                                  position: absolute;
+                                                  left: 0;
+                                                  top: 50%;
+                                                  transform: translateY(-50%);
+                                                  background: rgba(0, 0, 0, 0.3);
+                                                  border: none;
+                                                  color: rgb(255, 255, 255); /* icon màu đen */
+                                                  width: 40px;
+                                                  height: 60px;
+                                                  cursor: pointer;
+                                                  display: none;
+                                                  display: flex; /* dùng flexbox để căn giữa */
+                                                  justify-content: center; /* căn giữa ngang */
+                                                  align-items: center; /* căn giữa dọc */
+                                             "
+                                             id="prevBtn"
+                                        >
+                                             <i class="fas fa-chevron-left"></i>
+                                        </button>
+                                        <button
+                                             onclick="changeImage(1)"
+                                             id="nextBtn"
+                                             style="
+                                                  position: absolute;
+                                                  right: 0;
+                                                  top: 50%;
+                                                  transform: translateY(-50%);
+                                                  background: rgba(0, 0, 0, 0.3);
+                                                  border: none;
+                                                  color: rgb(255, 255, 255); /* icon màu đen */
+                                                  width: 40px;
+                                                  height: 60px;
+                                                  cursor: pointer;
+                                                  display: none;
+                                                  display: flex; /* dùng flexbox để căn giữa */
+                                                  justify-content: center; /* căn giữa ngang */
+                                                  align-items: center; /* căn giữa dọc */
+                                             "
+                                        >
+                                             <i class="fas fa-chevron-right"></i>
+                                        </button>
+                                   </div>
+
+                                   <!-- Thumbnails -->
+                                   <div
+                                        id="thumbnailsContainer"
+                                        style="display: flex; gap: 8px; overflow-x: auto"
+                                   >
+                                        <!-- Thumbnails will be loaded by JS -->
+                                   </div>
+                              </div>
+
+                              <!-- Right: Product Info -->
+                              <div class="col-lg-7 p-4">
+                                   <!-- Product Name -->
+                                   <h1
+                                        style="
+                                             font-size: 1.5rem;
+                                             font-weight: 600;
+                                             color: #333;
+                                             margin-bottom: 15px;
+                                        "
+                                        th:text="${product.name}"
+                                   >
+                                        Vợt Cầu Lông
                                    </h1>
 
-                                   <!-- Rating -->
-                                   <div class="product-rating mb-3">
-                                        <div class="d-flex align-items-center">
-                                             <div class="stars me-2">
-                                                  <i class="fas fa-star text-warning"></i>
-                                                  <i class="fas fa-star text-warning"></i>
-                                                  <i class="fas fa-star text-warning"></i>
-                                                  <i class="fas fa-star text-warning"></i>
-                                                  <i class="fas fa-star-half-alt text-warning"></i>
-                                             </div>
-                                             <span class="text-muted">(4.5/5 - 120 đánh giá)</span>
+                                   <!-- Rating & Reviews -->
+                                   <div
+                                        style="
+                                             display: flex;
+                                             align-items: center;
+                                             gap: 15px;
+                                             padding-bottom: 15px;
+                                             margin-bottom: 15px;
+                                             border-bottom: 1px solid #e8e8e8;
+                                             font-size: 0.9rem;
+                                        "
+                                   >
+                                        <div style="display: flex; align-items: center; gap: 3px">
+                                             <span
+                                                  style="color: #0d6efd; font-weight: 600"
+                                                  th:text="${product.rating}"
+                                                  >5</span
+                                             >
+                                             <i
+                                                  class="fas fa-star"
+                                                  style="color: #0d6efd; font-size: 0.85rem"
+                                             ></i>
+                                             <i
+                                                  class="fas fa-star"
+                                                  style="color: #0d6efd; font-size: 0.85rem"
+                                             ></i>
+                                             <i
+                                                  class="fas fa-star"
+                                                  style="color: #0d6efd; font-size: 0.85rem"
+                                             ></i>
+                                             <i
+                                                  class="fas fa-star"
+                                                  style="color: #0d6efd; font-size: 0.85rem"
+                                             ></i>
+                                             <i
+                                                  class="fas fa-star"
+                                                  style="color: #0d6efd; font-size: 0.85rem"
+                                             ></i>
+                                        </div>
+                                        <span style="color: #d8d8d8">|</span>
+                                        <div style="color: #666"><span>1</span> đánh giá</div>
+                                        <span style="color: #d8d8d8">|</span>
+                                        <div style="color: #666">
+                                             <strong>Đã bán:</strong>
+                                             <span th:text="${product.sold}">0</span>
                                         </div>
                                    </div>
 
                                    <!-- Price -->
-                                   <div class="product-price mb-4">
-                                        <h2 class="text-danger mb-0">
-                                             <span
-                                                  th:text="${#numbers.formatCurrency(product.promotionalPrice ?: product.price)}"
-                                                  >500,000₫</span
-                                             >
-                                        </h2>
+                                   <div
+                                        style="
+                                             background: #fafafa;
+                                             padding: 15px 20px;
+                                             margin-bottom: 20px;
+                                             border-radius: 4px;
+                                        "
+                                   >
                                         <span
-                                             th:if="${product.promotionalPrice}"
-                                             class="text-muted text-decoration-line-through fs-5"
+                                             style="
+                                                  color: #0d6efd;
+                                                  font-size: 2rem;
+                                                  font-weight: 700;
+                                             "
                                              th:text="${#numbers.formatCurrency(product.price)}"
+                                             >1.150.000₫</span
                                         >
-                                             700,000₫
-                                        </span>
-                                        <span
-                                             th:if="${product.promotionalPrice}"
-                                             class="badge bg-danger ms-2"
+                                   </div>
+
+                                   <!-- Style Selection Label -->
+                                   <div
+                                        th:if="${!styleMap.isEmpty()}"
+                                        style="
+                                             color: #0d6efd;
+                                             font-weight: 600;
+                                             margin-bottom: 15px;
+                                             font-size: 0.95rem;
+                                        "
+                                   >
+                                        Chọn thuộc tính:
+                                   </div>
+
+                                   <!-- Style Options -->
+                                   <div th:if="${!styleMap.isEmpty()}" style="margin-bottom: 20px">
+                                        <div
+                                             th:each="entry : ${styleMap}"
+                                             style="margin-bottom: 20px"
                                         >
-                                             -<span
-                                                  th:text="${(1 - product.promotionalPrice.doubleValue() / product.price.doubleValue()) * 100}"
-                                                  >30</span
-                                             >%
-                                        </span>
-                                   </div>
-
-                                   <!-- Description -->
-                                   <div class="product-description mb-4">
-                                        <h5 class="mb-3">
-                                             <i class="fas fa-info-circle me-2"></i>Mô tả sản phẩm
-                                        </h5>
-                                        <p class="text-muted" th:text="${product.description}">
-                                             Mô tả chi tiết về sản phẩm
-                                        </p>
-                                   </div>
-
-                                   <!-- Store Info -->
-                                   <div class="store-info mb-4 p-3 bg-light rounded">
-                                        <h6 class="mb-2">
-                                             <i class="fas fa-store me-2"></i>Cửa hàng
-                                        </h6>
-                                        <p class="mb-0 fw-bold" th:text="${product.store.name}">
-                                             Tên cửa hàng
-                                        </p>
-                                   </div>
-
-                                   <!-- Quantity Selector -->
-                                   <div class="quantity-selector mb-4">
-                                        <label class="form-label fw-bold">Số lượng:</label>
-                                        <div class="input-group" style="max-width: 200px">
-                                             <button
-                                                  class="btn btn-outline-secondary"
-                                                  type="button"
-                                                  onclick="decreaseQuantity()"
+                                             <div
+                                                  style="
+                                                       margin-bottom: 10px;
+                                                       color: #666;
+                                                       font-size: 0.9rem;
+                                                  "
                                              >
-                                                  <i class="fas fa-minus"></i>
-                                             </button>
-                                             <input
-                                                  type="number"
-                                                  class="form-control text-center"
-                                                  id="quantity"
-                                                  value="1"
-                                                  min="1"
-                                                  max="99"
-                                             />
-                                             <button
-                                                  class="btn btn-outline-secondary"
-                                                  type="button"
-                                                  onclick="increaseQuantity()"
+                                                  Chọn:
+                                                  <strong
+                                                       style="color: #333; font-weight: 600"
+                                                       th:text="${entry.key}"
+                                                       >Phiên Bản</strong
+                                                  >
+                                             </div>
+                                             <div style="display: flex; flex-wrap: wrap; gap: 10px">
+                                                  <button
+                                                       th:each="styleValue : ${entry.value}"
+                                                       type="button"
+                                                       class="style-option-btn"
+                                                       th:data-style-name="${entry.key}"
+                                                       th:data-style-id="${styleValue.id}"
+                                                       th:data-style-value="${styleValue.name}"
+                                                       onclick="selectStyle(this)"
+                                                       style="
+                                                            min-width: 100px;
+                                                            padding: 10px 20px;
+                                                            border: 1px solid #d8d8d8;
+                                                            background: white;
+                                                            color: #333;
+                                                            cursor: pointer;
+                                                            border-radius: 4px;
+                                                            font-size: 0.9rem;
+                                                            font-weight: 500;
+                                                            transition: all 0.2s;
+                                                       "
+                                                  >
+                                                       <span th:text="${styleValue.name}"
+                                                            >Có bảo hành</span
+                                                       >
+                                                  </button>
+                                             </div>
+                                        </div>
+
+                                        <!-- Warning -->
+                                        <div
+                                             id="styleWarning"
+                                             style="
+                                                  background: #fff3cd;
+                                                  border: 1px solid #81b3ff;
+                                                  color: #856404;
+                                                  padding: 12px 15px;
+                                                  border-radius: 4px;
+                                                  font-size: 0.9rem;
+                                                  display: none;
+                                             "
+                                        >
+                                             <i class="fas fa-exclamation-triangle me-2"></i>
+                                             Vui lòng chọn đầy đủ thuộc tính sản phẩm
+                                        </div>
+                                   </div>
+
+                                   <!-- Quantity -->
+                                   <div
+                                        style="
+                                             padding-bottom: 20px;
+                                             margin-bottom: 20px;
+                                             border-bottom: 1px solid #e8e8e8;
+                                        "
+                                   >
+                                        <div style="display: flex; align-items: center; gap: 15px">
+                                             <span style="color: #666; font-size: 0.9rem"
+                                                  >Số lượng:</span
                                              >
-                                                  <i class="fas fa-plus"></i>
-                                             </button>
+                                             <div
+                                                  style="
+                                                       display: flex;
+                                                       align-items: center;
+                                                       border: 1px solid #d8d8d8;
+                                                       border-radius: 4px;
+                                                       overflow: hidden;
+                                                  "
+                                             >
+                                                  <button
+                                                       onclick="decreaseQuantity()"
+                                                       style="
+                                                            width: 36px;
+                                                            height: 36px;
+                                                            border: none;
+                                                            background: white;
+                                                            cursor: pointer;
+                                                            color: #666;
+                                                       "
+                                                  >
+                                                       <i class="fas fa-minus"></i>
+                                                  </button>
+                                                  <input
+                                                       type="number"
+                                                       id="quantity"
+                                                       value="1"
+                                                       min="1"
+                                                       th:max="${product.quantity}"
+                                                       readonly
+                                                       style="
+                                                            width: 50px;
+                                                            height: 36px;
+                                                            border: none;
+                                                            border-left: 1px solid #d8d8d8;
+                                                            border-right: 1px solid #d8d8d8;
+                                                            text-align: center;
+                                                            font-size: 1rem;
+                                                            font-weight: 600;
+                                                            outline: none;
+                                                       "
+                                                  />
+                                                  <button
+                                                       onclick="increaseQuantity()"
+                                                       style="
+                                                            width: 36px;
+                                                            height: 36px;
+                                                            border: none;
+                                                            background: white;
+                                                            cursor: pointer;
+                                                            color: #666;
+                                                       "
+                                                  >
+                                                       <i class="fas fa-plus"></i>
+                                                  </button>
+                                             </div>
                                         </div>
                                    </div>
 
                                    <!-- Action Buttons -->
-                                   <div class="product-actions d-flex gap-3 mb-4">
-                                        <button class="btn btn-primary btn-lg flex-grow-1">
-                                             <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ hàng
+                                   <div style="display: flex; gap: 15px">
+                                        <button
+                                             onclick="addToCart()"
+                                             th:disabled="${!product.isSelling}"
+                                             style="
+                                                  flex: 1;
+                                                  background: white;
+                                                  color: #0d6efd;
+                                                  border: 2px solid #0d6efd;
+                                                  padding: 14px 40px;
+                                                  font-size: 0.95rem;
+                                                  font-weight: 600;
+                                                  cursor: pointer;
+                                                  border-radius: 4px;
+                                                  transition: all 0.2s;
+                                             "
+                                        >
+                                             <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ
                                         </button>
-                                        <button class="btn btn-outline-danger btn-lg">
-                                             <i class="far fa-heart"></i>
+                                        <button
+                                             id="favoriteBtn"
+                                             onclick="toggleFavorite()"
+                                             style="
+                                                  background: white;
+                                                  color: #dc3545;
+                                                  border: 2px solid #dc3545;
+                                                  padding: 14px 40px;
+                                                  font-size: 0.95rem;
+                                                  font-weight: 600;
+                                                  cursor: pointer;
+                                                  border-radius: 4px;
+                                                  transition: all 0.2s;
+                                                  min-width: 150px;
+                                             "
+                                        >
+                                             <i id="favoriteIcon" class="far fa-heart me-2"></i>
+                                             <span id="favoriteText">Yêu thích</span>
+                                        </button>
+                                        <button
+                                             onclick="buyNow()"
+                                             th:disabled="${!product.isSelling}"
+                                             style="
+                                                  flex: 1;
+                                                  background: #0d6efd;
+                                                  color: white;
+                                                  border: 2px solid #0d6efd;
+                                                  padding: 14px 40px;
+                                                  font-size: 0.95rem;
+                                                  font-weight: 600;
+                                                  cursor: pointer;
+                                                  border-radius: 4px;
+                                                  transition: all 0.2s;
+                                             "
+                                        >
+                                             <i class="fas fa-shopping-bag me-2"></i>Mua ngay
                                         </button>
                                    </div>
+                              </div>
+                         </div>
 
-                                   <!-- Product Meta -->
-                                   <div class="product-meta">
-                                        <div class="row g-3">
-                                             <div class="col-md-6">
-                                                  <p class="mb-1">
-                                                       <i class="fas fa-tag me-2 text-muted"></i>
-                                                       <strong>Danh mục:</strong>
-                                                       <span th:text="${product.category.name}"
-                                                            >Vợt cầu lông</span
-                                                       >
-                                                  </p>
-                                             </div>
-                                             <div class="col-md-6">
-                                                  <p class="mb-1">
-                                                       <i class="fas fa-box me-2 text-muted"></i>
-                                                       <strong>Tình trạng:</strong>
-                                                       <span
-                                                            class="text-success"
-                                                            th:text="${product.isSelling ? 'Còn hàng' : 'Hết hàng'}"
-                                                            >Còn hàng</span
-                                                       >
-                                                  </p>
-                                             </div>
-                                             <div class="col-md-6">
-                                                  <p class="mb-1">
-                                                       <i class="fas fa-fire me-2 text-muted"></i>
-                                                       <strong>Đã bán:</strong>
-                                                       <span th:text="${product.sold}">0</span> sản
-                                                       phẩm
-                                                  </p>
-                                             </div>
-                                        </div>
-                                   </div>
+                         <!-- Product Description -->
+                         <div class="p-4" style="border-top: 1px solid #e8e8e8">
+                              <h4
+                                   style="
+                                        font-size: 1.125rem;
+                                        text-transform: uppercase;
+                                        color: #333;
+                                        margin-bottom: 15px;
+                                   "
+                              >
+                                   <i class="fas fa-info-circle me-2" style="color: #0d6efd"></i>Mô
+                                   Tả Sản Phẩm
+                              </h4>
+                              <div
+                                   style="
+                                        background: #fafafa;
+                                        padding: 20px;
+                                        border-radius: 4px;
+                                        line-height: 1.8;
+                                   "
+                                   th:utext="${product.description}"
+                              >
+                                   Mô tả chi tiết về sản phẩm
                               </div>
                          </div>
                     </div>
                </div>
           </section>
 
-          <!-- Related Products Section -->
+          <!-- Related Products -->
           <section
-               class="related-products-section py-5 bg-light"
                th:if="${!#lists.isEmpty(relatedProducts)}"
+               style="background: #f5f5f5; padding: 30px 0"
           >
                <div class="container">
-                    <h3 class="mb-4"><i class="fas fa-box-open me-2"></i>Sản phẩm liên quan</h3>
-                    <div class="row g-4">
+                    <h3 style="color: #333; font-weight: 500; margin-bottom: 20px">
+                         <i class="fas fa-box-open me-2" style="color: #0d6efd"></i>
+                         Sản Phẩm Liên Quan
+                    </h3>
+                    <div class="row g-3">
                          <div
                               th:each="relatedProduct : ${relatedProducts}"
-                              class="col-lg-3 col-md-6"
+                              class="col-lg-3 col-md-4 col-sm-6"
                          >
-                              <div class="product-card h-100">
-                                   <div class="product-image-wrapper">
-                                        <img
-                                             th:src="${relatedProduct.firstImage}"
-                                             class="product-image"
-                                             th:alt="${relatedProduct.name}"
-                                        />
-                                        <div class="product-overlay">
-                                             <a
-                                                  th:href="@{/products/{id}(id=${relatedProduct.id})}"
-                                                  class="btn btn-light btn-sm"
-                                             >
-                                                  <i class="fas fa-eye me-1"></i> Xem chi tiết
-                                             </a>
-                                        </div>
-                                        <div
-                                             class="product-badge"
-                                             th:if="${relatedProduct.promotionalPrice}"
-                                        >
-                                             <span class="badge bg-danger">SALE</span>
-                                        </div>
+                              <div
+                                   class="card h-100 border-0 shadow-sm"
+                                   style="transition: transform 0.2s"
+                              >
+                                   <div style="position: relative; overflow: hidden">
+                                        <a th:href="@{/products/{id}(id=${relatedProduct.id})}">
+                                             <img
+                                                  th:src="${relatedProduct.firstImage}"
+                                                  class="card-img-top"
+                                                  th:alt="${relatedProduct.name}"
+                                                  style="height: 200px; object-fit: cover"
+                                             />
+                                        </a>
                                    </div>
-                                   <div class="product-info p-3">
-                                        <h5
-                                             class="product-title mb-2"
+                                   <div class="card-body">
+                                        <h6
+                                             class="card-title mb-2"
+                                             style="height: 40px; overflow: hidden"
                                              th:text="${relatedProduct.name}"
                                         >
-                                             Product Name
-                                        </h5>
-                                        <div class="product-rating mb-2">
-                                             <i class="fas fa-star text-warning"></i>
-                                             <i class="fas fa-star text-warning"></i>
-                                             <i class="fas fa-star text-warning"></i>
-                                             <i class="fas fa-star text-warning"></i>
-                                             <i class="fas fa-star-half-alt text-warning"></i>
-                                             <span class="text-muted ms-2">(4.5)</span>
-                                        </div>
-                                        <div class="product-price">
+                                             Product
+                                        </h6>
+                                        <div
+                                             class="d-flex align-items-center mb-2"
+                                             style="font-size: 0.875rem"
+                                        >
                                              <span
-                                                  class="price-current fw-bold fs-5 text-danger"
-                                                  th:text="${#numbers.formatCurrency(relatedProduct.promotionalPrice ?: relatedProduct.price)}"
+                                                  style="color: #0d6efd"
+                                                  th:text="${relatedProduct.rating}"
+                                                  >4.5</span
                                              >
-                                                  500,000₫
-                                             </span>
+                                             <i
+                                                  class="fas fa-star ms-1"
+                                                  style="color: #0d6efd; font-size: 0.75rem"
+                                             ></i>
+                                        </div>
+                                        <div>
                                              <span
-                                                  th:if="${relatedProduct.promotionalPrice}"
-                                                  class="price-original text-muted text-decoration-line-through ms-2"
+                                                  class="fw-bold"
+                                                  style="color: #0d6efd; font-size: 1.1rem"
                                                   th:text="${#numbers.formatCurrency(relatedProduct.price)}"
+                                                  >500,000₫</span
                                              >
-                                                  700,000₫
-                                             </span>
                                         </div>
-                                        <button class="btn btn-primary w-100 mt-3 btn-add-cart">
-                                             <i class="fas fa-cart-plus me-2"></i>Thêm vào giỏ
-                                        </button>
                                    </div>
                               </div>
                          </div>
@@ -259,22 +506,41 @@
 
           <div th:replace="~{fragments/footer :: footer}"></div>
 
-          <script>
-               function increaseQuantity() {
-                    const input = document.getElementById("quantity");
-                    const currentValue = parseInt(input.value) || 1;
-                    if (currentValue < 99) {
-                         input.value = currentValue + 1;
-                    }
-               }
+          <!-- Toast Notification -->
+          <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+               <div
+                    id="notificationToast"
+                    class="toast align-items-center text-white border-0"
+                    role="alert"
+               >
+                    <div class="d-flex">
+                         <div class="toast-body" id="toastMessage">Thông báo</div>
+                         <button
+                              type="button"
+                              class="btn-close btn-close-white me-2 m-auto"
+                              data-bs-dismiss="toast"
+                         ></button>
+                    </div>
+               </div>
+          </div>
 
-               function decreaseQuantity() {
-                    const input = document.getElementById("quantity");
-                    const currentValue = parseInt(input.value) || 1;
-                    if (currentValue > 1) {
-                         input.value = currentValue - 1;
-                    }
-               }
+          <!-- trong product-detail.html -->
+          <script th:inline="javascript">
+               const productData = {
+                    id: /*[[${product.id}]]*/ "",
+                    name: /*[[${product.name}]]*/ "",
+                    listImages: /*[[${product.listImages}]]*/ "[]",
+                    maxQuantity: /*[[${product.quantity}]]*/ 1,
+                    isSelling: /*[[${product.isSelling}]]*/ true,
+               };
+
+               const pageData = {
+                    styleMapSize: /*[[${styleMap.size()}]]*/ 0,
+                    csrfToken: /*[[${_csrf.token}]]*/ "",
+                    csrfHeader: /*[[${_csrf.headerName}]]*/ "",
+               };
           </script>
+
+          <script src="/js/product-detail.js"></script>
      </body>
 </html>

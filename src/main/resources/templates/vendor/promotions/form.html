@@ -30,8 +30,8 @@
 
                 <div class="card">
                     <div class="card-body">
-                        <form th:action="${isEdit ? '/vendor/promotions/' + promotion.id + '/update' : '/vendor/promotions/create'}" 
-                              method="post" th:object="${promotionDTO}">
+                        <form th:action="${isEdit ? '/vendor/promotions/edit/' + promotion.id : '/vendor/promotions/create'}" 
+                              method="post" th:object="${promotion}">
                             
                             <div class="row">
                                 <!-- Form Info Section -->

@@ -28,7 +28,8 @@
                 <select class="form-select" id="discountType" th:field="*{discountType}" required>
                     <option value="">-- Chọn loại --</option>
                     <option value="PERCENTAGE">Phần trăm (%)</option>
-                    <option value="FIXED">Số tiền cố định (VNĐ)</option>
+                    <option value="FIXED_AMOUNT">Số tiền cố định (VNĐ)</option>
+                    <option value="FREE_SHIPPING">Miễn phí vận chuyển</option>
                 </select>
                 <div th:if="${#fields.hasErrors('discountType')}" class="text-danger">
                     <small th:errors="*{discountType}"></small>
@@ -100,9 +101,10 @@
                            th:id="'product_' + ${product.id}" 
                            th:value="${product.id}" 
                            name="productIds"
-                           th:checked="${promotionDTO.productIds != null and promotionDTO.productIds.contains(product.id)}" />
+                           th:checked="${promotion.products != null and promotion.products.contains(product)}" />
                     <label class="form-check-label" th:for="'product_' + ${product.id}">
                         <span th:text="${product.name}">Product Name</span>
+                        <small class="text-muted ms-2" th:text="'(' + ${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ)'"></small>
                     </label>
                 </div>
             </div>

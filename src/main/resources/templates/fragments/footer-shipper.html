@@ -15,22 +15,21 @@
             <div class="col-md-4">
                 <h5>Công cụ giao hàng</h5>
                 <ul class="list-unstyled">
-                    <li><a href="#" th:href="@{/shipper/orders/pending}" class="text-light"><i class="fas fa-clock me-2"></i>Đơn chờ lấy</a></li>
-                    <li><a href="#" th:href="@{/shipper/orders/delivering}" class="text-light"><i class="fas fa-truck me-2"></i>Đơn đang giao</a></li>
-                    <li><a href="#" th:href="@{/shipper/income}" class="text-light"><i class="fas fa-coins me-2"></i>Thu nhập</a></li>
-                    <li><a href="#" th:href="@{/shipper/support}" class="text-light"><i class="fas fa-headset me-2"></i>Hỗ trợ shipper</a></li>
+                    <li><a href="#" th:href="@{/shipper/dashboard?keyword=&status=ACCEPTED}" class="text-light"><i class="fas fa-clock me-2"></i>Đơn chờ lấy</a></li>
+                    <li><a href="#" th:href="@{/shipper/dashboard?keyword=&status=DELIVERING}" class="text-light"><i class="fas fa-truck me-2"></i>Đơn đang giao</a></li>
+                    <li><a href="#" th:href="@{/shipper/dashboard?keyword=&status=DELIVERED}" class="text-light"><i class="fas fa-coins me-2"></i>Đơn giao thành công</a></li>
+                    <li><a href="#" th:href="@{/shipper/dashboard?keyword=&status=FAILED}" class="text-light"><i class="fas fa-times-circle"></i> Đơn giao thất bại</a></li>
                 </ul>
             </div>
             <div class="col-md-4">
                 <h5>Liên hệ hỗ trợ</h5>
-                <p><i class="fas fa-envelope me-2"></i>shipper@badminton.com</p>
-                <p><i class="fas fa-phone me-2"></i>Hotline: 1900 9999</p>
-                <p><i class="fas fa-book me-2"></i><a href="#" class="text-light">Hướng dẫn giao hàng</a></p>
+                <p><i class="fas fa-envelope me-2"></i>kunquan05@gmail.com</p>
+                <p><i class="fas fa-phone me-2"></i>Hotline: 0931607660</p>
             </div>
         </div>
         <hr class="bg-light">
         <div class="text-center">
-            <p class="mb-0">&copy; 2024 Badminton Marketplace - Shipper Portal | Đối tác vận chuyển</p>
+            <p class="mb-0">&copy; 2025 Badminton Marketplace - Shipper Portal | Đối tác vận chuyển</p>
         </div>
     </div>
 </footer>

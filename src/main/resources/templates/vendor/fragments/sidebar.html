@@ -91,36 +91,6 @@
                         <i class="fas fa-wallet"></i> Ví điện tử
                     </a>
                 </li>
-                
-                <!-- Settings & User Account -->
-                <li class="nav-item mt-3">
-                    <h6 class="text-muted px-3 mb-2"><small>TÀI KHOẢN</small></h6>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/user/profile}">
-                        <i class="fas fa-user"></i> Thông tin cá nhân
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/user/orders}">
-                        <i class="fas fa-shopping-bag"></i> Đơn mua của tôi
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" th:href="@{/}">
-                        <i class="fas fa-home"></i> Về trang chủ
-                    </a>
-                </li>
-                
-                <!-- Logout -->
-                <li class="nav-item mt-4 pt-3 border-top">
-                    <form th:action="@{/logout}" method="post" class="d-inline w-100">
-                        <button type="submit" class="nav-link btn btn-link text-danger w-100 text-start" 
-                                style="text-decoration: none;">
-                            <i class="fas fa-sign-out-alt"></i> Đăng xuất
-                        </button>
-                    </form>
-                </li>
             </ul>
         </div>
     </div>

@@ -20,7 +20,7 @@ public class Shipment {
     private Order order;
     
     @ManyToOne
-    @JoinColumn(name = "shipper_id", nullable = false)
+    @JoinColumn(name = "shipper_id")
     private User shipper;
     
     @ManyToOne

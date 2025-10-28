@@ -40,6 +40,9 @@ public class VendorOrderServiceImpl implements VendorOrderService {
     private UserRepository userRepository;
     
     @Autowired
+    private StoreRepository storeRepository;
+    
+    @Autowired
     private VendorSecurityService securityService;
     
     @Override
@@ -259,6 +262,42 @@ public class VendorOrderServiceImpl implements VendorOrderService {
         order.setUpdatedAt(LocalDateTime.now());
         
         Order savedOrder = orderRepository.save(order);
+        return convertToDTO(savedOrder);
+    }
+    
+    @Override
+    @Transactional
+    public VendorOrderDTO markAsDelivered(String orderId, String storeId) {
+        securityService.checkOrderOwnership(orderId, storeId);
+        
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> ResourceNotFoundException.order(orderId));
+        
+        // Check current status - can only mark SHIPPED orders as delivered
+        if (order.getStatus() != Order.OrderStatus.SHIPPED) {
+            throw new InvalidOrderStatusException(
+                "Chỉ có thể đánh dấu đã giao khi đơn hàng đang được vận chuyển"
+            );
+        }
+        
+        // Update order status to DELIVERED
+        order.setStatus(Order.OrderStatus.DELIVERED);
+        order.setUpdatedAt(LocalDateTime.now());
+        
+        // Mark as paid to vendor
+        order.setIsPaidBefore(true);
+        
+        // Transfer money to vendor's wallet
+        Store store = order.getStore();
+        BigDecimal currentWallet = store.getEWallet() != null ? store.getEWallet() : BigDecimal.ZERO;
+        BigDecimal amountToStore = order.getAmountToStore() != null ? order.getAmountToStore() : BigDecimal.ZERO;
+        
+        store.setEWallet(currentWallet.add(amountToStore));
+        storeRepository.save(store);
+        
+        // Save order
+        Order savedOrder = orderRepository.save(order);
+        
         return convertToDTO(savedOrder);
     }
     
