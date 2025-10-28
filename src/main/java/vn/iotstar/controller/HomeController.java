@@ -1,17 +1,28 @@
 package vn.iotstar.controller;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import vn.iotstar.entity.Product;
+import vn.iotstar.entity.StyleValue;
+import vn.iotstar.repository.StyleRepository;
+import vn.iotstar.repository.StyleValueRepository;
+import vn.iotstar.service.CartService;
+import vn.iotstar.service.FavoriteService;
 import vn.iotstar.service.ProductService;
 
 @Controller
@@ -19,6 +30,21 @@ public class HomeController {
     
     @Autowired
     private ProductService productService;
+    
+    @Autowired
+    private FavoriteService favoriteService;
+    
+    @Autowired
+    private CartService cartService;
+    
+    @Autowired
+    private StyleRepository styleRepository;
+    
+    @Autowired
+    private StyleValueRepository styleValueRepository;
+    
+    @Autowired
+    private ObjectMapper objectMapper;
     
     @GetMapping("/")
     public String home(Model model) {
@@ -84,21 +110,55 @@ public class HomeController {
 
     
     @GetMapping("/products/{id}")
-    public String productDetail(@PathVariable String id, Model model) {
+    public String productDetail(@PathVariable String id, Model model, Authentication auth) {
+        // Kiểm tra đăng nhập
+        if (auth == null || !auth.isAuthenticated()) {
+            return "redirect:/login";
+        }
+        
         Optional<Product> productOpt = productService.getProductById(id);
         
         if (productOpt.isPresent()) {
             Product product = productOpt.get();
             
-            // L?y s?n ph?m li?n quan (c?ng category)
+            // Lấy sản phẩm liên quan (cùng category)
             List<Product> relatedProducts = productService.getProductsByCategory(product.getCategory().getId());
-            relatedProducts.removeIf(p -> p.getId().equals(id)); // Lo?i b? s?n ph?m hi?n t?i
+            relatedProducts.removeIf(p -> p.getId().equals(id)); // Loại bỏ sản phẩm hiện tại
             if (relatedProducts.size() > 4) {
-                relatedProducts = relatedProducts.subList(0, 4); // Ch? l?y 4 s?n ph?m
+                relatedProducts = relatedProducts.subList(0, 4); // Chỉ lấy 4 sản phẩm
+            }
+            
+            // Kiểm tra sản phẩm có trong yêu thích không
+            boolean isFavorite = favoriteService.isFavorite(id);
+            
+            // Parse styleValueIds và lấy thông tin Style + StyleValue
+            Map<String, List<StyleValue>> styleMap = new HashMap<>();
+            try {
+                if (product.getStyleValueIds() != null && !product.getStyleValueIds().equals("[]")) {
+                    List<String> styleValueIds = objectMapper.readValue(
+                        product.getStyleValueIds(), 
+                        objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                    );
+                    
+                    if (!styleValueIds.isEmpty()) {
+                        List<StyleValue> styleValues = styleValueRepository.findAllById(styleValueIds);
+                        
+                        // Nhóm StyleValue theo Style
+                        for (StyleValue sv : styleValues) {
+                            String styleName = sv.getStyle().getName();
+                            styleMap.computeIfAbsent(styleName, k -> new ArrayList<>()).add(sv);
+                        }
+                    }
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
             
             model.addAttribute("product", product);
             model.addAttribute("relatedProducts", relatedProducts);
+            model.addAttribute("isFavorite", isFavorite);
+            model.addAttribute("isAuthenticated", true);
+            model.addAttribute("styleMap", styleMap);
             return "user/product-detail";
         }
         
