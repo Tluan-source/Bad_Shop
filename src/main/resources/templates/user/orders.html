@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html
      xmlns:th="http://www.thymeleaf.org"
      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
@@ -169,7 +169,7 @@
                                              <div class="col-md-6 text-md-end mt-2 mt-md-0">
                                                   <div>
                                                        <i class="fas fa-user me-2 text-info"></i>
-                                                       <small th:text="${order.name}"></small>
+                                                       <small th:text="${order.user.fullName}"></small>
                                                   </div>
                                                   <div>
                                                        <i
@@ -200,7 +200,7 @@
                                         >
                                              <div class="product-item">
                                                   <img
-                                                       th:src="${item.product.avatar}"
+                                                       th:src="${item.product.firstImage}"
                                                        th:alt="${item.product.name}"
                                                        class="product-image"
                                                   />
