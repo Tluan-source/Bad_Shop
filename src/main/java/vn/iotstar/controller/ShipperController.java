@@ -49,13 +49,14 @@ public class ShipperController {
         
         Pageable pageable = PageRequest.of(page, 10, Sort.by("createdAt").descending());
         
-        // 📊 Luôn tải tổng số của tất cả 4 trạng thái (cho cards tổng quan)
-        long totalPending = shipmentRepository.countByStatusAndShipperIsNull(ShipmentStatus.ACCEPTED);
+        // 📊 Tính tổng số cho các trạng thái
+        // Chờ nhận = Order có status PROCESSING (chưa có shipment hoặc shipment chưa assign shipper)
+        long totalPending = orderRepository.countByStatus(Order.OrderStatus.PROCESSING);
         long totalDelivering = shipmentRepository.countByShipper_IdAndStatus(shipperId, ShipmentStatus.DELIVERING);
         long totalDelivered = shipmentRepository.countByShipper_IdAndStatus(shipperId, ShipmentStatus.DELIVERED);
         long totalFailed = shipmentRepository.countByShipper_IdAndStatus(shipperId, ShipmentStatus.FAILED);
 
-        Page<Shipment> pending = Page.empty();
+        Page<Order> pendingOrders = Page.empty();
         Page<Shipment> delivering = Page.empty();
         Page<Shipment> delivered = Page.empty();
         Page<Shipment> failed = Page.empty();
@@ -63,34 +64,34 @@ public class ShipperController {
 
         // ✅ Có chọn trạng thái cụ thể → chỉ hiển thị bảng tương ứng
         if (status != null && !status.isEmpty()) {
-            ShipmentStatus selectedStatus = ShipmentStatus.valueOf(status);
-            switch (selectedStatus) {
-                case ACCEPTED -> {
-                    pending = getFilteredShipments(null, selectedStatus, keyword, fromDate, toDate, pageable);
-                    totalPages = pending.getTotalPages();
+            switch (status) {
+                case "PENDING" -> {
+                    // Lấy các Order có status PROCESSING (chờ shipper nhận)
+                    pendingOrders = getFilteredOrders(keyword, fromDate, toDate, pageable);
+                    totalPages = pendingOrders.getTotalPages();
                 }
-                case DELIVERING -> {
-                    delivering = getFilteredShipments(shipperId, selectedStatus, keyword, fromDate, toDate, pageable);
+                case "DELIVERING" -> {
+                    delivering = getFilteredShipments(shipperId, ShipmentStatus.DELIVERING, keyword, fromDate, toDate, pageable);
                     totalPages = delivering.getTotalPages();
                 }
-                case DELIVERED -> {
-                    delivered = getFilteredShipments(shipperId, selectedStatus, keyword, fromDate, toDate, pageable);
+                case "DELIVERED" -> {
+                    delivered = getFilteredShipments(shipperId, ShipmentStatus.DELIVERED, keyword, fromDate, toDate, pageable);
                     totalPages = delivered.getTotalPages();
                 }
-                case FAILED -> {
-                    failed = getFilteredShipments(shipperId, selectedStatus, keyword, fromDate, toDate, pageable);
+                case "FAILED" -> {
+                    failed = getFilteredShipments(shipperId, ShipmentStatus.FAILED, keyword, fromDate, toDate, pageable);
                     totalPages = failed.getTotalPages();
                 }
             }
         }
         // ✅ Không chọn trạng thái → mặc định hiển thị tab "Chờ nhận"
         else {
-            pending = getFilteredShipments(null, ShipmentStatus.ACCEPTED, keyword, fromDate, toDate, pageable);
-            totalPages = pending.getTotalPages();
-            status = "ACCEPTED"; // Set default active tab
+            pendingOrders = getFilteredOrders(keyword, fromDate, toDate, pageable);
+            totalPages = pendingOrders.getTotalPages();
+            status = "PENDING"; // Set default active tab
         }
 
-        model.addAttribute("pendingShipments", pending);
+        model.addAttribute("pendingOrders", pendingOrders);
         model.addAttribute("delivering", delivering);
         model.addAttribute("delivered", delivered);
         model.addAttribute("failed", failed);
@@ -107,6 +108,31 @@ public class ShipperController {
         model.addAttribute("username", shipperId);
 
         return "shipper/dashboard";
+    }
+
+    /** 📦 Hàm lọc Orders PROCESSING (chờ nhận) */
+    private Page<Order> getFilteredOrders(
+            String keyword,
+            LocalDate fromDate,
+            LocalDate toDate,
+            Pageable pageable
+    ) {
+        // Lọc các Order có status = PROCESSING
+        if (fromDate != null && toDate != null) {
+            return orderRepository.findByStatusAndCreatedAtBetween(
+                    Order.OrderStatus.PROCESSING, 
+                    fromDate.atStartOfDay(), 
+                    toDate.atTime(23, 59, 59), 
+                    pageable);
+        } else if (!keyword.isEmpty()) {
+            // Tìm kiếm theo keyword (ID, address, phone, customer name)
+            return orderRepository.findByStatusAndKeyword(
+                    Order.OrderStatus.PROCESSING, 
+                    keyword, 
+                    pageable);
+        } else {
+            return orderRepository.findByStatus(Order.OrderStatus.PROCESSING, pageable);
+        }
     }
 
     /** 📦 Hàm lọc / tìm kiếm / phân trang */
@@ -146,22 +172,30 @@ public class ShipperController {
         }
     }
 
-    /** ✅ Nhận đơn (assign shipper & đổi trạng thái) */
-    @PostMapping("/accept/{id}")
-    public String acceptShipment(@PathVariable String id, Authentication auth) {
-        Shipment shipment = shipmentRepository.findById(id).orElse(null);
-        if (shipment != null) {
-            // Lấy user ID thực sự từ database
+    /** ✅ Nhận đơn (tạo shipment mới & đổi trạng thái Order) */
+    @PostMapping("/accept/{orderId}")
+    public String acceptOrder(@PathVariable String orderId, Authentication auth) {
+        Order order = orderRepository.findById(orderId).orElse(null);
+        if (order != null && order.getStatus() == Order.OrderStatus.PROCESSING) {
+            // Lấy shipper hiện tại
             String email = auth.getName();
             User shipper = userRepository.findByEmail(email).orElseThrow();
             
+            // Tạo hoặc cập nhật Shipment
+            Shipment shipment = order.getShipment();
+            if (shipment == null) {
+                shipment = new Shipment();
+                shipment.setId("SH" + System.currentTimeMillis()); // Generate ID
+                shipment.setOrder(order);
+                shipment.setShippingFee(order.getShippingFee());
+            }
+            
             shipment.setStatus(ShipmentStatus.DELIVERING);
-            shipment.setAcceptedAt(LocalDateTime.now());
+            shipment.setAssignedAt(LocalDateTime.now());
             shipment.setShipper(shipper);
-
             shipmentRepository.save(shipment);
 
-            Order order = shipment.getOrder();
+            // Cập nhật Order status
             order.setStatus(Order.OrderStatus.SHIPPED);
             orderRepository.save(order);
         }
@@ -211,6 +245,18 @@ public class ShipperController {
         model.addAttribute("order", shipment.getOrder());
         model.addAttribute("orderItems", shipment.getOrder().getOrderItems());
         return "shipper/shipment_detail";
+    }
+    
+    /** 🔍 Xem chi tiết đơn hàng (Order chưa có Shipment) */
+    @GetMapping("/order/{id}")
+    public String orderDetail(@PathVariable String id, Model model) {
+        Order order = orderRepository.findByIdWithItems(id);
+        if (order == null) return "redirect:/shipper/dashboard";
+
+        model.addAttribute("order", order);
+        model.addAttribute("orderItems", order.getOrderItems());
+        model.addAttribute("shipment", order.getShipment()); // Có thể null
+        return "shipper/order_detail";
     }
 
     /** 📊 Trang báo cáo thu nhập */

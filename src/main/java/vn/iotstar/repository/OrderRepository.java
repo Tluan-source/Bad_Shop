@@ -84,4 +84,32 @@ public interface OrderRepository extends JpaRepository<Order, String> {
            "WHERE p.store.id = :storeId AND o.status = 'DELIVERED' " +
            "GROUP BY p.id, p.name, p.sold, c.name ORDER BY p.sold DESC")
     List<Object[]> findTopSellingByStore(@Param("storeId") String storeId, Pageable pageable);
+    
+    // ============ SHIPPER METHODS ============
+    
+    // Find orders by status (for shipper to see PROCESSING orders)
+    Page<Order> findByStatus(Order.OrderStatus status, Pageable pageable);
+    
+    // Count orders by status
+    Long countByStatus(Order.OrderStatus status);
+    
+    // Find orders by status and date range
+    Page<Order> findByStatusAndCreatedAtBetween(
+        Order.OrderStatus status, 
+        LocalDateTime startDate, 
+        LocalDateTime endDate, 
+        Pageable pageable
+    );
+    
+    // Find orders by status and keyword (search by ID, address, phone, user name)
+    @Query("SELECT o FROM Order o WHERE o.status = :status " +
+           "AND (LOWER(o.id) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(o.address) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(o.phone) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<Order> findByStatusAndKeyword(
+        @Param("status") Order.OrderStatus status,
+        @Param("keyword") String keyword,
+        Pageable pageable
+    );
 }

@@ -28,13 +28,10 @@ public class Shipment {
     private ShippingProvider shippingProvider;
     
     @Enumerated(EnumType.STRING)
-    private ShipmentStatus status = ShipmentStatus.ASSIGNED;
+    private ShipmentStatus status = ShipmentStatus.DELIVERING;
     
     @Column(name = "assigned_at")
     private LocalDateTime assignedAt;
-    
-    @Column(name = "accepted_at")
-    private LocalDateTime acceptedAt;
     
     @Column(name = "delivered_at")
     private LocalDateTime deliveredAt;
@@ -54,6 +51,6 @@ public class Shipment {
     private LocalDateTime updatedAt;
     
     public enum ShipmentStatus {
-        ASSIGNED, ACCEPTED, DELIVERING, DELIVERED, FAILED
+        DELIVERING, DELIVERED, FAILED
     }
 }
