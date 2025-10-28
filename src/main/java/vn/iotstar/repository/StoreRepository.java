@@ -31,6 +31,15 @@ public interface StoreRepository extends JpaRepository<Store, String> {
     // Check if user owns a store
     boolean existsByOwnerIdAndId(String ownerId, String storeId);
     
+    // Check if email exists (for creating new store or updating)
+    boolean existsByEmail(String email);
+    
+    // Check if email exists excluding current store
+    boolean existsByEmailAndIdNot(String email, String storeId);
+    
+    // Find store by email
+    Optional<Store> findByEmail(String email);
+    
     // Get store with products count
     @Query("SELECT s FROM Store s LEFT JOIN FETCH s.products WHERE s.id = :storeId")
     Optional<Store> findByIdWithProducts(@Param("storeId") String storeId);

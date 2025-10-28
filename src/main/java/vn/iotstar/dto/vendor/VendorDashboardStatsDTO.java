@@ -23,11 +23,13 @@ public class VendorDashboardStatsDTO {
     
     // Order stats
     private Long totalOrders;
+    private Long pendingOrders;       // NOT_PROCESSED (alias for newOrders)
     private Long newOrders;           // NOT_PROCESSED
     private Long processingOrders;    // PROCESSING
     private Long shippingOrders;      // SHIPPED
     private Long deliveredOrders;     // DELIVERED
     private Long cancelledOrders;     // CANCELLED
+    private Long returnedOrders;      // RETURNED
     
     // Revenue stats
     private BigDecimal todayRevenue;

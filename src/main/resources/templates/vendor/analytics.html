@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head th:replace="~{fragments/head :: head}">
     <title>Analytics - Badminton Marketplace</title>
 </head>
@@ -21,7 +21,7 @@
                         <div class="card text-white bg-primary">
                             <div class="card-body">
                                 <h6 class="card-title">Doanh thu hôm nay</h6>
-                                <h3 th:text="${#numbers.formatDecimal((revenueSummary['today'] ?: 0) / 1000000, 1, 1)} + 'M'">0M</h3>
+                                <h3 th:text="${revenueSummary != null ? (#numbers.formatDecimal(revenueSummary.today / 1000000, 1, 1) + 'M') : '0M'}">0M</h3>
                             </div>
                         </div>
                     </div>
@@ -29,7 +29,7 @@
                         <div class="card text-white bg-info">
                             <div class="card-body">
                                 <h6 class="card-title">Doanh thu tuần này</h6>
-                                <h3 th:text="${#numbers.formatDecimal((revenueSummary['thisWeek'] ?: 0) / 1000000, 1, 1)} + 'M'">0M</h3>
+                                <h3 th:text="${revenueSummary != null ? (#numbers.formatDecimal(revenueSummary.thisWeek / 1000000, 1, 1) + 'M') : '0M'}">0M</h3>
                             </div>
                         </div>
                     </div>
@@ -37,7 +37,7 @@
                         <div class="card text-white bg-success">
                             <div class="card-body">
                                 <h6 class="card-title">Doanh thu tháng này</h6>
-                                <h3 th:text="${#numbers.formatDecimal((revenueSummary['thisMonth'] ?: 0) / 1000000, 1, 1)} + 'M'">0M</h3>
+                                <h3 th:text="${revenueSummary != null ? (#numbers.formatDecimal(revenueSummary.thisMonth / 1000000, 1, 1) + 'M') : '0M'}">0M</h3>
                             </div>
                         </div>
                     </div>
@@ -45,7 +45,7 @@
                         <div class="card text-white bg-warning">
                             <div class="card-body">
                                 <h6 class="card-title">Tổng doanh thu</h6>
-                                <h3 th:text="${#numbers.formatDecimal((revenueSummary['total'] ?: 0) / 1000000, 1, 1)} + 'M'">0M</h3>
+                                <h3 th:text="${revenueSummary != null ? (#numbers.formatDecimal(revenueSummary.total / 1000000, 1, 1) + 'M') : '0M'}">0M</h3>
                             </div>
                         </div>
                     </div>
@@ -57,10 +57,10 @@
                         <h5><i class="fas fa-chart-line"></i> Doanh thu theo tháng (12 tháng gần nhất)</h5>
                     </div>
                     <div class="card-body">
-                        <div th:if="${#maps.isEmpty(monthlyRevenue)}" class="text-center text-muted py-3">
+                        <div th:if="${monthlyRevenue == null || monthlyRevenue.isEmpty()}" class="text-center text-muted py-3">
                             Chưa có dữ liệu doanh thu
                         </div>
-                        <div th:unless="${#maps.isEmpty(monthlyRevenue)}">
+                        <div th:unless="${monthlyRevenue == null || monthlyRevenue.isEmpty()}">
                             <canvas id="monthlyRevenueChart" height="80"></canvas>
                         </div>
                     </div>
@@ -72,10 +72,10 @@
                         <h5><i class="fas fa-calendar-day"></i> Doanh thu theo ngày (30 ngày gần nhất)</h5>
                     </div>
                     <div class="card-body">
-                        <div th:if="${#maps.isEmpty(dailyRevenue)}" class="text-center text-muted py-3">
+                        <div th:if="${dailyRevenue == null || dailyRevenue.isEmpty()}" class="text-center text-muted py-3">
                             Chưa có dữ liệu doanh thu
                         </div>
-                        <div th:unless="${#maps.isEmpty(dailyRevenue)}">
+                        <div th:unless="${dailyRevenue == null || dailyRevenue.isEmpty()}">
                             <canvas id="dailyRevenueChart" height="80"></canvas>
                         </div>
                     </div>
@@ -87,10 +87,10 @@
                         <h5><i class="fas fa-fire"></i> Top 10 sản phẩm bán chạy</h5>
                     </div>
                     <div class="card-body">
-                        <div th:if="${#lists.isEmpty(topProducts)}" class="text-center text-muted py-3">
+                        <div th:if="${topProducts == null || topProducts.isEmpty()}" class="text-center text-muted py-3">
                             Chưa có sản phẩm nào được bán
                         </div>
-                        <div th:unless="${#lists.isEmpty(topProducts)}">
+                        <div th:unless="${topProducts == null || topProducts.isEmpty()}">
                             <div class="table-responsive">
                                 <table class="table table-hover">
                                     <thead>
@@ -105,16 +105,13 @@
                                     <tbody>
                                         <tr th:each="product, iter : ${topProducts}">
                                             <td th:text="${iter.index + 1}">1</td>
-                                            <td>
-                                                <div th:text="${product.name}">Product Name</div>
-                                                <small class="text-muted" th:text="${product.categoryName}">Category</small>
-                                            </td>
+                                            <td th:text="${product.name}">Product Name</td>
                                             <td class="text-center">
-                                                <span class="badge bg-primary" th:text="${product.soldCount}">0</span>
+                                                <span class="badge bg-primary" th:text="${product.sold}">0</span>
                                             </td>
-                                            <td class="text-end" th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</td>
+                                            <td class="text-end" th:text="${product.price != null ? #numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT') + ' VNĐ' : '0 VNĐ'}">0 VNĐ</td>
                                             <td class="text-end">
-                                                <strong th:text="${#numbers.formatDecimal(product.soldCount * product.price, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'">0 VNĐ</strong>
+                                                <strong th:text="${product.revenue != null ? #numbers.formatDecimal(product.revenue, 0, 'COMMA', 0, 'POINT') + ' VNĐ' : '0 VNĐ'}">0 VNĐ</strong>
                                             </td>
                                         </tr>
                                     </tbody>
@@ -131,122 +128,105 @@
 
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script th:inline="javascript" th:if="${not #maps.isEmpty(monthlyRevenue)}">
+    <script th:inline="javascript">
         /*<![CDATA[*/
         // Monthly Revenue Chart
-        var monthlyCtx = document.getElementById('monthlyRevenueChart').getContext('2d');
-        var monthlyRevenueMap = /*[[${monthlyRevenue}]]*/ {};
-        var currentYear = /*[[${currentYear}]]*/ 2025;
+        var monthlyRevenue = /*[[${monthlyRevenue}]]*/ {};
         
-        var monthlyLabels = [];
-        var monthlyData = [];
-        
-        // Convert Map to arrays
-        for (var month = 1; month <= 12; month++) {
-            monthlyLabels.push(month + '/' + currentYear);
-            monthlyData.push(monthlyRevenueMap[month] || 0);
-        }
-        
-        var monthlyChartData = {
-            labels: monthlyLabels,
-            datasets: [{
-                label: 'Doanh thu (VNĐ)',
-                data: monthlyData,
-                backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                borderColor: 'rgba(54, 162, 235, 1)',
-                borderWidth: 2,
-                fill: true
-            }]
-        };
-        
-        new Chart(monthlyCtx, {
-            type: 'line',
-            data: monthlyChartData,
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: true },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' VNĐ';
+        if (monthlyRevenue && Object.keys(monthlyRevenue).length > 0) {
+            var monthlyCtx = document.getElementById('monthlyRevenueChart').getContext('2d');
+            
+            var monthlyLabels = Object.keys(monthlyRevenue);
+            var monthlyData = Object.values(monthlyRevenue);
+            
+            new Chart(monthlyCtx, {
+                type: 'line',
+                data: {
+                    labels: monthlyLabels,
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: monthlyData,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' VNĐ';
+                                }
                             }
                         }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return (value / 1000000).toFixed(1) + 'M';
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return (value / 1000000).toFixed(1) + 'M';
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
-        /*]]>*/
-    </script>
-
-    <script th:inline="javascript" th:if="${not #maps.isEmpty(dailyRevenue)}">
-        /*<![CDATA[*/
+            });
+        }
+        
         // Daily Revenue Chart
-        var dailyCtx = document.getElementById('dailyRevenueChart').getContext('2d');
-        var dailyRevenueMap = /*[[${dailyRevenue}]]*/ {};
+        var dailyRevenue = /*[[${dailyRevenue}]]*/ {};
         
-        var dailyLabels = [];
-        var dailyData = [];
-        
-        // Convert Map to arrays
-        for (var key in dailyRevenueMap) {
-            if (dailyRevenueMap.hasOwnProperty(key)) {
-                var date = new Date(key);
-                var dateStr = ('0' + date.getDate()).slice(-2) + '/' + ('0' + (date.getMonth() + 1)).slice(-2);
-                dailyLabels.push(dateStr);
-                dailyData.push(dailyRevenueMap[key] || 0);
-            }
-        }
-        
-        var dailyChartData = {
-            labels: dailyLabels,
-            datasets: [{
-                label: 'Doanh thu (VNĐ)',
-                data: dailyData,
-                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                borderColor: 'rgba(75, 192, 192, 1)',
-                borderWidth: 2,
-                fill: true
-            }]
-        };
-        
-        new Chart(dailyCtx, {
-            type: 'bar',
-            data: dailyChartData,
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: true },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' VNĐ';
+        if (dailyRevenue && Object.keys(dailyRevenue).length > 0) {
+            var dailyCtx = document.getElementById('dailyRevenueChart').getContext('2d');
+            
+            var dailyLabels = Object.keys(dailyRevenue);
+            var dailyData = Object.values(dailyRevenue);
+            
+            new Chart(dailyCtx, {
+                type: 'bar',
+                data: {
+                    labels: dailyLabels,
+                    datasets: [{
+                        label: 'Doanh thu (VNĐ)',
+                        data: dailyData,
+                        backgroundColor: 'rgba(75, 192, 192, 0.6)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: true },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return 'Doanh thu: ' + context.parsed.y.toLocaleString('vi-VN') + ' VNĐ';
+                                }
                             }
                         }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: function(value) {
-                                return (value / 1000000).toFixed(1) + 'M';
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return (value / 1000000).toFixed(1) + 'M';
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+        }
         /*]]>*/
     </script>
 </body>

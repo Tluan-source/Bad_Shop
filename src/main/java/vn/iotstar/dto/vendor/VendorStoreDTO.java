@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 public class VendorStoreDTO {
     private String id;
     private String name;
+    private String email;  // Store's own email
+    private String phone;  // Store's own phone
     private String bio;
     private String slug;
     private String featuredImages; // JSON array

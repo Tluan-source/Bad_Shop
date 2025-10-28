@@ -33,12 +33,15 @@ import vn.iotstar.entity.User;
 import vn.iotstar.entity.Voucher;
 import vn.iotstar.repository.CategoryRepository;
 import vn.iotstar.repository.OrderRepository;
+import vn.iotstar.repository.ProductRepository;
 import vn.iotstar.repository.StoreRepository;
 import vn.iotstar.repository.UserRepository;
 import vn.iotstar.repository.VoucherRepository;
 import vn.iotstar.service.ActivityLogService;
 import vn.iotstar.service.AdminService;
 import vn.iotstar.service.CloudinaryService;
+import vn.iotstar.service.CommissionService;
+import vn.iotstar.service.MailService;
 import vn.iotstar.service.PasswordService;
 
 @Controller
@@ -71,6 +74,15 @@ public class AdminController {
     
     @Autowired
     private ActivityLogService activityLogService;
+    
+    @Autowired
+    private ProductRepository productRepository;
+    
+    @Autowired
+    private CommissionService commissionService;
+    
+    @Autowired
+    private MailService mailService;
     
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication authentication) {
@@ -252,48 +264,6 @@ public class AdminController {
         model.addAttribute("cancelledCount", cancelledCount);
         
         return "admin/orders";
-    }
-    
-    @GetMapping("/vouchers")
-    public String vouchers(@RequestParam(required = false) String search, 
-                          Model model, 
-                          Authentication authentication) {
-        model.addAttribute("username", authentication.getName());
-        
-        // Get vouchers based on search parameter
-        List<Voucher> vouchers;
-        if (search != null && !search.trim().isEmpty()) {
-            vouchers = voucherRepository.searchVouchers(search.trim());
-            model.addAttribute("search", search);
-        } else {
-            vouchers = voucherRepository.findAll();
-        }
-        
-        model.addAttribute("vouchers", vouchers);
-        
-        // Calculate statistics
-        long totalVouchers = vouchers.size();
-        long activeVouchers = vouchers.stream().filter(v -> v.getIsActive() && !v.isExpired()).count();
-        int totalUsageCount = vouchers.stream().mapToInt(Voucher::getUsageCount).sum();
-        
-        // Calculate total discount given (estimated)
-        BigDecimal totalDiscount = vouchers.stream()
-            .map(v -> {
-                if (v.getDiscountType() == Voucher.DiscountType.FIXED) {
-                    return v.getDiscountValue().multiply(new BigDecimal(v.getUsageCount()));
-                } else {
-                    // For percentage, use max discount as estimate
-                    return v.getMaxDiscount().multiply(new BigDecimal(v.getUsageCount()));
-                }
-            })
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        model.addAttribute("totalVouchers", totalVouchers);
-        model.addAttribute("activeVouchers", activeVouchers);
-        model.addAttribute("totalUsageCount", totalUsageCount);
-        model.addAttribute("totalDiscount", totalDiscount);
-        
-        return "admin/vouchers";
     }
     
     @GetMapping("/reports")
@@ -500,113 +470,6 @@ public class AdminController {
         }
         
         writer.flush();
-    }
-    
-    // ==================== VOUCHER CRUD ====================
-    
-    /**
-     * Create new voucher
-     */
-    @PostMapping("/vouchers/create")
-    public String createVoucher(
-            @RequestParam String code,
-            @RequestParam(required = false) String description,
-            @RequestParam String discountType,
-            @RequestParam BigDecimal discountValue,
-            @RequestParam(required = false) BigDecimal maxDiscount,
-            @RequestParam(required = false) BigDecimal minOrderValue,
-            @RequestParam Integer quantity,
-            @RequestParam String startDate,
-            @RequestParam String endDate,
-            RedirectAttributes redirectAttributes) {
-        try {
-            // Check if code already exists
-            if (voucherRepository.findByCode(code).isPresent()) {
-                redirectAttributes.addFlashAttribute("message", "Mã voucher '" + code + "' đã tồn tại!");
-                redirectAttributes.addFlashAttribute("messageType", "danger");
-                return "redirect:/admin/vouchers";
-            }
-            
-            Voucher voucher = new Voucher();
-            voucher.setId("V" + System.currentTimeMillis());
-            voucher.setCode(code.toUpperCase());
-            voucher.setDescription(description);
-            voucher.setDiscountType(Voucher.DiscountType.valueOf(discountType));
-            voucher.setDiscountValue(discountValue);
-            voucher.setMaxDiscount(maxDiscount != null ? maxDiscount : BigDecimal.ZERO);
-            voucher.setMinOrderValue(minOrderValue != null ? minOrderValue : BigDecimal.ZERO);
-            voucher.setQuantity(quantity);
-            voucher.setUsageCount(0);
-            voucher.setStartDate(LocalDateTime.parse(startDate + "T00:00:00"));
-            voucher.setEndDate(LocalDateTime.parse(endDate + "T23:59:59"));
-            voucher.setIsActive(true);
-            
-            voucherRepository.save(voucher);
-            
-            redirectAttributes.addFlashAttribute("message", "Đã tạo voucher thành công!");
-            redirectAttributes.addFlashAttribute("messageType", "success");
-        } catch (Exception e) {
-            e.printStackTrace();
-            redirectAttributes.addFlashAttribute("message", "Lỗi khi tạo voucher: " + e.getMessage());
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-        }
-        return "redirect:/admin/vouchers";
-    }
-    
-    /**
-     * Toggle voucher status
-     */
-    @PostMapping("/vouchers/{id}/toggle-status")
-    public String toggleVoucherStatus(@PathVariable String id, RedirectAttributes redirectAttributes) {
-        Optional<Voucher> voucherOpt = voucherRepository.findById(id);
-        if (voucherOpt.isPresent()) {
-            Voucher voucher = voucherOpt.get();
-            voucher.setIsActive(!voucher.getIsActive());
-            voucherRepository.save(voucher);
-            
-            String status = voucher.getIsActive() ? "kích hoạt" : "vô hiệu hóa";
-            redirectAttributes.addFlashAttribute("message", "Đã " + status + " voucher thành công!");
-            redirectAttributes.addFlashAttribute("messageType", "success");
-        } else {
-            redirectAttributes.addFlashAttribute("message", "Không tìm thấy voucher!");
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-        }
-        return "redirect:/admin/vouchers";
-    }
-    
-    /**
-     * Delete voucher
-     */
-    @PostMapping("/vouchers/{id}/delete")
-    public String deleteVoucher(@PathVariable String id, RedirectAttributes redirectAttributes) {
-        try {
-            Optional<Voucher> voucherOpt = voucherRepository.findById(id);
-            if (!voucherOpt.isPresent()) {
-                redirectAttributes.addFlashAttribute("message", "Không tìm thấy voucher!");
-                redirectAttributes.addFlashAttribute("messageType", "danger");
-                return "redirect:/admin/vouchers";
-            }
-            
-            Voucher voucher = voucherOpt.get();
-            
-            // Check if voucher has been used
-            if (voucher.getUsageCount() > 0) {
-                redirectAttributes.addFlashAttribute("message", 
-                    "Không thể xóa voucher '" + voucher.getCode() + "' vì đã có " + voucher.getUsageCount() + " lượt sử dụng!");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/admin/vouchers";
-            }
-            
-            voucherRepository.deleteById(id);
-            redirectAttributes.addFlashAttribute("message", "Đã xóa voucher '" + voucher.getCode() + "' thành công!");
-            redirectAttributes.addFlashAttribute("messageType", "success");
-        } catch (Exception e) {
-            e.printStackTrace();
-            redirectAttributes.addFlashAttribute("message", 
-                "Không thể xóa voucher: " + e.getMessage());
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-        }
-        return "redirect:/admin/vouchers";
     }
     
     @GetMapping("/profile")
@@ -912,38 +775,19 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("message", "Đã thêm cửa hàng thành công!");
             redirectAttributes.addFlashAttribute("messageType", "success");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "Lỗi khi thêm cửa hàng: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
             redirectAttributes.addFlashAttribute("messageType", "danger");
         }
         return "redirect:/admin/stores";
     }
     
     /**
-     * Toggle store status (Active/Inactive)
+     * Approve vendor registration - activate store and grant VENDOR role
      */
-    @PostMapping("/stores/{id}/toggle-status")
-    public String toggleStoreStatus(@PathVariable String id, RedirectAttributes redirectAttributes) {
-        Optional<Store> storeOpt = storeRepository.findById(id);
-        if (storeOpt.isPresent()) {
-            Store store = storeOpt.get();
-            store.setIsActive(!store.getIsActive());
-            storeRepository.save(store);
-            
-            String status = store.getIsActive() ? "kích hoạt" : "vô hiệu hóa";
-            redirectAttributes.addFlashAttribute("message", "Đã " + status + " cửa hàng thành công!");
-            redirectAttributes.addFlashAttribute("messageType", "success");
-        } else {
-            redirectAttributes.addFlashAttribute("message", "Không tìm thấy cửa hàng!");
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-        }
-        return "redirect:/admin/stores";
-    }
-    
-    /**
-     * Delete store
-     */
-    @PostMapping("/stores/{id}/delete")
-    public String deleteStore(@PathVariable String id, RedirectAttributes redirectAttributes) {
+    @PostMapping("/stores/{id}/approve")
+    public String approveVendorRegistration(@PathVariable String id,
+                                           RedirectAttributes redirectAttributes,
+                                           Authentication authentication) {
         try {
             Optional<Store> storeOpt = storeRepository.findById(id);
             if (!storeOpt.isPresent()) {
@@ -953,377 +797,458 @@ public class AdminController {
             }
             
             Store store = storeOpt.get();
+            User owner = store.getOwner();
             
-            // Check if store has products
-            if (store.getProducts() != null && !store.getProducts().isEmpty()) {
-                redirectAttributes.addFlashAttribute("message", 
-                    "Không thể xóa cửa hàng '" + store.getName() + "' vì có " + store.getProducts().size() + " sản phẩm! Vui lòng xóa tất cả sản phẩm trước.");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/admin/stores";
+            // Activate store
+            store.setIsActive(true);
+            store.setUpdatedAt(LocalDateTime.now());
+            storeRepository.save(store);
+            
+            // Grant VENDOR role to owner
+            owner.setRole(User.UserRole.VENDOR);
+            userRepository.save(owner);
+            
+            // Send approval email
+            try {
+                String subject = "✅ Đăng ký cửa hàng được phê duyệt - " + store.getName();
+                StringBuilder body = new StringBuilder();
+                body.append("Chúc mừng! Đăng ký của bạn đã được phê duyệt\n\n");
+                body.append("Xin chào ").append(owner.getFullName()).append(",\n\n");
+                body.append("Cửa hàng ").append(store.getName()).append(" của bạn đã được phê duyệt.\n");
+                body.append("Bạn có thể bắt đầu quản lý cửa hàng và đăng bán sản phẩm ngay bây giờ!\n\n");
+                body.append("Vào trang quản lý: http://localhost:8080/vendor/dashboard\n\n");
+                body.append("Chúc bạn kinh doanh thành công!");
+                
+                mailService.sendSimpleMessage(owner.getEmail(), subject, body.toString());
+            } catch (Exception e) {
+                System.err.println("Failed to send approval email: " + e.getMessage());
             }
             
-            // Check if store has orders
-            if (store.getOrders() != null && !store.getOrders().isEmpty()) {
-                redirectAttributes.addFlashAttribute("message", 
-                    "Không thể xóa cửa hàng '" + store.getName() + "' vì có " + store.getOrders().size() + " đơn hàng liên quan! Hãy xem xét vô hiệu hóa cửa hàng thay vì xóa.");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/admin/stores";
+            // Log activity - Get current admin user
+            Optional<User> adminUserOpt = userRepository.findByEmail(authentication.getName());
+            if (adminUserOpt.isPresent()) {
+                activityLogService.logActivity(
+                    adminUserOpt.get(),
+                    ActivityLog.ActivityType.ADMIN_ACTION,
+                    "Admin phê duyệt cửa hàng: " + store.getName() + " (ID: " + store.getId() + ")",
+                    null
+                );
             }
             
-            storeRepository.deleteById(id);
-            redirectAttributes.addFlashAttribute("message", "Đã xóa cửa hàng '" + store.getName() + "' thành công!");
-            redirectAttributes.addFlashAttribute("messageType", "success");
-        } catch (Exception e) {
-            e.printStackTrace();
             redirectAttributes.addFlashAttribute("message", 
-                "Không thể xóa cửa hàng: " + e.getMessage() + ". Cửa hàng này có thể đang có dữ liệu liên quan trong hệ thống.");
+                "Đã phê duyệt cửa hàng " + store.getName() + " thành công! User đã được cấp quyền VENDOR.");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
             redirectAttributes.addFlashAttribute("messageType", "danger");
         }
+        
+        return "redirect:/admin/stores/" + id + "/details";
+    }
+    
+    /**
+     * Reject vendor registration - delete store and notify user
+     */
+    @PostMapping("/stores/{id}/reject")
+    public String rejectVendorRegistration(@PathVariable String id,
+                                          @RequestParam(required = false) String reason,
+                                          RedirectAttributes redirectAttributes,
+                                          Authentication authentication) {
+        try {
+            Optional<Store> storeOpt = storeRepository.findById(id);
+            if (!storeOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy cửa hàng!");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/stores";
+            }
+            
+            Store store = storeOpt.get();
+            User owner = store.getOwner();
+            String storeName = store.getName();
+            
+            // Send rejection email
+            try {
+                String subject = "❌ Đăng ký cửa hàng không được phê duyệt";
+                StringBuilder body = new StringBuilder();
+                body.append("Thông báo từ chối đăng ký\n\n");
+                body.append("Xin chào ").append(owner.getFullName()).append(",\n\n");
+                body.append("Rất tiếc, đăng ký cửa hàng ").append(storeName).append(" của bạn không được phê duyệt.\n\n");
+                
+                if (reason != null && !reason.isEmpty()) {
+                    body.append("Lý do: ").append(reason).append("\n\n");
+                }
+                
+                body.append("Bạn có thể đăng ký lại với thông tin đầy đủ và chính xác hơn.\n");
+                body.append("Nếu có thắc mắc, vui lòng liên hệ: support@badmintonmarket.com");
+                
+                mailService.sendSimpleMessage(owner.getEmail(), subject, body.toString());
+            } catch (Exception e) {
+                System.err.println("Failed to send rejection email: " + e.getMessage());
+            }
+            
+            // Delete store
+            storeRepository.delete(store);
+            
+            // Log activity - Get current admin user
+            Optional<User> adminUserOpt = userRepository.findByEmail(authentication.getName());
+            if (adminUserOpt.isPresent()) {
+                activityLogService.logActivity(
+                    adminUserOpt.get(),
+                    ActivityLog.ActivityType.ADMIN_ACTION,
+                    "Admin từ chối cửa hàng: " + storeName + " (Lý do: " + (reason != null ? reason : "Không ghi") + ")",
+                    null
+                );
+            }
+            
+            redirectAttributes.addFlashAttribute("message", 
+                "Đã từ chối đăng ký cửa hàng " + storeName + ". Email thông báo đã được gửi.");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+        
         return "redirect:/admin/stores";
     }
     
-    // ==================== CATEGORY CRUD ====================
+    // ==================== COMMISSION CRUD ====================
     
     /**
-     * Create new category
+     * View commissions page
      */
-    @PostMapping("/categories/create")
-    public String createCategory(
-            @RequestParam String name,
-            @RequestParam String slug,
-            @RequestParam(required = false) String description,
-            RedirectAttributes redirectAttributes) {
+    @GetMapping("/commissions")
+    public String commissions(@RequestParam(required = false) String search,
+                             Model model,
+                             Authentication authentication) {
+        model.addAttribute("username", authentication.getName());
+        
+        List<vn.iotstar.entity.Commission> commissions;
+        if (search != null && !search.trim().isEmpty()) {
+            commissions = commissionService.searchCommissions(search.trim());
+            model.addAttribute("search", search);
+        } else {
+            commissions = commissionService.getAllCommissions();
+        }
+        
+        model.addAttribute("commissions", commissions);
+        model.addAttribute("totalCommissions", commissions.size());
+        
+        return "admin/commissions";
+    }
+    
+    /**
+     * Create commission
+     */
+    @PostMapping("/commissions/create")
+    public String createCommission(@RequestParam String name,
+                                  @RequestParam BigDecimal feePercent,
+                                  @RequestParam(required = false) String description,
+                                  RedirectAttributes redirectAttributes) {
         try {
-            Category category = new Category();
-            category.setId("C" + System.currentTimeMillis());
-            category.setName(name);
-            category.setSlug(slug);
-            category.setDescription(description);
-            category.setIsActive(true);
-            
-            categoryRepository.save(category);
-            redirectAttributes.addFlashAttribute("message", "Đã tạo danh mục thành công!");
+            commissionService.createCommission(name, feePercent, description);
+            redirectAttributes.addFlashAttribute("message", "Tạo chiết khấu thành công!");
             redirectAttributes.addFlashAttribute("messageType", "success");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "Không thể tạo danh mục: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
             redirectAttributes.addFlashAttribute("messageType", "danger");
         }
-        return "redirect:/admin/categories";
+        return "redirect:/admin/commissions";
     }
     
     /**
-     * Update category
+     * Update commission
      */
-    @PostMapping("/categories/{id}/update")
-    public String updateCategory(
-            @PathVariable String id,
-            @RequestParam String name,
-            @RequestParam String slug,
-            @RequestParam(required = false) String description,
-            RedirectAttributes redirectAttributes) {
-        Optional<Category> categoryOpt = categoryRepository.findById(id);
-        if (categoryOpt.isPresent()) {
-            Category category = categoryOpt.get();
-            category.setName(name);
-            category.setSlug(slug);
-            category.setDescription(description);
-            
-            categoryRepository.save(category);
-            redirectAttributes.addFlashAttribute("message", "Đã cập nhật danh mục thành công!");
-            redirectAttributes.addFlashAttribute("messageType", "success");
-        } else {
-            redirectAttributes.addFlashAttribute("message", "Không tìm thấy danh mục!");
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-        }
-        return "redirect:/admin/categories";
-    }
-    
-    /**
-     * Toggle category status
-     */
-    @PostMapping("/categories/{id}/toggle-status")
-    public String toggleCategoryStatus(@PathVariable String id, RedirectAttributes redirectAttributes) {
-        Optional<Category> categoryOpt = categoryRepository.findById(id);
-        if (categoryOpt.isPresent()) {
-            Category category = categoryOpt.get();
-            category.setIsActive(!category.getIsActive());
-            categoryRepository.save(category);
-            
-            String status = category.getIsActive() ? "kích hoạt" : "vô hiệu hóa";
-            redirectAttributes.addFlashAttribute("message", "Đã " + status + " danh mục thành công!");
-            redirectAttributes.addFlashAttribute("messageType", "success");
-        } else {
-            redirectAttributes.addFlashAttribute("message", "Không tìm thấy danh mục!");
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-        }
-        return "redirect:/admin/categories";
-    }
-    
-    /**
-     * Delete category
-     */
-    @PostMapping("/categories/{id}/delete")
-    public String deleteCategory(@PathVariable String id, RedirectAttributes redirectAttributes) {
+    @PostMapping("/commissions/{id}/update")
+    public String updateCommission(@PathVariable String id,
+                                  @RequestParam String name,
+                                  @RequestParam BigDecimal feePercent,
+                                  @RequestParam(required = false) String description,
+                                  RedirectAttributes redirectAttributes) {
         try {
-            categoryRepository.deleteById(id);
-            redirectAttributes.addFlashAttribute("message", "Đã xóa danh mục thành công!");
+            commissionService.updateCommission(id, name, feePercent, description);
+            redirectAttributes.addFlashAttribute("message", "Cập nhật chiết khấu thành công!");
             redirectAttributes.addFlashAttribute("messageType", "success");
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("message", "Không thể xóa danh mục: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
             redirectAttributes.addFlashAttribute("messageType", "danger");
         }
-        return "redirect:/admin/categories";
+        return "redirect:/admin/commissions";
     }
     
-    // ==================== ORDER ACTIONS ====================
-    
     /**
-     * Update order status
+     * Delete commission
      */
-    @PostMapping("/orders/{id}/update-status")
-    public String updateOrderStatus(
-            @PathVariable String id,
-            @RequestParam String status,
-            RedirectAttributes redirectAttributes) {
-        Optional<Order> orderOpt = orderRepository.findById(id);
-        if (orderOpt.isPresent()) {
-            Order order = orderOpt.get();
-            order.setStatus(Order.OrderStatus.valueOf(status));
-            orderRepository.save(order);
-            
-            redirectAttributes.addFlashAttribute("message", "Đã cập nhật trạng thái đơn hàng thành công!");
+    @PostMapping("/commissions/{id}/delete")
+    public String deleteCommission(@PathVariable String id,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            commissionService.deleteCommission(id);
+            redirectAttributes.addFlashAttribute("message", "Xóa chiết khấu thành công!");
             redirectAttributes.addFlashAttribute("messageType", "success");
-        } else {
-            redirectAttributes.addFlashAttribute("message", "Không tìm thấy đơn hàng!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
             redirectAttributes.addFlashAttribute("messageType", "danger");
         }
-        return "redirect:/admin/orders";
+        return "redirect:/admin/commissions";
     }
-
+    
     /**
-     * Change user role
+     * Assign commission to store
      */
-    @PostMapping("/users/{id}/change-role")
-    public String changeUserRole(
-            @PathVariable String id,
-            @RequestParam String role,
-            RedirectAttributes redirectAttributes,
-            Authentication authentication) {
-        Optional<User> userOpt = userRepository.findById(id);
-        if (!userOpt.isPresent()) {
-            redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng!");
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-            return "redirect:/admin/users";
-        }
-
-        User user = userOpt.get();
-
-        // Prevent changing role to an invalid value
-        User.UserRole newRole;
+    @PostMapping("/stores/{storeId}/assign-commission")
+    public String assignCommissionToStore(@PathVariable String storeId,
+                                         @RequestParam String commissionId,
+                                         RedirectAttributes redirectAttributes) {
         try {
-            newRole = User.UserRole.valueOf(role);
-        } catch (IllegalArgumentException ex) {
-            redirectAttributes.addFlashAttribute("message", "Vai trò không hợp lệ: " + role);
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-            return "redirect:/admin/users";
-        }
-
-        // Prevent demoting the last admin
-        if (user.getRole() == User.UserRole.ADMIN && newRole != User.UserRole.ADMIN) {
-            long adminCount = userRepository.findAll().stream()
-                    .filter(u -> u != null && u.getRole() == User.UserRole.ADMIN)
-                    .count();
-            if (adminCount <= 1) {
-                redirectAttributes.addFlashAttribute("message", "Không thể gỡ quyền ADMIN: hệ thống chỉ còn một ADMIN duy nhất.");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/admin/users";
-            }
-
-            // Prevent self-demotion
-            if (authentication != null && authentication.getName() != null && authentication.getName().equals(user.getEmail())) {
-                redirectAttributes.addFlashAttribute("message", "Bạn không thể tự gỡ quyền ADMIN của chính mình.");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/admin/users";
-            }
-        }
-
-        user.setRole(newRole);
-        userRepository.save(user);
-
-        redirectAttributes.addFlashAttribute("message", "Đã cập nhật vai trò cho người dùng thành công!");
-        redirectAttributes.addFlashAttribute("messageType", "success");
-        return "redirect:/admin/users";
-    }
-
-    /**
-     * Remove ADMIN role (set to USER)
-     */
-    @PostMapping("/users/{id}/remove-admin-role")
-    public String removeAdminRole(
-            @PathVariable String id,
-            RedirectAttributes redirectAttributes,
-            Authentication authentication) {
-        Optional<User> userOpt = userRepository.findById(id);
-        if (!userOpt.isPresent()) {
-            redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng!");
-            redirectAttributes.addFlashAttribute("messageType", "danger");
-            return "redirect:/admin/users";
-        }
-
-        User user = userOpt.get();
-
-        if (user.getRole() != User.UserRole.ADMIN) {
-            redirectAttributes.addFlashAttribute("message", "Người dùng không có quyền ADMIN.");
-            redirectAttributes.addFlashAttribute("messageType", "info");
-            return "redirect:/admin/users";
-        }
-
-        // Prevent removing last admin
-        long adminCount = userRepository.findAll().stream()
-                .filter(u -> u != null && u.getRole() == User.UserRole.ADMIN)
-                .count();
-        if (adminCount <= 1) {
-            redirectAttributes.addFlashAttribute("message", "Không thể gỡ quyền ADMIN: hệ thống chỉ còn một ADMIN duy nhất.");
-            redirectAttributes.addFlashAttribute("messageType", "warning");
-            return "redirect:/admin/users";
-        }
-
-        // Prevent self-removal
-        if (authentication != null && authentication.getName() != null && authentication.getName().equals(user.getEmail())) {
-            redirectAttributes.addFlashAttribute("message", "Bạn không thể tự gỡ quyền ADMIN của chính mình.");
-            redirectAttributes.addFlashAttribute("messageType", "warning");
-            return "redirect:/admin/users";
-        }
-
-        user.setRole(User.UserRole.USER);
-        userRepository.save(user);
-
-        redirectAttributes.addFlashAttribute("message", "Đã gỡ vai trò ADMIN của người dùng thành công.");
-        redirectAttributes.addFlashAttribute("messageType", "success");
-        return "redirect:/admin/users";
-    }
-
-    // New: View order details (admin)
-    @GetMapping("/orders/{id}/details")
-    public String orderDetails(@PathVariable String id, Model model, Authentication authentication) {
-        model.addAttribute("username", authentication != null ? authentication.getName() : null);
-
-        Optional<Order> orderOpt = orderRepository.findById(id);
-        if (!orderOpt.isPresent()) {
-            model.addAttribute("error", "Không tìm thấy đơn hàng!");
-            return "redirect:/admin/orders";
-        }
-
-        Order order = orderOpt.get();
-        // Ensure orderItems are initialized to avoid LazyInitializationException in the view
-        if (order.getOrderItems() != null) {
-            order.getOrderItems().size();
-        }
-        model.addAttribute("order", order);
-        model.addAttribute("orderItems", order.getOrderItems() != null ? order.getOrderItems() : new java.util.ArrayList<>());
-
-        return "admin/order-details";
-    }
-
-    /**
-     * Delete user
-     */
-    @PostMapping("/users/{id}/delete")
-    public String deleteUser(@PathVariable String id, RedirectAttributes redirectAttributes, Authentication authentication) {
-        try {
-            Optional<User> userOpt = userRepository.findById(id);
-            if (!userOpt.isPresent()) {
-                redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng!");
+            Optional<Store> storeOpt = storeRepository.findById(storeId);
+            if (!storeOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy cửa hàng!");
                 redirectAttributes.addFlashAttribute("messageType", "danger");
-                return "redirect:/admin/users";
+                return "redirect:/admin/stores";
             }
-
-            User user = userOpt.get();
-
-            // Prevent self-delete
-            if (authentication != null && authentication.getName() != null && authentication.getName().equals(user.getEmail())) {
-                redirectAttributes.addFlashAttribute("message", "Bạn không thể xóa chính mình.");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/admin/users";
-            }
-
-            // Prevent deleting the last admin
-            if (user.getRole() == User.UserRole.ADMIN) {
-                long adminCount = userRepository.findAll().stream()
-                        .filter(u -> u != null && u.getRole() == User.UserRole.ADMIN)
-                        .count();
-                if (adminCount <= 1) {
-                    redirectAttributes.addFlashAttribute("message", "Không thể xóa người dùng: hệ thống chỉ còn một ADMIN duy nhất.");
-                    redirectAttributes.addFlashAttribute("messageType", "warning");
-                    return "redirect:/admin/users";
-                }
-            }
-
-            // Prevent deletion if user has related data
-            if ((user.getStores() != null && !user.getStores().isEmpty()) ||
-                (user.getOrders() != null && !user.getOrders().isEmpty())) {
-                redirectAttributes.addFlashAttribute("message",
-                    "Không thể xóa người dùng vì tồn tại dữ liệu liên quan (cửa hàng hoặc đơn hàng). Hãy vô hiệu hóa thay vì xóa.");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/admin/users";
-            }
-
-            userRepository.deleteById(id);
-            redirectAttributes.addFlashAttribute("message", "Đã xóa người dùng thành công!");
+            
+            vn.iotstar.entity.Commission commission = commissionService.getCommissionById(commissionId);
+            Store store = storeOpt.get();
+            store.setCommission(commission);
+            storeRepository.save(store);
+            
+            redirectAttributes.addFlashAttribute("message", 
+                "Đã gán chiết khấu " + commission.getName() + " cho cửa hàng " + store.getName());
             redirectAttributes.addFlashAttribute("messageType", "success");
         } catch (Exception e) {
-            e.printStackTrace();
-            redirectAttributes.addFlashAttribute("message", "Không thể xóa người dùng: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
             redirectAttributes.addFlashAttribute("messageType", "danger");
         }
-        return "redirect:/admin/users";
+        return "redirect:/admin/stores/" + storeId + "/details";
     }
-
+    
+    // ==================== SHIPPING PROVIDER CRUD ====================
+    
     /**
-     * Toggle user status (Active/Inactive)
+     * View shipping providers page
      */
-    @PostMapping("/users/{id}/toggle-status")
-    public String toggleUserStatus(@PathVariable String id, RedirectAttributes redirectAttributes, Authentication authentication) {
+    @GetMapping("/shipping-providers")
+    public String shippingProviders(@RequestParam(required = false) String search,
+                                   Model model,
+                                   Authentication authentication) {
+        model.addAttribute("username", authentication.getName());
+        
+        List<vn.iotstar.entity.ShippingProvider> providers;
+        if (search != null && !search.trim().isEmpty()) {
+            vn.iotstar.repository.ShippingProviderRepository repo = 
+                (vn.iotstar.repository.ShippingProviderRepository) 
+                org.springframework.beans.factory.BeanFactoryUtils.beanOfTypeIncludingAncestors(
+                    org.springframework.web.context.ContextLoader.getCurrentWebApplicationContext(),
+                    vn.iotstar.repository.ShippingProviderRepository.class);
+            providers = repo.searchByName(search.trim());
+            model.addAttribute("search", search);
+        } else {
+            vn.iotstar.repository.ShippingProviderRepository repo = 
+                (vn.iotstar.repository.ShippingProviderRepository) 
+                org.springframework.beans.factory.BeanFactoryUtils.beanOfTypeIncludingAncestors(
+                    org.springframework.web.context.ContextLoader.getCurrentWebApplicationContext(),
+                    vn.iotstar.repository.ShippingProviderRepository.class);
+            providers = repo.findAll();
+        }
+        
+        model.addAttribute("providers", providers);
+        model.addAttribute("totalProviders", providers.size());
+        
+        // Count active providers
+        long activeCount = providers.stream().filter(vn.iotstar.entity.ShippingProvider::getIsActive).count();
+        model.addAttribute("activeProviders", activeCount);
+        
+        return "admin/shipping-providers";
+    }
+    
+    /**
+     * Create shipping provider
+     */
+    @PostMapping("/shipping-providers/create")
+    public String createShippingProvider(@RequestParam String name,
+                                        @RequestParam BigDecimal shippingFee,
+                                        @RequestParam(required = false) String description,
+                                        RedirectAttributes redirectAttributes) {
         try {
-            Optional<User> userOpt = userRepository.findById(id);
-            if (!userOpt.isPresent()) {
-                redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng!");
+            vn.iotstar.repository.ShippingProviderRepository repo = 
+                (vn.iotstar.repository.ShippingProviderRepository) 
+                org.springframework.beans.factory.BeanFactoryUtils.beanOfTypeIncludingAncestors(
+                    org.springframework.web.context.ContextLoader.getCurrentWebApplicationContext(),
+                    vn.iotstar.repository.ShippingProviderRepository.class);
+            
+            // Check if name exists
+            if (repo.findByName(name).isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Tên nhà vận chuyển đã tồn tại!");
                 redirectAttributes.addFlashAttribute("messageType", "danger");
-                return "redirect:/admin/users";
+                return "redirect:/admin/shipping-providers";
             }
-
-            User user = userOpt.get();
-
-            // Prevent self-toggle
-            if (authentication != null && authentication.getName() != null && authentication.getName().equals(user.getEmail())) {
-                redirectAttributes.addFlashAttribute("message", "Bạn không thể thay đổi trạng thái của chính mình.");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/admin/users";
-            }
-
-            // Toggle between ACTIVE and INACTIVE (don't change BANNED status here)
-            if (user.getStatus() == User.UserStatus.ACTIVE) {
-                user.setStatus(User.UserStatus.INACTIVE);
-            } else if (user.getStatus() == User.UserStatus.INACTIVE) {
-                user.setStatus(User.UserStatus.ACTIVE);
-            } else {
-                // If user is BANNED, don't allow toggle
-                redirectAttributes.addFlashAttribute("message", "Không thể thay đổi trạng thái người dùng đã bị cấm.");
-                redirectAttributes.addFlashAttribute("messageType", "warning");
-                return "redirect:/admin/users";
-            }
-
-            userRepository.save(user);
-
-            String status = user.getStatus() == User.UserStatus.ACTIVE ? "kích hoạt" : "vô hiệu hóa";
-            redirectAttributes.addFlashAttribute("message", "Đã " + status + " tài khoản người dùng thành công!");
+            
+            vn.iotstar.entity.ShippingProvider provider = new vn.iotstar.entity.ShippingProvider();
+            provider.setId("SP" + System.currentTimeMillis());
+            provider.setName(name);
+            provider.setShippingFee(shippingFee);
+            provider.setDescription(description);
+            provider.setIsActive(true);
+            
+            repo.save(provider);
+            
+            redirectAttributes.addFlashAttribute("message", "Tạo nhà vận chuyển thành công!");
             redirectAttributes.addFlashAttribute("messageType", "success");
         } catch (Exception e) {
-            e.printStackTrace();
-            redirectAttributes.addFlashAttribute("message", "Không thể thay đổi trạng thái người dùng: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
             redirectAttributes.addFlashAttribute("messageType", "danger");
         }
-        return "redirect:/admin/users";
+        return "redirect:/admin/shipping-providers";
     }
-
+    
+    /**
+     * Update shipping provider
+     */
+    @PostMapping("/shipping-providers/{id}/update")
+    public String updateShippingProvider(@PathVariable String id,
+                                        @RequestParam String name,
+                                        @RequestParam BigDecimal shippingFee,
+                                        @RequestParam(required = false) String description,
+                                        RedirectAttributes redirectAttributes) {
+        try {
+            vn.iotstar.repository.ShippingProviderRepository repo = 
+                (vn.iotstar.repository.ShippingProviderRepository) 
+                org.springframework.beans.factory.BeanFactoryUtils.beanOfTypeIncludingAncestors(
+                    org.springframework.web.context.ContextLoader.getCurrentWebApplicationContext(),
+                    vn.iotstar.repository.ShippingProviderRepository.class);
+            
+            Optional<vn.iotstar.entity.ShippingProvider> providerOpt = repo.findById(id);
+            if (!providerOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy nhà vận chuyển!");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/shipping-providers";
+            }
+            
+            vn.iotstar.entity.ShippingProvider provider = providerOpt.get();
+            provider.setName(name);
+            provider.setShippingFee(shippingFee);
+            provider.setDescription(description);
+            
+            repo.save(provider);
+            
+            redirectAttributes.addFlashAttribute("message", "Cập nhật nhà vận chuyển thành công!");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+        return "redirect:/admin/shipping-providers";
+    }
+    
+    /**
+     * Toggle shipping provider status
+     */
+    @PostMapping("/shipping-providers/{id}/toggle")
+    public String toggleShippingProviderStatus(@PathVariable String id,
+                                              RedirectAttributes redirectAttributes) {
+        try {
+            vn.iotstar.repository.ShippingProviderRepository repo = 
+                (vn.iotstar.repository.ShippingProviderRepository) 
+                org.springframework.beans.factory.BeanFactoryUtils.beanOfTypeIncludingAncestors(
+                    org.springframework.web.context.ContextLoader.getCurrentWebApplicationContext(),
+                    vn.iotstar.repository.ShippingProviderRepository.class);
+            
+            Optional<vn.iotstar.entity.ShippingProvider> providerOpt = repo.findById(id);
+            if (!providerOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy nhà vận chuyển!");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/shipping-providers";
+            }
+            
+            vn.iotstar.entity.ShippingProvider provider = providerOpt.get();
+            provider.setIsActive(!provider.getIsActive());
+            repo.save(provider);
+            
+            String status = provider.getIsActive() ? "kích hoạt" : "vô hiệu hóa";
+            redirectAttributes.addFlashAttribute("message", "Đã " + status + " nhà vận chuyển thành công!");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+        return "redirect:/admin/shipping-providers";
+    }
+    
+    /**
+     * Delete shipping provider
+     */
+    @PostMapping("/shipping-providers/{id}/delete")
+    public String deleteShippingProvider(@PathVariable String id,
+                                        RedirectAttributes redirectAttributes) {
+        try {
+            vn.iotstar.repository.ShippingProviderRepository repo = 
+                (vn.iotstar.repository.ShippingProviderRepository) 
+                org.springframework.beans.factory.BeanFactoryUtils.beanOfTypeIncludingAncestors(
+                    org.springframework.web.context.ContextLoader.getCurrentWebApplicationContext(),
+                    vn.iotstar.repository.ShippingProviderRepository.class);
+            
+            Optional<vn.iotstar.entity.ShippingProvider> providerOpt = repo.findById(id);
+            if (!providerOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy nhà vận chuyển!");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/shipping-providers";
+            }
+            
+            repo.deleteById(id);
+            
+            redirectAttributes.addFlashAttribute("message", "Xóa nhà vận chuyển thành công!");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+        return "redirect:/admin/shipping-providers";
+    }
+    
+    // ==================== PROMOTION MANAGEMENT (Admin view all promotions) ====================
+    
+    /**
+     * View all promotions from all stores
+     */
+    @GetMapping("/promotions")
+    public String allPromotions(@RequestParam(required = false) String search,
+                               @RequestParam(required = false) String storeId,
+                               Model model,
+                               Authentication authentication) {
+        model.addAttribute("username", authentication.getName());
+        
+        vn.iotstar.repository.PromotionRepository promotionRepo = 
+            (vn.iotstar.repository.PromotionRepository) 
+            org.springframework.beans.factory.BeanFactoryUtils.beanOfTypeIncludingAncestors(
+                org.springframework.web.context.ContextLoader.getCurrentWebApplicationContext(),
+                vn.iotstar.repository.PromotionRepository.class);
+        
+        List<vn.iotstar.entity.Promotion> promotions;
+        if (storeId != null && !storeId.isEmpty()) {
+            promotions = promotionRepo.findByStoreIdOrderByCreatedAtDesc(storeId);
+            model.addAttribute("selectedStoreId", storeId);
+        } else {
+            promotions = promotionRepo.findAll();
+            promotions.sort((p1, p2) -> p2.getCreatedAt().compareTo(p1.getCreatedAt()));
+        }
+        
+        model.addAttribute("promotions", promotions);
+        model.addAttribute("totalPromotions", promotions.size());
+        
+        // Get all stores for filter
+        List<Store> stores = storeRepository.findAll();
+        model.addAttribute("stores", stores);
+        
+        // Count active promotions
+        long activeCount = promotions.stream()
+            .filter(p -> p.getIsActive() && 
+                        p.getStartDate().isBefore(LocalDateTime.now()) && 
+                        p.getEndDate().isAfter(LocalDateTime.now()))
+            .count();
+        model.addAttribute("activePromotions", activeCount);
+        
+        return "admin/promotions";
+    }
 }

@@ -32,6 +32,10 @@ public class Order {
     @JoinColumn(name = "voucher_id")
     private Voucher voucher;
     
+    @ManyToOne
+    @JoinColumn(name = "promotion_id")
+    private Promotion promotion;
+    
     @Column(columnDefinition = "NVARCHAR(500)")
     private String address;
     
@@ -61,6 +65,12 @@ public class Order {
     
     @Column(name = "discount_amount", precision = 15, scale = 2)
     private BigDecimal discountAmount = BigDecimal.ZERO;
+    
+    @Column(name = "promotion_discount", precision = 15, scale = 2)
+    private BigDecimal promotionDiscount = BigDecimal.ZERO;
+    
+    @Column(name = "voucher_discount", precision = 15, scale = 2)
+    private BigDecimal voucherDiscount = BigDecimal.ZERO;
     
     @CreationTimestamp
     @Column(name = "created_at")

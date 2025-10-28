@@ -24,7 +24,6 @@ public class ProductCreateDTO {
     private String name;
     
     @NotBlank(message = "Mô tả sản phẩm không được trống")
-    @Size(min = 20, max = 1000, message = "Mô tả phải từ 20 đến 1000 ký tự")
     private String description;
     
     @NotNull(message = "Giá sản phẩm không được trống")

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head th:replace="~{fragments/head :: head}">
     <title>Product Form - Badminton Marketplace</title>
 </head>
@@ -26,12 +26,6 @@
                 <!-- Product Form -->
                 <div class="card">
                     <div class="card-body">
-                        <!-- Thông báo cho user -->
-                        <div class="alert alert-info" th:if="${!isEdit}">
-                            <i class="fas fa-info-circle"></i> 
-                            <strong>Lưu ý:</strong> Sản phẩm sẽ được gửi đến admin để duyệt. 
-                            Sản phẩm chỉ hiển thị trên hệ thống sau khi được admin phê duyệt.
-                        </div>
                         
                 <form th:action="@{${isEdit ? '/vendor/products/' + product.id + '/update' : '/vendor/products/create'}}" 
                     method="post" th:object="${productDTO}" enctype="multipart/form-data">
@@ -304,17 +298,6 @@
                                         <div class="invalid-feedback" th:if="${#fields.hasErrors('quantity')}" th:errors="*{quantity}"></div>
                                     </div>
                                 </div>
-                            </div>
-
-                            <div class="mb-3 form-check">
-                                <input type="checkbox" class="form-check-input" id="isSelling" th:field="*{isSelling}">
-                                <label class="form-check-label" for="isSelling">
-                                    Mở bán ngay khi được duyệt
-                                </label>
-                            </div>
-
-                            <div class="alert alert-info">
-                                <i class="fas fa-info-circle"></i> Sản phẩm sẽ cần được Admin duyệt trước khi hiển thị trên hệ thống
                             </div>
 
                             <div class="d-grid gap-2 d-md-flex justify-content-md-end">
