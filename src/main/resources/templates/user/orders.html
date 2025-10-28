@@ -121,7 +121,7 @@
                                                        <small class="text-muted">
                                                             <i class="far fa-clock me-1"></i>
                                                             <span
-                                                                 th:text="${#temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm')}"
+                                                                 th:text="${order.createdAt != null ? #temporals.format(order.createdAt, 'dd/MM/yyyy HH:mm') : (order.updatedAt != null ? #temporals.format(order.updatedAt, 'dd/MM/yyyy HH:mm') : 'Chưa có thời gian')}"
                                                             ></span>
                                                        </small>
                                                   </div>
