@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
      <head th:replace="~{fragments/head :: head}">
           <title>Chi tiết sản phẩm - Badminton Marketplace</title>
      </head>
@@ -7,7 +7,7 @@
           <!-- Link to external CSS -->
           <link th:href="@{/css/product-detail.css}" rel="stylesheet" />
 
-          <div th:replace="~{fragments/header :: header}"></div>
+          <th:block th:replace="~{fragments/header :: header}"></th:block>
 
           <!-- Breadcrumb -->
           <section class="py-3 bg-light">
@@ -504,7 +504,7 @@
                </div>
           </section>
 
-          <div th:replace="~{fragments/footer :: footer}"></div>
+          <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 
           <!-- Toast Notification -->
           <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">

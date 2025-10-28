@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="vi">
      <head th:replace="~{fragments/head :: head}">
           <title>Sản phẩm - Badminton Marketplace</title>
      </head>
      <body>
-          <div th:replace="~{fragments/header :: header}"></div>
+          <th:block th:replace="~{fragments/header :: header}"></th:block>
 
           <!-- Breadcrumb -->
           <section class="breadcrumb-section py-3 bg-light">
@@ -514,7 +516,7 @@
                </div>
           </section>
 
-          <div th:replace="~{fragments/footer :: footer}"></div>
+          <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 
           <script>
                function switchView(view) {

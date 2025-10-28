@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
      <head>
           <div th:replace="~{fragments/head :: head}"></div>
           <title>Thông tin tài khoản</title>
      </head>
      <body>
-          <div th:replace="~{fragments/header :: header}"></div>
+          <th:block th:replace="~{fragments/header :: header}"></th:block>
 
           <!-- Profile Section -->
           <section class="profile-section py-5">
@@ -237,6 +237,6 @@
                </div>
           </section>
 
-          <div th:replace="~{fragments/footer :: footer}"></div>
+          <th:block th:replace="~{fragments/footer :: footer}"></th:block>
      </body>
 </html>
