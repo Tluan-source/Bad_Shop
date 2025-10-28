@@ -28,6 +28,9 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     // Find orders by store and status
     List<Order> findByStoreIdAndStatus(String storeId, Order.OrderStatus status);
     
+    // Find orders by store and multiple statuses
+    List<Order> findByStoreIdAndStatusIn(String storeId, List<Order.OrderStatus> statuses);
+    
     Page<Order> findByStoreIdAndStatus(String storeId, Order.OrderStatus status, Pageable pageable);
     
     // Count orders by store and status
@@ -76,9 +79,9 @@ public interface OrderRepository extends JpaRepository<Order, String> {
        List<Order> findByStoreIdAndShipmentIsNotNullOrderByCreatedAtDesc(String storeId);
     
     // Get top selling products by store
-    @Query("SELECT p.id, p.name, p.sold, SUM(oi.total) as revenue " +
-           "FROM Product p JOIN p.orderItems oi JOIN oi.order o " +
+    @Query("SELECT p.id, p.name, p.sold, SUM(oi.total) as revenue, c.name " +
+           "FROM Product p JOIN p.orderItems oi JOIN oi.order o JOIN p.category c " +
            "WHERE p.store.id = :storeId AND o.status = 'DELIVERED' " +
-           "GROUP BY p.id, p.name, p.sold ORDER BY p.sold DESC")
+           "GROUP BY p.id, p.name, p.sold, c.name ORDER BY p.sold DESC")
     List<Object[]> findTopSellingByStore(@Param("storeId") String storeId, Pageable pageable);
 }

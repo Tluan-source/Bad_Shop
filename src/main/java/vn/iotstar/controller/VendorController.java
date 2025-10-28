@@ -1,6 +1,7 @@
 package vn.iotstar.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -16,33 +17,43 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import vn.iotstar.dto.vendor.ProductCreateDTO;
 import vn.iotstar.dto.vendor.ProductUpdateDTO;
+import vn.iotstar.dto.vendor.PromotionCreateDTO;
+import vn.iotstar.dto.vendor.StoreRegistrationDTO;
 import vn.iotstar.dto.vendor.StoreUpdateDTO;
 import vn.iotstar.dto.vendor.VendorDashboardStatsDTO;
 import vn.iotstar.dto.vendor.VendorOrderDTO;
 import vn.iotstar.dto.vendor.VendorProductDTO;
+import vn.iotstar.dto.vendor.VendorPromotionDTO;
 import vn.iotstar.dto.vendor.VendorStoreDTO;
 import vn.iotstar.entity.Category;
 import vn.iotstar.entity.Order;
 import vn.iotstar.entity.Style;
 import vn.iotstar.entity.StyleValue;
 import vn.iotstar.entity.User;
+import vn.iotstar.entity.Promotion;
 import vn.iotstar.repository.CategoryRepository;
 import vn.iotstar.repository.StyleRepository;
 import vn.iotstar.repository.StyleValueRepository;
+import vn.iotstar.repository.PromotionRepository;
 import vn.iotstar.service.UserService;
 import vn.iotstar.service.vendor.VendorAnalyticsService;
 import vn.iotstar.service.vendor.VendorOrderService;
 import vn.iotstar.service.vendor.VendorProductService;
 import vn.iotstar.service.vendor.VendorSecurityService;
 import vn.iotstar.service.vendor.VendorStoreService;
+import vn.iotstar.service.vendor.VendorRegistrationService;
+import vn.iotstar.service.CloudinaryService;
+import vn.iotstar.service.vendor.VendorPromotionService;
 
 /**
  * Main Vendor Controller - handles all vendor operations
@@ -80,6 +91,18 @@ public class VendorController {
     
     @Autowired
     private StyleValueRepository styleValueRepository;
+    
+    @Autowired
+    private VendorRegistrationService vendorRegistrationService;
+    
+    @Autowired
+    private CloudinaryService cloudinaryService;
+    
+    @Autowired
+    private VendorPromotionService promotionService;
+    
+    @Autowired
+    private PromotionRepository promotionRepository;
     
     // ========================================
     // DASHBOARD
@@ -289,7 +312,7 @@ public class VendorController {
         
         productService.createProduct(createDTO, storeId);
         
-        redirectAttributes.addFlashAttribute("success", "Thêm sản phẩm thành công! Chờ admin duyệt.");
+        redirectAttributes.addFlashAttribute("success", "Thêm sản phẩm thành công! Sản phẩm đã được kích hoạt và đang bán.");
         return "redirect:/vendor/products";
     }
     
@@ -554,52 +577,79 @@ public class VendorController {
         return "redirect:/vendor/orders/" + id;
     }
     
-    // ========================================
-    // ANALYTICS & REPORTS
-    // ========================================
-    
-    @GetMapping("/analytics")
-    public String analytics(Model model, Authentication auth) {
-        User user = userService.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        String storeId = securityService.getCurrentVendorStoreId(user.getId());
+    @PostMapping("/orders/{id}/delivered")
+    public String markAsDelivered(@PathVariable String id,
+                                  Authentication auth,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            User user = userService.findByEmail(auth.getName())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            String storeId = securityService.getCurrentVendorStoreId(user.getId());
+            
+            orderService.markAsDelivered(id, storeId);
+            
+            redirectAttributes.addFlashAttribute("success", "Đơn hàng đã giao thành công! Tiền đã được chuyển vào ví.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
         
-        // Revenue summary
-        var revenueSummary = analyticsService.getRevenueSummary(storeId);
-        model.addAttribute("revenueSummary", revenueSummary);
-        
-        // Monthly revenue (current year)
-        int currentYear = java.time.LocalDate.now().getYear();
-        var monthlyRevenue = analyticsService.getMonthlyRevenue(storeId, currentYear);
-        model.addAttribute("monthlyRevenue", monthlyRevenue);
-        model.addAttribute("currentYear", currentYear);
-        
-        // Daily revenue (last 30 days)
-        var dailyRevenue = analyticsService.getDailyRevenue(storeId, 30);
-        model.addAttribute("dailyRevenue", dailyRevenue);
-        
-        // Top selling products
-        var topProducts = analyticsService.getTopSellingProducts(storeId, 10);
-        model.addAttribute("topProducts", topProducts);
-        
-        return "vendor/analytics";
+        return "redirect:/vendor/orders/" + id;
     }
     
     // ========================================
-    // WALLET
+    // VENDOR REGISTRATION (for non-vendors)
     // ========================================
     
-    @GetMapping("/wallet")
-    public String wallet(Model model, Authentication auth) {
+    @GetMapping("/register")
+    public String registerForm(Model model, Authentication auth) {
         User user = userService.findByEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
-        String storeId = securityService.getCurrentVendorStoreId(user.getId());
         
-        VendorStoreDTO store = storeService.getMyStore(storeId, user.getId());
-        model.addAttribute("store", store);
+        // Check if already vendor
+        if (user.getRole() == User.UserRole.VENDOR) {
+            return "redirect:/vendor/dashboard";
+        }
         
-        // TODO: Add transaction history
+        // Check if has pending registration
+        if (vendorRegistrationService.hasPendingRegistration(user.getId())) {
+            model.addAttribute("hasPending", true);
+            model.addAttribute("message", "Bạn đã đăng ký. Vui lòng đợi admin phê duyệt.");
+        }
         
-        return "vendor/wallet";
+        model.addAttribute("storeRegistration", new StoreRegistrationDTO());
+        
+        return "vendor/register";
+    }
+    
+    @PostMapping("/register")
+    public String registerStore(@Valid @ModelAttribute("storeRegistration") StoreRegistrationDTO storeDTO,
+                               BindingResult result,
+                               @RequestParam(required = false) MultipartFile logoFile,
+                               @RequestParam(required = false) MultipartFile licenseFile,
+                               Authentication auth,
+                               RedirectAttributes redirectAttributes,
+                               Model model) {
+        
+        if (result.hasErrors()) {
+            return "vendor/register";
+        }
+        
+        User user = userService.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        try {
+            // Register vendor
+            String storeId = vendorRegistrationService.registerVendor(user, storeDTO, logoFile, licenseFile);
+            
+            redirectAttributes.addFlashAttribute("success", 
+                "Đăng ký thành công! Cửa hàng của bạn đang chờ admin phê duyệt. " +
+                "Bạn sẽ nhận được email thông báo khi được duyệt.");
+            
+            return "redirect:/";
+            
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi: " + e.getMessage());
+            return "vendor/register";
+        }
     }
 }

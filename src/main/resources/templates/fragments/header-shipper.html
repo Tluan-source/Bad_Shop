@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head>
     <title>Shipper Header</title>
 </head>
@@ -24,28 +24,8 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" th:href="@{/shipper/orders/pending}">
-                            <i class="fas fa-clock me-1"></i>Đơn chờ lấy
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/shipper/orders/delivering}">
-                            <i class="fas fa-truck me-1"></i>Đang giao
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/shipper/orders/completed}">
-                            <i class="fas fa-check-circle me-1"></i>Đã giao
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/shipper/income}">
-                            <i class="fas fa-coins me-1"></i>Thu nhập
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/shipper/wallet}">
-                            <i class="fas fa-wallet me-1"></i>Ví tiền
+                        <a class="nav-link" th:href="@{/shipper/report}">
+                            <i class="fas fa-coins me-1"></i>Báo cáo
                         </a>
                     </li>
                 </ul>

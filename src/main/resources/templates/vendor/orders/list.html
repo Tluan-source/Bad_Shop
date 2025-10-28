@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
 <head th:replace="~{fragments/head :: head}">
     <title>Orders Management - Badminton Marketplace</title>
 </head>
-<body>
+<body class="order-list-page">
     <div th:replace="~{fragments/header :: header}"></div>
 
     <div class="container-fluid mt-4">
@@ -23,18 +23,81 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
 
-                <h2 class="mb-4"><i class="fas fa-shopping-cart"></i> Quản lý đơn hàng</h2>
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-shopping-cart"></i> Quản lý đơn hàng</h2>
+                    <div>
+                        <button class="btn btn-sm btn-outline-primary" onclick="window.vendorApp.refreshOrderCounts()">
+                            <i class="fas fa-sync-alt"></i> Làm mới
+                        </button>
+                    </div>
+                </div>
 
-                <!-- Three zones overview -->
-                <div class="row mb-4">
+                <!-- Order Status Tabs -->
+                <ul class="nav nav-tabs mb-4" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link order-status-tab" th:classappend="${currentStatus == null ? 'active' : ''}"
+                           th:href="@{/vendor/orders}" data-status="">
+                            <i class="fas fa-list"></i> Tất cả
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link order-status-tab" th:classappend="${currentStatus == 'NOT_PROCESSED' ? 'active' : ''}"
+                           th:href="@{/vendor/orders(status='NOT_PROCESSED')}" data-status="NOT_PROCESSED">
+                            <i class="fas fa-bell"></i> Đơn mới
+                            <span class="badge bg-danger ms-1" th:text="${newCount}" data-count="new">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link order-status-tab" th:classappend="${currentStatus == 'PROCESSING' ? 'active' : ''}"
+                           th:href="@{/vendor/orders(status='PROCESSING')}" data-status="PROCESSING">
+                            <i class="fas fa-check-circle"></i> Đã xác nhận
+                            <span class="badge bg-info ms-1" th:text="${processingCount}" data-count="processing">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link order-status-tab" th:classappend="${currentStatus == 'SHIPPED' ? 'active' : ''}"
+                           th:href="@{/vendor/orders(status='SHIPPED')}" data-status="SHIPPED">
+                            <i class="fas fa-shipping-fast"></i> Đang giao
+                            <span class="badge bg-primary ms-1" th:text="${shippingCount}" data-count="shipping">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link order-status-tab" th:classappend="${currentStatus == 'DELIVERED' ? 'active' : ''}"
+                           th:href="@{/vendor/orders(status='DELIVERED')}" data-status="DELIVERED">
+                            <i class="fas fa-check-double"></i> Đã giao
+                            <span class="badge bg-success ms-1" th:text="${deliveredCount}" data-count="delivered">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link order-status-tab" th:classappend="${currentStatus == 'CANCELLED' ? 'active' : ''}"
+                           th:href="@{/vendor/orders(status='CANCELLED')}" data-status="CANCELLED">
+                            <i class="fas fa-times-circle"></i> Đã hủy
+                            <span class="badge bg-secondary ms-1" th:text="${cancelledCount}" data-count="cancelled">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <a class="nav-link order-status-tab" th:classappend="${currentStatus == 'RETURNED' ? 'active' : ''}"
+                           th:href="@{/vendor/orders(status='RETURNED')}" data-status="RETURNED">
+                            <i class="fas fa-undo"></i> Trả hàng
+                            <span class="badge bg-warning ms-1" data-count="returned">0</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Three zones overview - CHỈ HIỂN THỊ KHI XEM TẤT CẢ -->
+                <div th:if="${currentStatus == null}" class="row mb-4">
                     <div class="col-12 mb-3">
                         <div class="card zone-card">
                             <div class="card-header bg-warning">
                                 <i class="fas fa-hourglass-start me-2"></i> Đơn hàng chờ xác nhận
-                                <span class="count-badge" th:text="${newOrders.size()}">0</span>
+                                <span class="count-badge badge bg-danger" th:text="${newOrders.size()}">0</span>
                             </div>
                             <div class="card-body" style="max-height:300px; overflow:auto;">
-                                <table class="table table-sm mb-0">
+                                <div th:if="${newOrders.empty}" class="text-center text-muted py-3">
+                                    <i class="fas fa-inbox fa-3x mb-2"></i>
+                                    <p>Không có đơn hàng mới</p>
+                                </div>
+                                <table th:if="${!newOrders.empty}" class="table table-sm table-hover mb-0">
                                     <thead>
                                         <tr>
                                             <th>Mã đơn</th>
@@ -42,29 +105,44 @@
                                             <th>Địa chỉ giao</th>
                                             <th>Tổng tiền</th>
                                             <th>Ngày tạo</th>
+                                            <th>Thao tác</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr th:each="o : ${newOrders}">
-                                            <td><a th:href="@{/vendor/orders/{id}(id=${o.orderId})}" th:text="${o.orderId}">ORD001</a></td>
+                                            <td>
+                                                <a th:href="@{/vendor/orders/{id}(id=${o.orderId})}" 
+                                                   th:text="${o.orderId}" class="text-decoration-none fw-bold">ORD001</a>
+                                            </td>
                                             <td th:text="${o.customerName}">Khách</td>
                                             <td th:text="${o.address}">Địa chỉ</td>
-                                            <td th:text="${#numbers.formatDecimal(o.totalAmount,0,'COMMA',0,'POINT')} + ' VNĐ'">0 VNĐ</td>
+                                            <td><strong th:text="${#numbers.formatDecimal(o.totalAmount,0,'COMMA',0,'POINT')} + ' VNĐ'" class="text-primary">0 VNĐ</strong></td>
                                             <td th:text="${#temporals.format(o.orderDate,'dd/MM/yyyy HH:mm')}">01/01/2024</td>
+                                            <td>
+                                                <a th:href="@{/vendor/orders/{id}(id=${o.orderId})}" 
+                                                   class="btn btn-sm btn-primary">
+                                                    <i class="fas fa-eye"></i> Xem
+                                                </a>
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
                             </div>
                         </div>
                     </div>
-                    <div class="col-12">
+                    
+                    <div class="col-12 mb-3">
                         <div class="card zone-card">
-                            <div class="card-header bg-info">
+                            <div class="card-header bg-info text-white">
                                 <i class="fas fa-tasks me-2"></i> Đơn hàng đang xử lý
-                                <span class="count-badge" th:text="${processingOrders.size()}">0</span>
+                                <span class="count-badge badge bg-light text-dark" th:text="${processingOrders.size()}">0</span>
                             </div>
                             <div class="card-body" style="max-height:300px; overflow:auto;">
-                                <table class="table table-sm mb-0">
+                                <div th:if="${processingOrders.empty}" class="text-center text-muted py-3">
+                                    <i class="fas fa-inbox fa-3x mb-2"></i>
+                                    <p>Không có đơn hàng đang xử lý</p>
+                                </div>
+                                <table th:if="${!processingOrders.empty}" class="table table-sm table-hover mb-0">
                                     <thead>
                                         <tr>
                                             <th>Mã đơn</th>
@@ -72,15 +150,84 @@
                                             <th>Địa chỉ giao</th>
                                             <th>Tổng tiền</th>
                                             <th>Ngày tạo</th>
+                                            <th>Thao tác</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         <tr th:each="o : ${processingOrders}">
-                                            <td><a th:href="@{/vendor/orders/{id}(id=${o.orderId})}" th:text="${o.orderId}">ORD001</a></td>
+                                            <td>
+                                                <a th:href="@{/vendor/orders/{id}(id=${o.orderId})}" 
+                                                   th:text="${o.orderId}" class="text-decoration-none fw-bold">ORD001</a>
+                                            </td>
                                             <td th:text="${o.customerName}">Khách</td>
                                             <td th:text="${o.address}">Địa chỉ</td>
-                                            <td th:text="${#numbers.formatDecimal(o.totalAmount,0,'COMMA',0,'POINT')} + ' VNĐ'">0 VNĐ</td>
+                                            <td><strong th:text="${#numbers.formatDecimal(o.totalAmount,0,'COMMA',0,'POINT')} + ' VNĐ'" class="text-primary">0 VNĐ</strong></td>
                                             <td th:text="${#temporals.format(o.orderDate,'dd/MM/yyyy HH:mm')}">01/01/2024</td>
+                                            <td>
+                                                <a th:href="@{/vendor/orders/{id}(id=${o.orderId})}" 
+                                                   class="btn btn-sm btn-success">
+                                                    <i class="fas fa-eye"></i> Xem
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Shipments list (full width) -->
+                    <div class="card">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center flex-wrap">
+                            <div class="mb-2 mb-md-0">
+                                <i class="fas fa-shipping-fast me-2"></i> Danh sách đơn giao hàng
+                                <span class="badge bg-light text-dark ms-2" th:text="${assignedShipments.size()}">0</span>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div th:if="${assignedShipments.empty}" class="text-center text-muted py-5">
+                                <i class="fas fa-truck fa-4x mb-3"></i>
+                                <h5>Chưa có đơn hàng giao</h5>
+                                <p>Các đơn hàng đã được giao cho shipper sẽ hiển thị ở đây</p>
+                            </div>
+                            <div th:if="${!assignedShipments.empty}" class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Mã shipment</th>
+                                            <th>Mã đơn hàng</th>
+                                            <th>Khách hàng</th>
+                                            <th>Shipper</th>
+                                            <th>Ngày tạo</th>
+                                            <th>Trạng thái</th>
+                                            <th>Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="o : ${assignedShipments}">
+                                            <td th:text="${o.shipmentId}">SH0001</td>
+                                            <td>
+                                                <a th:href="@{/vendor/orders/{id}(id=${o.orderId})}" 
+                                                   th:text="${o.orderId}" class="text-decoration-none fw-bold">ORD001</a>
+                                            </td>
+                                            <td th:text="${o.customerName}">Khách</td>
+                                            <td>
+                                                <i class="fas fa-user-circle"></i>
+                                                <span th:text="${o.shipperName}">Shipper</span>
+                                            </td>
+                                            <td th:text="${#temporals.format(o.orderDate, 'dd/MM/yyyy HH:mm')}">01/01/2024</td>
+                                            <td>
+                                                <span th:if="${o.shipmentStatus == 'ASSIGNED'}" class="badge bg-secondary">Đã phân công</span>
+                                                <span th:if="${o.shipmentStatus == 'ACCEPTED'}" class="badge bg-info">Đã chấp nhận</span>
+                                                <span th:if="${o.shipmentStatus == 'DELIVERING'}" class="badge bg-primary">Đang giao</span>
+                                                <span th:if="${o.shipmentStatus == 'DELIVERED'}" class="badge bg-success">Đã giao</span>
+                                                <span th:if="${o.shipmentStatus == 'FAILED'}" class="badge bg-danger">Thất bại</span>
+                                            </td>
+                                            <td>
+                                                <a th:href="@{/vendor/orders/{id}(id=${o.orderId})}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-eye"></i> Chi tiết
+                                                </a>
+                                            </td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -89,87 +236,95 @@
                     </div>
                 </div>
 
-                <!-- Shipments list (full width) -->
-                <div class="card mt-4">
-                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                        <div>
-                            <i class="fas fa-shipping-fast me-2"></i> Danh sách đơn giao hàng
-                            <span class="badge bg-light text-dark ms-2" th:text="${assignedShipments.size()}">0</span>
-                        </div>
-                        <div>
-                            <!-- Filters: status, from date, to date -->
-                            <form th:action="@{/vendor/orders}" method="get" class="row g-2 align-items-center">
-                                <div class="col-auto">
-                                    <select name="shipmentStatus" class="form-select form-select-sm">
-                                        <option value="">Tất cả trạng thái</option>
-                                        <option value="ASSIGNED">ASSIGNED</option>
-                                        <option value="ACCEPTED">ACCEPTED</option>
-                                        <option value="DELIVERING">DELIVERING</option>
-                                        <option value="DELIVERED">DELIVERED</option>
-                                        <option value="FAILED">FAILED</option>
-                                    </select>
-                                </div>
-                                <div class="col-auto">
-                                    <input type="date" name="fromDate" class="form-control form-control-sm" />
-                                </div>
-                                <div class="col-auto">
-                                    <input type="date" name="toDate" class="form-control form-control-sm" />
-                                </div>
-                                <div class="col-auto">
-                                    <button type="submit" class="btn btn-sm btn-primary">Lọc</button>
-                                </div>
-                            </form>
-                        </div>
+                <!-- Filtered Orders List - HIỂN THỊ KHI CHỌN STATUS CỤ THỂ -->
+                <div th:if="${currentStatus != null}" class="card">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-filter"></i> 
+                            <span th:if="${currentStatus == 'NOT_PROCESSED'}">Đơn hàng mới - Chờ xác nhận</span>
+                            <span th:if="${currentStatus == 'PROCESSING'}">Đơn hàng đã xác nhận - Đang xử lý</span>
+                            <span th:if="${currentStatus == 'SHIPPED'}">Đơn hàng đang giao</span>
+                            <span th:if="${currentStatus == 'DELIVERED'}">Đơn hàng đã giao</span>
+                            <span th:if="${currentStatus == 'CANCELLED'}">Đơn hàng đã hủy</span>
+                            <span th:if="${currentStatus == 'RETURNED'}">Đơn hàng trả hàng</span>
+                            <span class="badge bg-primary ms-2" th:text="${orders.totalElements}">0</span>
+                        </h5>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
+                        <div th:if="${orders.empty}" class="text-center text-muted py-5">
+                            <i class="fas fa-inbox fa-4x mb-3"></i>
+                            <h5>Không có đơn hàng</h5>
+                            <p>Chưa có đơn hàng nào với trạng thái này</p>
+                        </div>
+                        <div th:if="${!orders.empty}" class="table-responsive">
                             <table class="table table-hover">
                                 <thead>
                                     <tr>
-                                        <th>Mã shipment</th>
-                                        <th>Mã đơn hàng</th>
+                                        <th>Mã đơn</th>
                                         <th>Khách hàng</th>
-                                        <th>Shipper</th>
-                                        <th>Ngày tạo</th>
+                                        <th>Địa chỉ giao</th>
+                                        <th class="text-end">Tổng tiền</th>
+                                        <th>Ngày đặt</th>
                                         <th>Trạng thái</th>
                                         <th>Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="o : ${assignedShipments}">
-                                        <td th:text="${o.shipmentId}">SH0001</td>
+                                    <tr th:each="order : ${orders.content}">
                                         <td>
-                                            <a th:href="@{/vendor/orders/{id}(id=${o.orderId})}" th:text="${o.orderId}">ORD001</a>
+                                            <a th:href="@{/vendor/orders/{id}(id=${order.orderId})}" 
+                                               th:text="${order.orderId}" class="text-decoration-none fw-bold">ORD001</a>
                                         </td>
-                                        <td th:text="${o.customerName}">Khách</td>
-                                        <td th:text="${o.shipperName}">Shipper</td>
-                                        <td th:text="${#temporals.format(o.orderDate, 'dd/MM/yyyy HH:mm')}">01/01/2024</td>
+                                        <td th:text="${order.customerName}">Customer</td>
+                                        <td th:text="${order.address}">Address</td>
+                                        <td class="text-end">
+                                            <strong th:text="${#numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT')} + ' VNĐ'" class="text-primary">0 VNĐ</strong>
+                                        </td>
+                                        <td th:text="${#temporals.format(order.orderDate, 'dd/MM/yyyy HH:mm')}">01/01/2024</td>
                                         <td>
-                                            <span th:if="${o.shipmentStatus == 'ASSIGNED'}" class="badge bg-secondary">ASSIGNED</span>
-                                            <span th:if="${o.shipmentStatus == 'ACCEPTED'}" class="badge bg-info">ACCEPTED</span>
-                                            <span th:if="${o.shipmentStatus == 'DELIVERING'}" class="badge bg-primary">SHIPPING</span>
-                                            <span th:if="${o.shipmentStatus == 'DELIVERED'}" class="badge bg-success">DELIVERED</span>
-                                            <span th:if="${o.shipmentStatus == 'FAILED'}" class="badge bg-danger">FAILED</span>
+                                            <span th:if="${order.status.name() == 'NOT_PROCESSED'}" class="badge bg-warning">Chờ xác nhận</span>
+                                            <span th:if="${order.status.name() == 'PROCESSING'}" class="badge bg-info">Đang xử lý</span>
+                                            <span th:if="${order.status.name() == 'SHIPPED'}" class="badge bg-primary">Đang giao</span>
+                                            <span th:if="${order.status.name() == 'DELIVERED'}" class="badge bg-success">Đã giao</span>
+                                            <span th:if="${order.status.name() == 'CANCELLED'}" class="badge bg-danger">Đã hủy</span>
+                                            <span th:if="${order.status.name() == 'RETURNED'}" class="badge bg-secondary">Trả hàng</span>
                                         </td>
                                         <td>
-                                            <a th:href="@{/vendor/orders/{id}(id=${o.orderId})}" class="btn btn-sm btn-success">✔ Đã giao</a>
-                                            <a th:if="${o.shipmentStatus == 'DELIVERING'}" th:href="@{/vendor/shipments/{id}(id=${o.shipmentId})}" class="btn btn-sm btn-primary ms-1">🚚 Đang giao...</a>
+                                            <a th:href="@{/vendor/orders/{id}(id=${order.orderId})}" 
+                                               class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-eye"></i> Xem
+                                            </a>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
+                        
+                        <!-- Pagination -->
+                        <nav th:if="${orders.totalPages > 1}" aria-label="Order pagination" class="mt-3">
+                            <ul class="pagination justify-content-center">
+                                <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/vendor/orders(status=${currentStatus}, page=${currentPage - 1})}">&laquo;</a>
+                                </li>
+                                <li th:each="i : ${#numbers.sequence(0, orders.totalPages - 1)}" 
+                                    class="page-item" 
+                                    th:classappend="${i == currentPage} ? 'active'">
+                                    <a class="page-link" th:href="@{/vendor/orders(status=${currentStatus}, page=${i})}" th:text="${i + 1}">1</a>
+                                </li>
+                                <li class="page-item" th:classappend="${currentPage == orders.totalPages - 1} ? 'disabled'">
+                                    <a class="page-link" th:href="@{/vendor/orders(status=${currentStatus}, page=${currentPage + 1})}">&raquo;</a>
+                                </li>
+                            </ul>
+                        </nav>
                     </div>
                 </div>
-                </div>
-
-                <!-- (Removed duplicate filter block: shipment filter present above) -->
-
-                <!-- Old orders table removed: page now uses three zone layout (newOrders, processingOrders, assignedShipments) -->
             </div>
         </div>
     </div>
 
     <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <!-- Vendor JavaScript -->
+    <script th:src="@{/js/vendor.js}"></script>
 </body>
 </html>

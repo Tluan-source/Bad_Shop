@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/head :: head}">
+    <title>Khuyến mãi - Badminton Marketplace</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div th:replace="~{vendor/fragments/sidebar :: sidebar('promotions')}"></div>
+
+            <!-- Main content -->
+            <div class="col-md-10">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2>
+                        <i th:class="${isEdit ? 'fas fa-edit' : 'fas fa-plus-circle'}"></i>
+                        <span th:text="${isEdit ? 'Chỉnh sửa Khuyến mãi' : 'Tạo Chương trình Khuyến mãi mới'}">Tạo Khuyến mãi</span>
+                    </h2>
+                    <a th:href="@{/vendor/promotions}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> Quay lại
+                    </a>
+                </div>
+
+                <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <form th:action="${isEdit ? '/vendor/promotions/edit/' + promotion.id : '/vendor/promotions/create'}" 
+                              method="post" th:object="${promotion}">
+                            
+                            <div class="row">
+                                <!-- Form Info Section -->
+                                <div th:replace="~{vendor/promotions/fragments/form-info :: formInfo}"></div>
+                                
+                                <!-- Form Settings Section -->
+                                <div th:replace="~{vendor/promotions/fragments/form-settings :: formSettings}"></div>
+                            </div>
+
+                            <hr class="my-4" />
+
+                            <div class="d-flex justify-content-end gap-2">
+                                <a th:href="@{/vendor/promotions}" class="btn btn-secondary">
+                                    <i class="fas fa-times"></i> Hủy
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save"></i> 
+                                    <span th:text="${isEdit ? 'Cập nhật' : 'Tạo khuyến mãi'}">Lưu</span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+    
+    <script th:inline="javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            const appliesToSelect = document.getElementById('appliesTo');
+            const productSelection = document.getElementById('productSelection');
+            
+            if (appliesToSelect && productSelection) {
+                appliesToSelect.addEventListener('change', function() {
+                    if (this.value === 'SPECIFIC_PRODUCTS') {
+                        productSelection.style.display = 'block';
+                    } else {
+                        productSelection.style.display = 'none';
+                    }
+                });
+                
+                // Initialize on page load
+                if (appliesToSelect.value === 'SPECIFIC_PRODUCTS') {
+                    productSelection.style.display = 'block';
+                }
+            }
+        });
+    </script>
+</body>
+</html>
