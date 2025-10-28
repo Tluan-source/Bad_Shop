@@ -280,9 +280,25 @@
                          <div class="order-detail-card">
                               <div class="card-header-custom">Phương thức thanh toán</div>
                               <div class="card-body-custom">
-                                   <p class="mb-0">
+                                   <!-- VNPAY Payment -->
+                                   <p class="mb-0" th:if="${payment != null && payment.paymentMethod.name() == 'VNPAY'}">
+                                        <i class="fas fa-credit-card me-2 text-primary"></i>
+                                        Thanh toán online (VNPay)
+                                   </p>
+                                   <!-- COD Payment -->
+                                   <p class="mb-0" th:if="${payment == null || payment.paymentMethod.name() == 'COD'}">
                                         <i class="fas fa-money-bill-wave me-2 text-success"></i>
                                         Thanh toán khi nhận hàng (COD)
+                                   </p>
+                                   <!-- MOMO Payment -->
+                                   <p class="mb-0" th:if="${payment != null && payment.paymentMethod.name() == 'MOMO'}">
+                                        <i class="fas fa-mobile-alt me-2 text-danger"></i>
+                                        Thanh toán online (MoMo)
+                                   </p>
+                                   <!-- WALLET Payment -->
+                                   <p class="mb-0" th:if="${payment != null && payment.paymentMethod.name() == 'WALLET'}">
+                                        <i class="fas fa-wallet me-2 text-warning"></i>
+                                        Thanh toán bằng ví điện tử
                                    </p>
                               </div>
                          </div>

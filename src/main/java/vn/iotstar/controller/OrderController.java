@@ -14,8 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import lombok.RequiredArgsConstructor;
 import vn.iotstar.entity.Order;
+import vn.iotstar.entity.Payment;
 import vn.iotstar.entity.Product;
 import vn.iotstar.entity.User;
+import vn.iotstar.repository.PaymentRepository;
 import vn.iotstar.service.OrderService;
 import vn.iotstar.service.ProductService;
 import vn.iotstar.service.UserService;
@@ -28,6 +30,7 @@ public class OrderController {
     private final OrderService orderService;
     private final UserService userService;
     private final ProductService productService;
+    private final PaymentRepository paymentRepository;
     
     /**
      * Xem danh sách đơn hàng của user
@@ -77,6 +80,9 @@ public class OrderController {
             return "redirect:/orders";
         }
         
+        // Lấy thông tin Payment để hiển thị phương thức thanh toán
+        Payment payment = paymentRepository.findByOrderId(orderId).orElse(null);
+        
         // Lấy sản phẩm liên quan dựa trên các sản phẩm trong đơn hàng
         // Lấy category từ sản phẩm đầu tiên trong đơn hàng
         if (!order.getOrderItems().isEmpty()) {
@@ -95,6 +101,7 @@ public class OrderController {
         }
         
         model.addAttribute("order", order);
+        model.addAttribute("payment", payment);
         
         return "user/order-detail";
     }
