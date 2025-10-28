@@ -24,23 +24,66 @@
                               <span class="navbar-toggler-icon"></span>
                          </button>
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/}">Trang chủ</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/products}">Sản phẩm</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/stores}">Cửa hàng</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/categories}">Danh mục</a>
-                    </li>
-                </ul>
+                         <div class="collapse navbar-collapse" id="navbarNav">
+                              <ul class="navbar-nav me-auto">
+                                   <li class="nav-item">
+                                        <a class="nav-link" th:href="@{/}">Trang chủ</a>
+                                   </li>
+                                   <li class="nav-item">
+                                        <a class="nav-link" th:href="@{/products}">Sản phẩm</a>
+                                   </li>
+                                   <li class="nav-item">
+                                        <a class="nav-link" th:href="@{/stores}">Cửa hàng</a>
+                                   </li>
+                                   <li class="nav-item">
+                                        <a class="nav-link" th:href="@{/categories}">Danh mục</a>
+                                   </li>
+                              </ul>
 
                               <ul class="navbar-nav">
+                                   <!-- Cart -->
+                                   <li class="nav-item me-2" sec:authorize="isAuthenticated()">
+                                        <a
+                                             class="nav-link d-flex align-items-center position-relative"
+                                             th:href="@{/cart}"
+                                        >
+                                             <i class="fas fa-shopping-cart fa-lg"></i>
+                                             <span
+                                                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-count"
+                                                  style="font-size: 0.7rem"
+                                             >
+                                                  0
+                                             </span>
+                                        </a>
+                                   </li>
+
+                                   <!-- Favorites -->
+                                   <li class="nav-item me-2" sec:authorize="isAuthenticated()">
+                                        <a
+                                             class="nav-link d-flex align-items-center position-relative"
+                                             th:href="@{/favorites}"
+                                        >
+                                             <i class="fas fa-heart fa-lg"></i>
+                                             <span
+                                                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger favorite-count"
+                                                  style="font-size: 0.7rem"
+                                             >
+                                                  0
+                                             </span>
+                                        </a>
+                                   </li>
+
+                                   <!-- Cart for guest -->
+                                   <li class="nav-item me-2" sec:authorize="!isAuthenticated()">
+                                        <a
+                                             class="nav-link d-flex align-items-center"
+                                             th:href="@{/login}"
+                                        >
+                                             <i class="fas fa-shopping-cart fa-lg me-1"></i>
+                                             Giỏ hàng
+                                        </a>
+                                   </li>
+
                                    <!-- Menu khi đã đăng nhập -->
                                    <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
                                         <a
@@ -77,10 +120,19 @@
                                                   </a>
                                              </li>
                                              <li>
-                                                  <a
-                                                       class="dropdown-item"
-                                                       th:href="@{/user/orders}"
-                                                  >
+                                                  <a class="dropdown-item" th:href="@{/favorites}">
+                                                       <i class="fas fa-heart me-2"></i>Sản phẩm yêu
+                                                       thích
+                                                  </a>
+                                             </li>
+                                             <li>
+                                                  <a class="dropdown-item" th:href="@{/cart}">
+                                                       <i class="fas fa-shopping-cart me-2"></i>Giỏ
+                                                       hàng
+                                                  </a>
+                                             </li>
+                                             <li>
+                                                  <a class="dropdown-item" th:href="@{/orders}">
                                                        <i class="fas fa-shopping-bag me-2"></i>Đơn
                                                        hàng của tôi
                                                   </a>
@@ -186,6 +238,41 @@
                          </div>
                     </div>
                </nav>
+
+               <!-- Script to update cart and favorite counts -->
+               <script sec:authorize="isAuthenticated()">
+                    document.addEventListener("DOMContentLoaded", function () {
+                         // Update cart count
+                         fetch("/cart/count")
+                              .then((response) => response.json())
+                              .then((data) => {
+                                   const cartBadge = document.querySelector(".cart-count");
+                                   if (cartBadge && data.count !== undefined) {
+                                        cartBadge.textContent = data.count;
+                                        if (data.count === 0) {
+                                             cartBadge.style.display = "none";
+                                        }
+                                   }
+                              })
+                              .catch((error) => console.error("Error fetching cart count:", error));
+
+                         // Update favorite count
+                         fetch("/favorites/count")
+                              .then((response) => response.json())
+                              .then((data) => {
+                                   const favBadge = document.querySelector(".favorite-count");
+                                   if (favBadge && data.count !== undefined) {
+                                        favBadge.textContent = data.count;
+                                        if (data.count === 0) {
+                                             favBadge.style.display = "none";
+                                        }
+                                   }
+                              })
+                              .catch((error) =>
+                                   console.error("Error fetching favorite count:", error)
+                              );
+                    });
+               </script>
           </header>
      </body>
 </html>

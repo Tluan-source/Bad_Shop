@@ -1,0 +1,277 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+     <head th:replace="~{fragments/head :: head}">
+          <title>Sản phẩm yêu thích - Badminton Marketplace</title>
+     </head>
+     <body>
+          <div th:replace="~{fragments/header :: header}"></div>
+
+          <!-- Breadcrumb -->
+          <section class="breadcrumb-section py-3 bg-light">
+               <div class="container">
+                    <nav aria-label="breadcrumb">
+                         <ol class="breadcrumb mb-0">
+                              <li class="breadcrumb-item"><a th:href="@{/}">Trang chủ</a></li>
+                              <li class="breadcrumb-item active">Sản phẩm yêu thích</li>
+                         </ol>
+                    </nav>
+               </div>
+          </section>
+
+          <!-- Favorites Section -->
+          <section class="favorites-section py-5">
+               <div class="container">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                         <h2 class="mb-0">
+                              <i class="fas fa-heart text-danger me-2"></i>Sản phẩm yêu thích
+                              <span class="badge bg-danger ms-2" th:text="${favoriteCount}">0</span>
+                         </h2>
+                    </div>
+
+                    <!-- CSRF Token -->
+                    <input type="hidden" id="csrfToken" th:value="${_csrf.token}" />
+                    <input type="hidden" id="csrfHeader" th:value="${_csrf.headerName}" />
+
+                    <!-- Empty Favorites -->
+                    <div
+                         th:if="${favorites == null || favorites.isEmpty()}"
+                         class="text-center py-5"
+                    >
+                         <i class="far fa-heart text-muted" style="font-size: 5rem"></i>
+                         <h3 class="mt-4 text-muted">Chưa có sản phẩm yêu thích</h3>
+                         <p class="text-muted">
+                              Hãy thêm sản phẩm yêu thích để dễ dàng tìm lại sau này
+                         </p>
+                         <a th:href="@{/products}" class="btn btn-primary mt-3">
+                              <i class="fas fa-shopping-bag me-2"></i>Khám phá sản phẩm
+                         </a>
+                    </div>
+
+                    <!-- Favorites Grid -->
+                    <div th:if="${favorites != null && !favorites.isEmpty()}" class="row g-4">
+                         <div th:each="favorite : ${favorites}" class="col-lg-3 col-md-4 col-sm-6">
+                              <div class="card h-100 shadow-sm position-relative">
+                                   <!-- Remove Favorite Button -->
+                                   <button
+                                        class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2"
+                                        style="z-index: 10"
+                                        th:onclick="'removeFavorite(\'' + ${favorite.product.id} + '\')'"
+                                   >
+                                        <i class="fas fa-times"></i>
+                                   </button>
+
+                                   <!-- Product Image -->
+                                   <a
+                                        th:href="@{/products/{id}(id=${favorite.product.id})}"
+                                        class="text-decoration-none"
+                                   >
+                                        <div
+                                             class="product-image-wrapper position-relative overflow-hidden"
+                                        >
+                                             <img
+                                                  th:src="${favorite.product.firstImage}"
+                                                  class="card-img-top"
+                                                  th:alt="${favorite.product.name}"
+                                                  style="height: 250px; object-fit: cover"
+                                             />
+
+                                             <!-- Sale Badge -->
+                                             <div
+                                                  th:if="${favorite.product.promotionalPrice}"
+                                                  class="position-absolute top-0 start-0 m-2"
+                                             >
+                                                  <span class="badge bg-danger">
+                                                       -<span
+                                                            th:text="${(1 - favorite.product.promotionalPrice.doubleValue() / favorite.product.price.doubleValue()) * 100}"
+                                                            >30</span
+                                                       >%
+                                                  </span>
+                                             </div>
+                                        </div>
+                                   </a>
+
+                                   <!-- Product Info -->
+                                   <div class="card-body">
+                                        <a
+                                             th:href="@{/products/{id}(id=${favorite.product.id})}"
+                                             class="text-decoration-none"
+                                        >
+                                             <h5
+                                                  class="card-title text-dark mb-2"
+                                                  th:text="${favorite.product.name}"
+                                                  style="
+                                                       height: 48px;
+                                                       overflow: hidden;
+                                                       display: -webkit-box;
+                                                       -webkit-line-clamp: 2;
+                                                       -webkit-box-orient: vertical;
+                                                  "
+                                             >
+                                                  Tên sản phẩm
+                                             </h5>
+                                        </a>
+
+                                        <!-- Store Name -->
+                                        <p class="text-muted small mb-2">
+                                             <i class="fas fa-store me-1"></i>
+                                             <span th:text="${favorite.product.store.name}"
+                                                  >Tên cửa hàng</span
+                                             >
+                                        </p>
+
+                                        <!-- Rating -->
+                                        <div class="mb-2">
+                                             <i class="fas fa-star text-warning"></i>
+                                             <i class="fas fa-star text-warning"></i>
+                                             <i class="fas fa-star text-warning"></i>
+                                             <i class="fas fa-star text-warning"></i>
+                                             <i class="fas fa-star-half-alt text-warning"></i>
+                                             <span class="text-muted small ms-1">(4.5)</span>
+                                        </div>
+
+                                        <!-- Price -->
+                                        <div class="mb-3">
+                                             <h5 class="text-danger mb-0">
+                                                  <span
+                                                       th:text="${#numbers.formatCurrency(favorite.product.promotionalPrice ?: favorite.product.price)}"
+                                                  >
+                                                       500,000₫
+                                                  </span>
+                                             </h5>
+                                             <span
+                                                  th:if="${favorite.product.promotionalPrice}"
+                                                  class="text-muted text-decoration-line-through small"
+                                                  th:text="${#numbers.formatCurrency(favorite.product.price)}"
+                                             >
+                                                  700,000₫
+                                             </span>
+                                        </div>
+
+                                        <!-- Action Buttons -->
+                                        <div class="d-grid gap-2">
+                                             <a
+                                                  th:href="@{/products/{id}(id=${favorite.product.id})}"
+                                                  class="btn btn-outline-primary btn-sm"
+                                             >
+                                                  <i class="fas fa-eye me-2"></i>Xem chi tiết
+                                             </a>
+                                             <div class="btn-group" role="group">
+                                                  <button
+                                                       type="button"
+                                                       class="btn btn-outline-success btn-sm"
+                                                       th:onclick="'addToCart(\'' + ${favorite.product.id} + '\')'"
+                                                  >
+                                                       <i class="fas fa-cart-plus me-1"></i>Giỏ hàng
+                                                  </button>
+                                                  <button
+                                                       type="button"
+                                                       class="btn btn-success btn-sm"
+                                                       th:onclick="'buyNow(\'' + ${favorite.product.id} + '\')'"
+                                                  >
+                                                       <i class="fas fa-shopping-bag me-1"></i>Mua
+                                                       ngay
+                                                  </button>
+                                             </div>
+                                        </div>
+                                   </div>
+
+                                   <!-- Added Date -->
+                                   <div class="card-footer bg-transparent border-top-0">
+                                        <small class="text-muted">
+                                             <i class="far fa-clock me-1"></i>
+                                             Đã thêm:
+                                             <span
+                                                  th:text="${#temporals.format(favorite.createdAt, 'dd/MM/yyyy')}"
+                                                  >01/01/2024</span
+                                             >
+                                        </small>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </section>
+
+          <div th:replace="~{fragments/footer :: footer}"></div>
+
+          <!-- Toast for notifications -->
+          <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
+               <div
+                    id="notificationToast"
+                    class="toast align-items-center text-white bg-success border-0"
+                    role="alert"
+                    aria-live="assertive"
+                    aria-atomic="true"
+               >
+                    <div class="d-flex">
+                         <div class="toast-body" id="toastMessage">Thông báo</div>
+                         <button
+                              type="button"
+                              class="btn-close btn-close-white me-2 m-auto"
+                              data-bs-dismiss="toast"
+                              aria-label="Close"
+                         ></button>
+                    </div>
+               </div>
+          </div>
+
+          <script>
+               function getCsrfToken() {
+                    return document.getElementById("csrfToken").value;
+               }
+
+               function getCsrfHeader() {
+                    return document.getElementById("csrfHeader").value;
+               }
+
+               function showToast(message, isSuccess = true) {
+                    const toast = document.getElementById("notificationToast");
+                    const toastMessage = document.getElementById("toastMessage");
+
+                    toastMessage.textContent = message;
+                    toast.classList.remove("bg-success", "bg-danger");
+                    toast.classList.add(isSuccess ? "bg-success" : "bg-danger");
+
+                    const bsToast = new bootstrap.Toast(toast);
+                    bsToast.show();
+               }
+
+               function removeFavorite(productId) {
+                    const csrfToken = getCsrfToken();
+                    const csrfHeader = getCsrfHeader();
+
+                    fetch("/favorites/toggle", {
+                         method: "POST",
+                         headers: {
+                              "Content-Type": "application/x-www-form-urlencoded",
+                              [csrfHeader]: csrfToken,
+                         },
+                         body: `productId=${productId}`,
+                    })
+                         .then((response) => response.json())
+                         .then((data) => {
+                              if (data.success) {
+                                   showToast(data.message, true);
+                                   setTimeout(() => location.reload(), 500);
+                              } else {
+                                   showToast(data.message, false);
+                              }
+                         })
+                         .catch((error) => {
+                              console.error("Remove favorite error:", error);
+                              showToast("Có lỗi xảy ra. Vui lòng thử lại!", false);
+                         });
+               }
+
+               function addToCart(productId) {
+                    // Chuyển đến trang chi tiết để chọn thuộc tính
+                    window.location.href = `/products/${productId}`;
+               }
+
+               function buyNow(productId) {
+                    // Chuyển đến trang chi tiết để chọn thuộc tính trước khi mua
+                    window.location.href = `/products/${productId}`;
+               }
+          </script>
+     </body>
+</html>
