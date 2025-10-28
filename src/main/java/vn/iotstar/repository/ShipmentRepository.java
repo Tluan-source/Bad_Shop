@@ -31,6 +31,10 @@ public interface ShipmentRepository extends JpaRepository<Shipment, String> {
     // 🔵 Shipment của 1 shipper (dạng list, dùng cho thống kê hoặc không phân trang)
     List<Shipment> findByShipper_IdAndStatus(String shipperId, ShipmentStatus status);
 
+    // 📊 Đếm số lượng đơn theo trạng thái (cho cards tổng quan)
+    long countByStatusAndShipperIsNull(ShipmentStatus status);
+    long countByShipper_IdAndStatus(String shipperId, ShipmentStatus status);
+
 
     /* ===========================================================
        🔹 2. Lọc theo thời gian (Từ ngày – Đến ngày)
