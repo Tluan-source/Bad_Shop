@@ -1,6 +1,7 @@
 package vn.iotstar.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -65,6 +66,11 @@ public class OrderService {
         order.setPhone(request.getPhone());
         order.setStatus(Order.OrderStatus.NOT_PROCESSED);
         order.setIsPaidBefore(false);
+        
+        // Set timestamps explicitly to ensure they are not null
+        LocalDateTime now = LocalDateTime.now();
+        order.setCreatedAt(now);
+        order.setUpdatedAt(now);
         
         // Calculate totals
         BigDecimal total = BigDecimal.ZERO;

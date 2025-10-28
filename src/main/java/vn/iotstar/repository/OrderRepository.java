@@ -37,7 +37,8 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     Long countByStoreIdAndStatus(String storeId, Order.OrderStatus status);
     
     // Find orders by user
-    List<Order> findByUserIdOrderByCreatedAtDesc(String userId);
+    @Query("SELECT o FROM Order o WHERE o.user.id = :userId ORDER BY COALESCE(o.createdAt, o.updatedAt, CURRENT_TIMESTAMP) DESC")
+    List<Order> findByUserIdOrderByCreatedAtDesc(@Param("userId") String userId);
     
     // Find orders by date range
     @Query("SELECT o FROM Order o WHERE o.store.id = :storeId " +
