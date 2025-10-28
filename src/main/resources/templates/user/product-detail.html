@@ -434,6 +434,56 @@
                                    Mô tả chi tiết về sản phẩm
                               </div>
                          </div>
+
+                         <!-- Store Info Section -->
+                         <div class="p-4" style="border-top: 1px solid #e8e8e8">
+                              <h4
+                                   style="
+                                        font-size: 1.125rem;
+                                        text-transform: uppercase;
+                                        color: #333;
+                                        margin-bottom: 15px;
+                                   "
+                              >
+                                   <i class="fas fa-store me-2" style="color: #0d6efd"></i>Thông Tin Cửa Hàng
+                              </h4>
+                              <div
+                                   style="
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 15px;
+                                        padding: 20px;
+                                        background: #fafafa;
+                                        border-radius: 8px;
+                                        border: 1px solid #e8e8e8;
+                                   "
+                              >
+                                   <div style="flex: 1;">
+                                        <div style="font-size: 0.9rem; color: #666; margin-bottom: 5px;">
+                                             Cửa hàng
+                                        </div>
+                                        <a 
+                                             th:href="@{/stores/{id}(id=${product.store.id})}" 
+                                             style="
+                                                  font-weight: 600;
+                                                  color: #0d6efd;
+                                                  text-decoration: none;
+                                                  font-size: 1.2rem;
+                                             "
+                                             th:text="${product.store.name}"
+                                        >
+                                             Tên cửa hàng
+                                        </a>
+                                   </div>
+                                   <a 
+                                        th:href="@{/stores/{id}(id=${product.store.id})}" 
+                                        class="btn btn-primary"
+                                        style="padding: 10px 25px; font-size: 0.95rem; font-weight: 600;"
+                                   >
+                                        <i class="fas fa-external-link-alt me-2"></i>Xem Cửa Hàng
+                                   </a>
+                              </div>
+                         </div>
                     </div>
                </div>
           </section>
