@@ -51,8 +51,8 @@
                 </tr>
 
                 <tr th:if="${order.status.name() == 'SHIPPED' or order.status.name() == 'DELIVERED' or order.status.name() == 'CANCELLED'}">
-                    <th>Thời gian xác nhận</th>
-                    <td th:text="${#temporals.format(shipment.acceptedAt, 'HH:mm dd/MM/yyyy')}"></td>
+                    <th>Thời gian nhận đơn</th>
+                    <td th:text="${shipment.assignedAt != null ? #temporals.format(shipment.assignedAt, 'HH:mm dd/MM/yyyy') : 'N/A'}"></td>
                 </tr>
 
                 <tr th:if="${order.status.name() == 'DELIVERED'}">

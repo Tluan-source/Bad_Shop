@@ -169,8 +169,8 @@
 											<span th:if="${shipment.status.name() == 'DELIVERING'}" class="badge bg-info">
 												<i class="fas fa-truck"></i> Đang giao
 											</span>
-											<span th:if="${shipment.status.name() == 'ACCEPTED'}" class="badge bg-warning">
-												<i class="fas fa-clock"></i> Đã nhận
+											<span th:if="${shipment.status.name() == 'DELIVERED'}" class="badge bg-success">
+												<i class="fas fa-check"></i> Đã giao
 											</span>
 										</td>
 										<td class="text-success fw-bold" 
