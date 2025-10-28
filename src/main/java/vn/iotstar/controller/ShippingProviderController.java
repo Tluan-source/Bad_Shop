@@ -6,6 +6,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 import vn.iotstar.entity.ShippingProvider;
+import vn.iotstar.repository.ShipmentRepository;
 import vn.iotstar.repository.ShippingProviderRepository;
 
 import java.math.BigDecimal;
@@ -18,6 +19,9 @@ public class ShippingProviderController {
 
     @Autowired
     private ShippingProviderRepository shippingProviderRepository;
+    
+    @Autowired
+    private ShipmentRepository shipmentRepository;
 
     @GetMapping("")
     public String list(@RequestParam(required = false) String search, Model model) {
@@ -104,6 +108,12 @@ public class ShippingProviderController {
     @ResponseBody
     public String delete(@RequestParam String id) {
         try {
+            // Kiểm tra xem nhà vận chuyển có đang được sử dụng không
+            long count = shipmentRepository.countByShippingProvider_Id(id);
+            if (count > 0) {
+                return "ERR: Không thể xóa nhà vận chuyển đang được sử dụng trong " + count + " đơn hàng";
+            }
+            
             shippingProviderRepository.deleteById(id);
             return "OK";
         } catch (Exception e) {

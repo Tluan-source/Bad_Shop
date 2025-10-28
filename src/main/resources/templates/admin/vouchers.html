@@ -34,7 +34,7 @@
                             <i class="fas fa-ticket-alt text-white bg-primary p-3 rounded-circle me-3"></i>
                             <div>
                                 <h6 class="text-muted mb-1">Tổng vouchers</h6>
-                                <h4 class="mb-0" th:text="${totalVouchers}">0</h4>
+                                <h4 class="mb-0" th:text="${stats != null ? stats.totalVouchers : 0}">0</h4>
                             </div>
                         </div>
                     </div>
@@ -45,7 +45,7 @@
                             <i class="fas fa-check-circle text-white bg-success p-3 rounded-circle me-3"></i>
                             <div>
                                 <h6 class="text-muted mb-1">Đang hoạt động</h6>
-                                <h4 class="mb-0" th:text="${activeVouchers}">0</h4>
+                                <h4 class="mb-0" th:text="${stats != null ? stats.activeVouchers : 0}">0</h4>
                             </div>
                         </div>
                     </div>
@@ -56,7 +56,7 @@
                             <i class="fas fa-users text-white bg-info p-3 rounded-circle me-3"></i>
                             <div>
                                 <h6 class="text-muted mb-1">Đã sử dụng</h6>
-                                <h4 class="mb-0" th:text="${totalUsageCount}">0</h4>
+                                <h4 class="mb-0" th:text="${stats != null ? stats.totalUsageCount : 0}">0</h4>
                             </div>
                         </div>
                     </div>
@@ -67,7 +67,7 @@
                             <i class="fas fa-dollar-sign text-white bg-warning p-3 rounded-circle me-3"></i>
                             <div>
                                 <h6 class="text-muted mb-1">Tổng giảm giá</h6>
-                                <h4 class="mb-0" th:text="${#numbers.formatDecimal(totalDiscount / 1000000, 0, 'COMMA', 0, 'POINT')} + 'M'">0M</h4>
+                                <h4 class="mb-0" th:text="${stats != null and stats.totalDiscount != null ? #numbers.formatDecimal(stats.totalDiscount / 1000000, 0, 'COMMA', 0, 'POINT') + 'M' : '0M'}">0M</h4>
                             </div>
                         </div>
                     </div>
@@ -98,15 +98,15 @@
                             <p class="text-muted mb-3" th:text="${voucher.description}">Mô tả</p>
                             <div class="mb-2">
                                 <small class="text-muted">Loại giảm giá:</small>
-                                <strong class="ms-2" th:text="${voucher.discountType == T(vn.iotstar.entity.Voucher.DiscountType).PERCENTAGE ? 'Phần trăm' : 'Cố định'}">Phần trăm</strong>
+                                <strong class="ms-2" th:text="${voucher.discountType.name() == 'PERCENTAGE' ? 'Phần trăm' : 'Cố định'}">Phần trăm</strong>
                             </div>
                             <div class="mb-2">
                                 <small class="text-muted">Giá trị:</small>
                                 <strong class="ms-2 text-danger">
-                                    <span th:if="${voucher.discountType == T(vn.iotstar.entity.Voucher.DiscountType).PERCENTAGE}">
+                                    <span th:if="${voucher.discountType.name() == 'PERCENTAGE'}">
                                         <span th:text="${voucher.discountValue}">0</span>%
                                     </span>
-                                    <span th:if="${voucher.discountType == T(vn.iotstar.entity.Voucher.DiscountType).FIXED}">
+                                    <span th:if="${voucher.discountType.name() == 'FIXED'}">
                                         <span th:text="${#numbers.formatCurrency(voucher.discountValue)}">0</span>
                                     </span>
                                 </strong>
