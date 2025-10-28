@@ -64,6 +64,15 @@
                                 </button>
                             </form>
 
+                            <form th:if="${order.status != null && order.status.name() == 'SHIPPED'}" 
+                                  th:action="@{/vendor/orders/{id}/delivered(id=${order.orderId})}" 
+                                  method="post" style="display: inline;"
+                                  onsubmit="return confirm('Xác nhận đơn hàng đã giao thành công? Tiền sẽ được tự động chuyển vào ví của bạn.');">
+                                <button type="submit" class="btn btn-success">
+                                    <i class="fas fa-check-circle"></i> Đã giao hàng thành công
+                                </button>
+                            </form>
+
                             <button th:if="${order.status != null && (order.status.name() == 'NOT_PROCESSED' || order.status.name() == 'PROCESSING')}" 
                                     type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
                                 <i class="fas fa-times"></i> Hủy đơn
@@ -88,8 +97,8 @@
                             </div>
                             <div class="card-body">
                                 <p><strong>Tên:</strong> <span th:text="${order.customerName ?: 'N/A'}">Customer Name</span></p>
-                                <p><strong>Email:</strong> <span th:text="${order.customerEmail ?: 'N/A'}">email@example.com</span></p>
-                                <p><strong>Số điện thoại:</strong> <span th:text="${order.customerPhone ?: 'N/A'}">0123456789</span></p>
+                                <p><strong>Email:</strong> <span th:text="${order.userEmail ?: 'N/A'}">email@example.com</span></p>
+                                <p><strong>Số điện thoại:</strong> <span th:text="${order.userPhone ?: 'N/A'}">0123456789</span></p>
                                 <p><strong>Địa chỉ giao hàng:</strong><br>
                                    <span th:text="${order.address ?: 'N/A'}">Address</span>
                                 </p>
@@ -110,11 +119,11 @@
                                 <p><strong>Trạng thái thanh toán:</strong> 
                                     <span class="badge bg-warning">Chờ thanh toán</span>
                                 </p>
-                                <p th:if="${order.shippingProvider != null && !#strings.isEmpty(order.shippingProvider)}">
-                                    <strong>Đơn vị vận chuyển:</strong> <span th:text="${order.shippingProvider}">Provider</span>
+                                <p th:if="${order.shippingProviderName != null && !#strings.isEmpty(order.shippingProviderName)}">
+                                    <strong>Đơn vị vận chuyển:</strong> <span th:text="${order.shippingProviderName}">Provider</span>
                                 </p>
-                                <p th:if="${order.trackingNumber != null && !#strings.isEmpty(order.trackingNumber)}">
-                                    <strong>Mã vận đơn:</strong> <span th:text="${order.trackingNumber}">TRACK123</span>
+                                <p th:if="${order.shipmentId != null && !#strings.isEmpty(order.shipmentId)}">
+                                    <strong>Mã vận đơn:</strong> <span th:text="${order.shipmentId}">TRACK123</span>
                                 </p>
                             </div>
                         </div>
@@ -127,10 +136,10 @@
                         <h5><i class="fas fa-list"></i> Sản phẩm đặt hàng</h5>
                     </div>
                     <div class="card-body">
-                        <div th:if="${order.items == null || #lists.isEmpty(order.items)}" class="text-center text-muted py-3">
+                        <div th:if="${order.orderItems == null || #lists.isEmpty(order.orderItems)}" class="text-center text-muted py-3">
                             <p>Không có sản phẩm nào trong đơn hàng</p>
                         </div>
-                        <div th:unless="${order.items == null || #lists.isEmpty(order.items)}" class="table-responsive">
+                        <div th:unless="${order.orderItems == null || #lists.isEmpty(order.orderItems)}" class="table-responsive">
                             <table class="table">
                                 <thead>
                                     <tr>
@@ -141,7 +150,7 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr th:each="item : ${order.items}">
+                                    <tr th:each="item : ${order.orderItems}">
                                         <td>
                                             <div th:text="${item.productName ?: 'N/A'}">Product Name</div>
                                         </td>

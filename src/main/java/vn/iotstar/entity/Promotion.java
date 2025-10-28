@@ -90,9 +90,17 @@ public class Promotion {
         return LocalDateTime.now().isBefore(startDate);
     }
     
+    public boolean isUpcoming() {
+        return isNotStarted();
+    }
+    
     public boolean isAvailable() {
         if (isActive == null) return false;
         return isActive && !isExpired() && !isNotStarted();
+    }
+    
+    public Integer getProductCount() {
+        return products != null ? products.size() : 0;
     }
     
     public boolean isApplicableToProduct(Product product) {

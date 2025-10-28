@@ -577,104 +577,23 @@ public class VendorController {
         return "redirect:/vendor/orders/" + id;
     }
     
-    // ========================================
-    // ANALYTICS & REPORTS
-    // ========================================
-    
-    @GetMapping("/analytics")
-    public String analytics(Model model, Authentication auth) {
-        User user = userService.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        String storeId = securityService.getCurrentVendorStoreId(user.getId());
+    @PostMapping("/orders/{id}/delivered")
+    public String markAsDelivered(@PathVariable String id,
+                                  Authentication auth,
+                                  RedirectAttributes redirectAttributes) {
+        try {
+            User user = userService.findByEmail(auth.getName())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            String storeId = securityService.getCurrentVendorStoreId(user.getId());
+            
+            orderService.markAsDelivered(id, storeId);
+            
+            redirectAttributes.addFlashAttribute("success", "Đơn hàng đã giao thành công! Tiền đã được chuyển vào ví.");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Lỗi: " + e.getMessage());
+        }
         
-        // Revenue summary
-        var revenueSummary = analyticsService.getRevenueSummary(storeId);
-        model.addAttribute("revenueSummary", revenueSummary);
-        
-        // Monthly revenue (current year)
-        int currentYear = java.time.LocalDate.now().getYear();
-        var monthlyRevenue = analyticsService.getMonthlyRevenue(storeId, currentYear);
-        model.addAttribute("monthlyRevenue", monthlyRevenue);
-        model.addAttribute("currentYear", currentYear);
-        
-        // Daily revenue (last 30 days)
-        var dailyRevenue = analyticsService.getDailyRevenue(storeId, 30);
-        model.addAttribute("dailyRevenue", dailyRevenue);
-        
-        // Top selling products
-        var topProducts = analyticsService.getTopSellingProducts(storeId, 10);
-        model.addAttribute("topProducts", topProducts);
-        
-        return "vendor/analytics";
-    }
-    
-    // ========================================
-    // WALLET
-    // ========================================
-    
-    @GetMapping("/wallet")
-    public String wallet(Model model, Authentication auth) {
-        User user = userService.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        String storeId = securityService.getCurrentVendorStoreId(user.getId());
-        
-        VendorStoreDTO store = storeService.getMyStore(storeId, user.getId());
-        model.addAttribute("store", store);
-        
-        // TODO: Add transaction history
-        
-        return "vendor/wallet";
-    }
-    
-    // ========================================
-    // REVENUE MANAGEMENT
-    // ========================================
-    
-    @GetMapping("/revenue")
-    public String revenue(@RequestParam(required = false) String startDate,
-                         @RequestParam(required = false) String endDate,
-                         @RequestParam(required = false) String status,
-                         @RequestParam(defaultValue = "0") int page,
-                         Model model, 
-                         Authentication auth) {
-        User user = userService.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        String storeId = securityService.getCurrentVendorStoreId(user.getId());
-        
-        // Get revenue summary
-        // TODO: Create revenue service methods
-        model.addAttribute("totalRevenue", 0);
-        model.addAttribute("pendingRevenue", 0);
-        model.addAttribute("paidRevenue", 0);
-        model.addAttribute("walletBalance", 0);
-        
-        // Get transactions
-        // TODO: Get transaction list with filters
-        // Page<Transaction> transactions = revenueService.getTransactions(storeId, startDate, endDate, status, page);
-        // model.addAttribute("transactions", transactions);
-        
-        model.addAttribute("startDate", startDate);
-        model.addAttribute("endDate", endDate);
-        model.addAttribute("status", status);
-        model.addAttribute("currentPage", page);
-        
-        return "vendor/revenue";
-    }
-    
-    @GetMapping("/revenue/export")
-    public void exportRevenue(@RequestParam(required = false) String startDate,
-                             @RequestParam(required = false) String endDate,
-                             Authentication auth,
-                             HttpServletResponse response) throws IOException {
-        User user = userService.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        String storeId = securityService.getCurrentVendorStoreId(user.getId());
-        
-        // TODO: Export to Excel
-        response.setContentType("application/vnd.ms-excel");
-        response.setHeader("Content-Disposition", "attachment; filename=revenue-report.xlsx");
-        
-        // Implementation needed
+        return "redirect:/vendor/orders/" + id;
     }
     
     // ========================================

@@ -69,6 +69,14 @@ public interface VendorOrderService {
     VendorOrderDTO handleReturn(String orderId, String storeId, String reason);
     
     /**
+     * Mark order as delivered (SHIPPED -> DELIVERED)
+     * - Update order status to DELIVERED
+     * - Transfer money to vendor's wallet
+     * - Mark as paid
+     */
+    VendorOrderDTO markAsDelivered(String orderId, String storeId);
+    
+    /**
      * Count orders by status
      */
     Long countOrdersByStatus(String storeId, Order.OrderStatus status);
