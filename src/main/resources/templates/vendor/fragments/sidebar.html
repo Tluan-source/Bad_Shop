@@ -46,6 +46,13 @@
                         <i class="fas fa-box"></i> Danh sách sản phẩm
                     </a>
                 </li>
+                <!-- Category & Attributes management for vendors -->
+                <li class="nav-item" sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
+                    <a class="nav-link" th:classappend="${active == 'categories' ? 'active' : ''}"
+                       th:href="@{/vendor/categories}">
+                        <i class="fas fa-list-alt"></i> Quản lý Danh mục & Thuộc tính
+                    </a>
+                </li>
                 
                 <!-- Order Management Section -->
                 <li class="nav-item mt-3" sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">

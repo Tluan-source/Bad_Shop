@@ -25,7 +25,6 @@ public class StoreUpdateDTO {
     @Pattern(regexp = "^(\\+84|0)[0-9]{9,10}$", message = "Số điện thoại không hợp lệ")
     private String phone;
     
-    @Size(max = 1000, message = "Mô tả không được vượt quá 1000 ký tự")
     private String bio;
     
     private String featuredImages; // JSON array of image URLs

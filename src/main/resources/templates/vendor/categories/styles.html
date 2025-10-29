@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head th:replace="~{fragments/head :: head}">
+    <title>Quản lý Style - Vendor</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <div th:replace="~{vendor/fragments/sidebar :: sidebar('categories')}"></div>
+            <div class="col-md-10">
+                <div th:if="${success}" class="alert alert-success" th:text="${success}"></div>
+                <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h3>Quản lý Style cho: <span th:text="${category.name}"></span></h3>
+                    <a class="btn btn-primary" th:href="@{/vendor/categories/{id}/styles/new(id=${category.id})}">Thêm style</a>
+                </div>
+
+                <div class="card">
+                    <div class="card-body">
+                        <div th:if="${styles == null or #lists.isEmpty(styles)}" class="text-center text-muted py-4">Chưa có style nào cho danh mục này.</div>
+                        <div th:unless="${styles == null or #lists.isEmpty(styles)}" class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Tên</th>
+                                        <th class="text-end">Hành động</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="s : ${styles}" th:classappend="${s.isDeleted} ? 'table-secondary'">
+                                        <td>
+                                            <span th:text="${s.name}"></span>
+                                            <span th:if="${s.isDeleted}" class="badge bg-danger ms-2">Đã vô hiệu</span>
+                                        </td>
+                                        <td class="text-end">
+                                            <th:block th:if="${!s.isDeleted}">
+                                                <form th:if="${appliedIds != null and #lists.contains(appliedIds, s.id)}" th:action="@{/vendor/categories/{cat}/styles/{id}/unapply(cat=${category.id},id=${s.id})}" method="post" style="display:inline;">
+                                                    <button class="btn btn-sm btn-outline-warning">Bỏ áp dụng</button>
+                                                </form>
+                                                <form th:if="${appliedIds == null or not #lists.contains(appliedIds, s.id)}" th:action="@{/vendor/categories/{cat}/styles/{id}/apply(cat=${category.id},id=${s.id})}" method="post" style="display:inline;">
+                                                    <button class="btn btn-sm btn-outline-success">Áp dụng</button>
+                                                </form>
+                                            </th:block>
+                                            <th:block th:if="${s.isDeleted}">
+                                                <button class="btn btn-sm btn-secondary" disabled title="Style đã vô hiệu, không thể áp dụng">Không thể áp dụng</button>
+                                            </th:block>
+                                            &nbsp;
+                                            <a class="btn btn-sm btn-outline-primary" th:href="@{/vendor/categories/{cat}/styles/{id}/edit(cat=${category.id},id=${s.id})}">Sửa</a>
+                                            <a class="btn btn-sm btn-outline-secondary" th:href="@{/vendor/categories/{cat}/styles/{id}/values(cat=${category.id},id=${s.id})}">Giá trị</a>
+                                            <form th:if="${!s.isDeleted}" th:action="@{/vendor/categories/{cat}/styles/{id}/delete(cat=${category.id},id=${s.id})}" method="post" style="display:inline;" onsubmit="return confirm('Vô hiệu style này?');">
+                                                <button class="btn btn-sm btn-danger">Vô hiệu</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <a class="btn btn-secondary mt-3" th:href="@{/vendor/categories}">Quay lại danh mục</a>
+            </div>
+        </div>
+    </div>
+    <div th:replace="~{fragments/footer :: footer}"></div>
+</body>
+</html>

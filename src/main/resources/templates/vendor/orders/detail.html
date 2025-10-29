@@ -47,6 +47,8 @@
                     </div>
                     <div class="card-body">
                         <div class="btn-group" role="group">
+                            <!-- Vendor may only confirm or cancel when order is NEW (NOT_PROCESSED).
+                                 Shipping and delivery updates are handled by the shipper. -->
                             <form th:if="${order.status != null && order.status.name() == 'NOT_PROCESSED'}" 
                                   th:action="@{/vendor/orders/{id}/confirm(id=${order.orderId})}" 
                                   method="post" style="display: inline;" 
@@ -56,24 +58,7 @@
                                 </button>
                             </form>
 
-                            <form th:if="${order.status != null && order.status.name() == 'PROCESSING'}" 
-                                  th:action="@{/vendor/orders/{id}/ship(id=${order.orderId})}" 
-                                  method="post" style="display: inline;">
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-shipping-fast"></i> Giao hàng
-                                </button>
-                            </form>
-
-                            <form th:if="${order.status != null && order.status.name() == 'SHIPPED'}" 
-                                  th:action="@{/vendor/orders/{id}/delivered(id=${order.orderId})}" 
-                                  method="post" style="display: inline;"
-                                  onsubmit="return confirm('Xác nhận đơn hàng đã giao thành công? Tiền sẽ được tự động chuyển vào ví của bạn.');">
-                                <button type="submit" class="btn btn-success">
-                                    <i class="fas fa-check-circle"></i> Đã giao hàng thành công
-                                </button>
-                            </form>
-
-                            <button th:if="${order.status != null && (order.status.name() == 'NOT_PROCESSED' || order.status.name() == 'PROCESSING')}" 
+                            <button th:if="${order.status != null && order.status.name() == 'NOT_PROCESSED'}" 
                                     type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#cancelModal">
                                 <i class="fas fa-times"></i> Hủy đơn
                             </button>
@@ -153,6 +138,11 @@
                                     <tr th:each="item : ${order.orderItems}">
                                         <td>
                                             <div th:text="${item.productName ?: 'N/A'}">Product Name</div>
+                                            <div th:if="${item.styleValueNames != null && !#lists.isEmpty(item.styleValueNames)}" class="text-muted small mt-1">
+                                                <span th:each="svName, iterStat : ${item.styleValueNames}">
+                                                    <span th:text="${svName}"></span><span th:if="${!iterStat.last}">, </span>
+                                                </span>
+                                            </div>
                                         </td>
                                         <td class="text-center" th:text="${item.quantity ?: 0}">1</td>
                                         <td class="text-end">
