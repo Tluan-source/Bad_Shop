@@ -101,8 +101,9 @@
                                 <p><strong>Phương thức thanh toán:</strong> 
                                     <span th:text="${order.paymentMethod ?: 'COD'}">COD</span>
                                 </p>
-                                <p><strong>Trạng thái thanh toán:</strong> 
-                                    <span class="badge bg-warning">Chờ thanh toán</span>
+                                <p><strong>Trạng thái thanh toán:</strong>
+                                    <span th:if="${order.isPaidBefore == true}" class="badge bg-success">Đã thanh toán</span>
+                                    <span th:unless="${order.isPaidBefore == true}" class="badge bg-warning">Chờ thanh toán</span>
                                 </p>
                                 <p th:if="${order.shippingProviderName != null && !#strings.isEmpty(order.shippingProviderName)}">
                                     <strong>Đơn vị vận chuyển:</strong> <span th:text="${order.shippingProviderName}">Provider</span>
