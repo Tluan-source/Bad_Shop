@@ -50,6 +50,23 @@
                             <i class="fas fa-wallet me-1"></i>Ví tiền
                         </a>
                     </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarChatDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-comments me-1"></i>Tin nhắn
+                        </a>
+                        <ul class="dropdown-menu" aria-labelledby="navbarChatDropdown">
+                            <li>
+                                <a class="dropdown-item" th:href="@{/vendor/chat}">
+                                    <i class="fas fa-store me-2 text-success"></i>Tin nhắn từ khách hàng
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" th:href="@{/user/chat}">
+                                    <i class="fas fa-shopping-cart me-2 text-primary"></i>Tin nhắn với Shop khác
+                                </a>
+                            </li>
+                        </ul>
+                    </li>
                 </ul>
 
                 <ul class="navbar-nav">
@@ -86,6 +103,12 @@
                                 <a class="dropdown-item py-2" th:href="@{/vendor/settings}">
                                     <i class="fas fa-cog me-2 text-secondary"></i>
                                     <span>Cài đặt</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2" th:href="@{/vendor/chat}">
+                                    <i class="fas fa-comments me-2 text-info"></i>
+                                    <span>Tin nhắn khách hàng</span>
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>

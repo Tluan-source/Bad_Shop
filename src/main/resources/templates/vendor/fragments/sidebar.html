@@ -1,105 +1,111 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <title>Vendor Sidebar</title>
+</head>
 <body>
-    <!-- Vendor Sidebar Fragment -->
-    <div th:fragment="sidebar(active)" class="col-md-2 bg-light sidebar">
-        <div class="position-sticky pt-3">
-            <h5 class="text-center mb-3">
-                <i class="fas fa-store"></i> Quản lý cửa hàng
-            </h5>
-            
-            <ul class="nav flex-column">
-                <!-- Dashboard -->
-                <li class="nav-item">
-                    <a class="nav-link" th:classappend="${active == 'dashboard' ? 'active' : ''}" 
-                       th:href="@{/vendor/dashboard}">
-                        <i class="fas fa-tachometer-alt"></i> Tổng quan
-                    </a>
-                </li>
-                
-                <!-- Store Management Section -->
-                <li class="nav-item mt-3">
-                    <h6 class="text-muted px-3 mb-2"><small>QUẢN LÝ SHOP</small></h6>
-                </li>
-                <!-- Chỉ hiển thị "Đăng ký Shop" cho user chưa có role VENDOR -->
-                <li class="nav-item" sec:authorize="!hasRole('VENDOR')">
-                    <a class="nav-link" th:classappend="${active == 'register' ? 'active' : ''}" 
-                       th:href="@{/vendor/register}">
-                        <i class="fas fa-store-alt"></i> Đăng ký Shop
-                    </a>
-                </li>
-                <!-- Menu quản lý shop chỉ cho VENDOR -->
-                <li class="nav-item" sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                    <a class="nav-link" th:classappend="${active == 'store' ? 'active' : ''}" 
-                       th:href="@{/vendor/store}">
-                        <i class="fas fa-cog"></i> Thông tin Shop
-                    </a>
-                </li>
-                
-                <!-- Product Management Section -->
-                <li class="nav-item mt-3" sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                    <h6 class="text-muted px-3 mb-2"><small>SẢN PHẨM</small></h6>
-                </li>
-                <li class="nav-item" sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                    <a class="nav-link" th:classappend="${active == 'products' ? 'active' : ''}" 
-                       th:href="@{/vendor/products}">
-                        <i class="fas fa-box"></i> Danh sách sản phẩm
-                    </a>
-                </li>
-                <!-- Category & Attributes management for vendors -->
-                <li class="nav-item" sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                    <a class="nav-link" th:classappend="${active == 'categories' ? 'active' : ''}"
-                       th:href="@{/vendor/categories}">
-                        <i class="fas fa-list-alt"></i> Quản lý Danh mục & Thuộc tính
-                    </a>
-                </li>
-                
-                <!-- Order Management Section -->
-                <li class="nav-item mt-3" sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                    <h6 class="text-muted px-3 mb-2"><small>QUẢN LÝ ĐƠN HÀNG</small></h6>
-                </li>
-                <li class="nav-item" sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                    <a class="nav-link" th:classappend="${active == 'orders' ? 'active' : ''}" 
-                       th:href="@{/vendor/orders}">
-                        <i class="fas fa-shopping-cart"></i> Tất cả đơn hàng
-                    </a>
-                </li>
-                
-                <!-- Promotion Management Section -->
-                <li class="nav-item mt-3" sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                    <h6 class="text-muted px-3 mb-2"><small>KHUYẾN MÃI</small></h6>
-                </li>
-                <li class="nav-item" sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                    <a class="nav-link" th:classappend="${active == 'promotions' ? 'active' : ''}" 
-                       th:href="@{/vendor/promotions}">
-                        <i class="fas fa-tags"></i> Chương trình khuyến mãi
-                    </a>
-                </li>
-                
-                <!-- Finance & Reports Section -->
-                <li class="nav-item mt-3" sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                    <h6 class="text-muted px-3 mb-2"><small>TÀI CHÍNH & BÁO CÁO</small></h6>
-                </li>
-                <li class="nav-item" sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                    <a class="nav-link" th:classappend="${active == 'analytics' ? 'active' : ''}" 
-                       th:href="@{/vendor/analytics}">
-                        <i class="fas fa-chart-line"></i> Thống kê doanh thu
-                    </a>
-                </li>
-                <li class="nav-item" sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                    <a class="nav-link" th:classappend="${active == 'revenue' ? 'active' : ''}" 
-                       th:href="@{/vendor/revenue}">
-                        <i class="fas fa-money-bill-wave"></i> Quản lý doanh thu
-                    </a>
-                </li>
-                <li class="nav-item" sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                    <a class="nav-link" th:classappend="${active == 'wallet' ? 'active' : ''}" 
-                       th:href="@{/vendor/wallet}">
-                        <i class="fas fa-wallet"></i> Ví điện tử
-                    </a>
-                </li>
-            </ul>
-        </div>
-    </div>
+<div th:fragment="sidebar(activeMenu)" class="col-md-2 bg-light sidebar">
+    <style>
+        .sidebar {
+            min-height: calc(100vh - 150px);
+            padding: 0;
+        }
+        .sidebar .nav {
+            padding: 15px 0;
+        }
+        .sidebar .nav-link {
+            color: #495057;
+            padding: 12px 20px;
+            margin: 4px 10px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+        }
+        .sidebar .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+            text-align: center;
+        }
+        .sidebar .nav-link:hover {
+            background: #e9ecef;
+            color: #28a745;
+        }
+        .sidebar .nav-link.active {
+            background: #28a745;
+            color: white;
+            font-weight: 500;
+        }
+        .sidebar .nav-link.active:hover {
+            background: #218838;
+        }
+    </style>
+
+    <ul class="nav flex-column">
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${activeMenu == 'dashboard'} ? 'active' : ''" 
+               th:href="@{/vendor/dashboard}">
+                <i class="fas fa-tachometer-alt"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${activeMenu == 'store'} ? 'active' : ''" 
+               th:href="@{/vendor/store}">
+                <i class="fas fa-store"></i>
+                <span>Cửa hàng</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${activeMenu == 'products'} ? 'active' : ''" 
+               th:href="@{/vendor/products}">
+                <i class="fas fa-box"></i>
+                <span>Sản phẩm</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${activeMenu == 'orders'} ? 'active' : ''" 
+               th:href="@{/vendor/orders}">
+                <i class="fas fa-shopping-bag"></i>
+                <span>Đơn hàng</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${activeMenu == 'revenue'} ? 'active' : ''" 
+               th:href="@{/vendor/revenue}">
+                <i class="fas fa-chart-line"></i>
+                <span>Doanh thu</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${activeMenu == 'analytics'} ? 'active' : ''" 
+               th:href="@{/vendor/analytics}">
+                <i class="fas fa-chart-bar"></i>
+                <span>Thống kê</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${activeMenu == 'promotions'} ? 'active' : ''" 
+               th:href="@{/vendor/promotions}">
+                <i class="fas fa-tag"></i>
+                <span>Khuyến mãi</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${activeMenu == 'chat'} ? 'active' : ''" 
+               th:href="@{/vendor/chat}">
+                <i class="fas fa-comments"></i>
+                <span>Tin nhắn</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" th:classappend="${activeMenu == 'wallet'} ? 'active' : ''" 
+               th:href="@{/vendor/wallet}">
+                <i class="fas fa-wallet"></i>
+                <span>Ví tiền</span>
+            </a>
+        </li>
+    </ul>
+</div>
 </body>
 </html>

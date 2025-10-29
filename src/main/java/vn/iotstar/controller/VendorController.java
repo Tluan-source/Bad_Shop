@@ -105,6 +105,9 @@ public class VendorController {
     @Autowired
     private PromotionRepository promotionRepository;
     
+    @Autowired
+    private vn.iotstar.service.ChatService chatService;
+    
     // ========================================
     // VENDOR REGISTRATION (for USER role)
     // ========================================
@@ -180,6 +183,19 @@ public class VendorController {
         // Get recent orders (top 5)
         List<VendorOrderDTO> recentOrders = orderService.getMyOrders(storeId, PageRequest.of(0, 5)).getContent();
         model.addAttribute("recentOrders", recentOrders);
+        
+        // Get recent conversations (top 5)
+        List<vn.iotstar.dto.ConversationDTO> recentConversations = chatService.getVendorConversations(user.getId())
+                .stream()
+                .limit(5)
+                .collect(Collectors.toList());
+        model.addAttribute("recentConversations", recentConversations);
+        
+        // Count unread messages
+        long unreadCount = recentConversations.stream()
+                .mapToInt(vn.iotstar.dto.ConversationDTO::getUnreadCount)
+                .sum();
+        model.addAttribute("unreadMessagesCount", unreadCount);
         
         model.addAttribute("username", user.getFullName());
         return "vendor/dashboard";

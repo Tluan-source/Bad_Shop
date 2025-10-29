@@ -216,6 +216,51 @@
                     </div>
                 </div>
 
+                <!-- Recent Messages -->
+                <div class="card mb-4">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="fas fa-comments"></i> Tin nhắn khách hàng
+                            <span th:if="${unreadMessagesCount > 0}" class="badge bg-danger ms-2" th:text="${unreadMessagesCount}">0</span>
+                        </h5>
+                        <a th:href="@{/vendor/chat}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-comment-dots"></i> Xem tất cả
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div th:if="${#lists.isEmpty(recentConversations)}" class="text-center text-muted py-4">
+                            <i class="fas fa-inbox fa-3x mb-3"></i>
+                            <p>Chưa có tin nhắn nào</p>
+                        </div>
+                        <div th:unless="${#lists.isEmpty(recentConversations)}" class="list-group list-group-flush">
+                            <a th:each="conversation : ${recentConversations}" 
+                               th:href="@{/vendor/chat(conversationId=${conversation.id})}"
+                               class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 align-items-center">
+                                    <img th:src="${conversation.userAvatar != null ? conversation.userAvatar : '/images/default-avatar.png'}" 
+                                         alt="Avatar" 
+                                         class="rounded-circle me-3" 
+                                         style="width: 50px; height: 50px; object-fit: cover;">
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center mb-1">
+                                            <h6 class="mb-0" th:text="${conversation.userName}">Khách hàng</h6>
+                                            <small class="text-muted" th:text="${#temporals.format(conversation.lastMessageTime, 'dd/MM/yyyy HH:mm')}">
+                                                01/01/2024
+                                            </small>
+                                        </div>
+                                        <p class="mb-0 text-muted text-truncate" style="max-width: 400px;">
+                                            <span th:text="${conversation.lastMessage}">Tin nhắn cuối...</span>
+                                        </p>
+                                    </div>
+                                    <div th:if="${conversation.unreadCount > 0}" class="ms-2">
+                                        <span class="badge bg-danger rounded-pill" th:text="${conversation.unreadCount}">0</span>
+                                    </div>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Quick Actions -->
                 <div class="row">
                     <div class="col-md-4 mb-3">
