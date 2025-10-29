@@ -139,4 +139,7 @@ public interface ShipmentRepository extends JpaRepository<Shipment, String> {
             LIMIT 10
             """)
     List<Shipment> findTop10ByShipper_IdOrderByCreatedAtDesc(@Param("shipperId") String shipperId);
+    
+    // Đếm số lượng shipment đang sử dụng shipping provider
+    long countByShippingProvider_Id(String shippingProviderId);
 }

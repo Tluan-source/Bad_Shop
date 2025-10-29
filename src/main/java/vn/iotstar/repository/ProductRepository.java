@@ -63,4 +63,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
            "AND p.quantity < :threshold AND p.isSelling = true")
     List<Product> findLowStockProducts(@Param("storeId") String storeId, 
                                         @Param("threshold") Integer threshold);
+    
+    // Count products by category
+    Long countByCategory_Id(String categoryId);
 }
