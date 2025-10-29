@@ -1,34 +1,51 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head}">
-    <title>Style Form</title>
-</head>
-<body>
-<div th:replace="~{fragments/header :: header}"></div>
-<div class="container-fluid mt-4">
-    <div class="row">
-        <div th:replace="~{vendor/fragments/sidebar :: sidebar('categories')}"></div>
-        <div class="col-md-10">
-            <div class="card">
-                <div class="card-body">
-                    <h4 th:text="${style.id != null} ? 'Chỉnh sửa Style' : 'Thêm Style'">Form</h4>
-                    <form th:action="${style.id != null} ? @{/vendor/categories/{catId}/styles/{id}/update(catId=${category.id},id=${style.id})} : @{/vendor/categories/{catId}/styles(catId=${category.id})}" method="post">
-                        <div class="mb-3">
-                            <label class="form-label">Tên Style</label>
-                            <input type="text" class="form-control" name="name" th:value="${style.name}" required />
-                        </div>
-                        <div class="form-check mb-3">
+     <head th:replace="~{fragments/head :: head}">
+          <title>Style Form</title>
+     </head>
+     <body>
+          <div th:replace="~{fragments/header :: header}"></div>
+          <div class="container-fluid mt-4">
+               <div class="row">
+                    <div th:replace="~{vendor/fragments/sidebar :: sidebar('categories')}"></div>
+                    <div class="col-md-10">
+                         <div class="card">
+                              <div class="card-body">
+                                   <h4
+                                        th:text="${style.id != null} ? 'Chỉnh sửa Style' : 'Thêm Style'"
+                                   >
+                                        Form
+                                   </h4>
+                                   <form
+                                        th:action="${style.id != null} ? @{/vendor/categories/{catId}/styles/{id}/update(catId=${category.id},id=${style.id})} : @{/vendor/categories/{catId}/styles(catId=${category.id})}"
+                                        method="post"
+                                   >
+                                        <div class="mb-3">
+                                             <label class="form-label">Tên Style</label>
+                                             <input
+                                                  type="text"
+                                                  class="form-control"
+                                                  name="name"
+                                                  th:value="${style.name}"
+                                                  required
+                                             />
+                                        </div>
+                                        <!-- <div class="form-check mb-3">
                             <input class="form-check-input" type="checkbox" name="isDeleted" th:checked="${style.isDeleted}" />
                             <label class="form-check-label">Vô hiệu</label>
-                        </div>
-                        <button class="btn btn-primary" type="submit">Lưu</button>
-                        <a class="btn btn-secondary" th:href="@{/vendor/categories/{id}/styles(id=${category.id})}">Hủy</a>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<div th:replace="~{fragments/footer :: footer}"></div>
-</body>
+                        </div> -->
+                                        <button class="btn btn-primary" type="submit">Lưu</button>
+                                        <a
+                                             class="btn btn-secondary"
+                                             th:href="@{/vendor/categories/{id}/styles(id=${category.id})}"
+                                             >Hủy</a
+                                        >
+                                   </form>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </div>
+          <div th:replace="~{fragments/footer :: footer}"></div>
+     </body>
 </html>
