@@ -43,84 +43,89 @@ public class OrderService {
     private final ObjectMapper objectMapper;
     
     @Transactional
-    public Order createOrder(List<CheckoutItemDTO> items, CheckoutRequest request, String userId) {
+    public List<Order> createOrders(List<CheckoutItemDTO> items, CheckoutRequest request, String userId) {
         // Group items by store
         Map<String, List<CheckoutItemDTO>> itemsByStore = new HashMap<>();
         for (CheckoutItemDTO item : items) {
             itemsByStore.computeIfAbsent(item.getStoreId(), k -> new ArrayList<>()).add(item);
         }
-        
-        // For now, create order for first store (you can modify to handle multiple stores)
-        String storeId = itemsByStore.keySet().iterator().next();
-        List<CheckoutItemDTO> storeItems = itemsByStore.get(storeId);
-        
+
         User user = userRepository.findById(userId).orElseThrow();
-        Store store = storeRepository.findById(storeId).orElseThrow();
-        
-        // Create order
-        Order order = new Order();
-        order.setId(UUID.randomUUID().toString());
-        order.setUser(user);
-        order.setStore(store);
-        order.setAddress(formatAddress(request));
-        order.setPhone(request.getPhone());
-        order.setStatus(Order.OrderStatus.NOT_PROCESSED);
-        order.setIsPaidBefore(false);
-        
-        // Set timestamps explicitly to ensure they are not null
-        LocalDateTime now = LocalDateTime.now();
-        order.setCreatedAt(now);
-        order.setUpdatedAt(now);
-        
-        // Calculate totals
-        BigDecimal total = BigDecimal.ZERO;
-        List<OrderItem> orderItems = new ArrayList<>();
-        
-        for (CheckoutItemDTO item : storeItems) {
-            Product product = productRepository.findById(item.getProductId()).orElseThrow();
-            
-            OrderItem orderItem = new OrderItem();
-            orderItem.setId(UUID.randomUUID().toString());
-            orderItem.setOrder(order);
-            orderItem.setProduct(product);
-            orderItem.setQuantity(item.getQuantity());
-            orderItem.setPrice(item.getPrice());
-            orderItem.setTotal(item.getTotal());
-            
-            // Save style value IDs as JSON
-            if (item.getStyleValueIds() != null && !item.getStyleValueIds().isEmpty()) {
-                try {
-                    orderItem.setStyleValueIds(objectMapper.writeValueAsString(item.getStyleValueIds()));
-                } catch (Exception e) {
-                    orderItem.setStyleValueIds("[]");
+        List<Order> orders = new ArrayList<>();
+
+        for (Map.Entry<String, List<CheckoutItemDTO>> entry : itemsByStore.entrySet()) {
+            String storeId = entry.getKey();
+            List<CheckoutItemDTO> storeItems = entry.getValue();
+
+            Store store = storeRepository.findById(storeId).orElseThrow();
+
+            // Create order
+            Order order = new Order();
+            order.setId(UUID.randomUUID().toString());
+            order.setUser(user);
+            order.setStore(store);
+            order.setAddress(formatAddress(request));
+            order.setPhone(request.getPhone());
+            order.setStatus(Order.OrderStatus.NOT_PROCESSED);
+            order.setIsPaidBefore(false);
+
+            // Set timestamps explicitly to ensure they are not null
+            LocalDateTime now = LocalDateTime.now();
+            order.setCreatedAt(now);
+            order.setUpdatedAt(now);
+
+            // Calculate totals
+            BigDecimal total = BigDecimal.ZERO;
+            List<OrderItem> orderItems = new ArrayList<>();
+
+            for (CheckoutItemDTO item : storeItems) {
+                Product product = productRepository.findById(item.getProductId()).orElseThrow();
+
+                OrderItem orderItem = new OrderItem();
+                orderItem.setId(UUID.randomUUID().toString());
+                orderItem.setOrder(order);
+                orderItem.setProduct(product);
+                orderItem.setQuantity(item.getQuantity());
+                orderItem.setPrice(item.getPrice());
+                orderItem.setTotal(item.getTotal());
+
+                // Save style value IDs as JSON
+                if (item.getStyleValueIds() != null && !item.getStyleValueIds().isEmpty()) {
+                    try {
+                        orderItem.setStyleValueIds(objectMapper.writeValueAsString(item.getStyleValueIds()));
+                    } catch (Exception e) {
+                        orderItem.setStyleValueIds("[]");
+                    }
                 }
+
+                orderItems.add(orderItem);
+                total = total.add(item.getTotal());
+
+                // Update product quantity and sold count
+                product.setQuantity(product.getQuantity() - item.getQuantity());
+                product.setSold(product.getSold() + item.getQuantity());
+                productRepository.save(product);
             }
-            
-            orderItems.add(orderItem);
-            total = total.add(item.getTotal());
-            
-            // Update product quantity and sold count
-            product.setQuantity(product.getQuantity() - item.getQuantity());
-            product.setSold(product.getSold() + item.getQuantity());
-            productRepository.save(product);
+
+            order.setAmountFromUser(total);
+            order.setAmountFromStore(total);
+            order.setAmountToStore(total);
+            order.setOrderItems(orderItems);
+
+            // Create payment record
+            Payment payment = new Payment();
+            payment.setId(UUID.randomUUID().toString());
+            payment.setOrder(order);
+            payment.setAmount(total);
+            payment.setStatus(Payment.PaymentStatus.PENDING);
+            payment.setPaymentMethod("VNPAY".equalsIgnoreCase(request.getPaymentMethod()) ? Payment.PaymentMethod.VNPAY : Payment.PaymentMethod.COD);
+
+            order.setPayment(payment);
+
+            orders.add(orderRepository.save(order));
         }
-        
-        order.setAmountFromUser(total);
-        order.setAmountFromStore(total);
-        order.setAmountToStore(total);
-        order.setOrderItems(orderItems);
-        
-        // Create payment record
-        Payment payment = new Payment();
-        payment.setId(UUID.randomUUID().toString());
-        payment.setOrder(order);
-        payment.setAmount(total);
-        payment.setStatus(Payment.PaymentStatus.PENDING);
-        payment.setPaymentMethod("VNPAY".equalsIgnoreCase(request.getPaymentMethod()) ? Payment.PaymentMethod.VNPAY : Payment.PaymentMethod.COD);
-        
-        order.setPayment(payment);
-        
-        return orderRepository.save(order);
+
+        return orders;
     }
     
     private String formatAddress(CheckoutRequest request) {
