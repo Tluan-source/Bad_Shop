@@ -9,7 +9,32 @@
     <div class="container mt-5 mb-5">
         <div class="row justify-content-center">
             <div class="col-md-8">
-                <div class="card shadow">
+                <!-- Pending Registration Alert -->
+                <div th:if="${hasPending}" class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <h5><i class="fas fa-clock"></i> Yêu cầu đang chờ phê duyệt</h5>
+                    <p th:text="${message}"></p>
+                    <p class="mb-0">
+                        <strong>Lưu ý:</strong> Bạn cần được admin phê duyệt trước khi có thể bắt đầu bán hàng. 
+                        Vui lòng kiểm tra email để nhận thông báo khi được duyệt.
+                    </p>
+                    <hr>
+                    <a th:href="@{/user/profile}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-user"></i> Quay lại trang cá nhân
+                    </a>
+                </div>
+
+                <!-- Registration Form -->
+                <div th:if="${!hasPending}" class="card shadow">
+                    <!-- Success/Error Messages -->
+                    <div th:if="${success}" class="alert alert-success alert-dismissible fade show m-3" role="alert">
+                        <i class="fas fa-check-circle"></i> <span th:text="${success}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+                    <div th:if="${error}" class="alert alert-danger alert-dismissible fade show m-3" role="alert">
+                        <i class="fas fa-exclamation-circle"></i> <span th:text="${error}"></span>
+                        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
+
                     <div class="card-header bg-primary text-white text-center py-4">
                         <h3><i class="fas fa-store-alt"></i> Đăng ký làm Người bán</h3>
                         <p class="mb-0">Bắt đầu kinh doanh cùng Badminton Marketplace</p>
@@ -23,8 +48,19 @@
                                 <li>Công cụ quản lý shop chuyên nghiệp</li>
                                 <li>Hỗ trợ marketing và khuyến mãi</li>
                                 <li>Thanh toán nhanh chóng, minh bạch</li>
-                                <li>Hoa hồng cạnh tranh chỉ 5-10%</li>
+                                <li>Hoa hồng cạnh tranh</li>
                             </ul>
+                        </div>
+                        
+                        <!-- Important Note -->
+                        <div class="alert alert-warning">
+                            <h6><i class="fas fa-info-circle"></i> Lưu ý quan trọng:</h6>
+                            <p class="mb-0">
+                                <strong>Sau khi đăng ký, bạn cần đợi admin phê duyệt.</strong><br>
+                                • Admin sẽ xem xét thông tin cửa hàng của bạn<br>
+                                • Bạn sẽ nhận thông báo qua email khi được duyệt<br>
+                                • Chỉ sau khi được duyệt, bạn mới có thể bắt đầu bán hàng
+                            </p>
                         </div>
 
                         <form th:action="@{/vendor/register}" method="post" th:object="${storeRegistration}" enctype="multipart/form-data">
@@ -59,7 +95,7 @@
                             <div class="mb-3">
                                 <label for="address" class="form-label">Địa chỉ cửa hàng <span class="text-danger">*</span></label>
                                 <input type="text" class="form-control" id="address" th:field="*{address}" 
-                                       placeholder="Số nhà, đường, phường/xã" required>
+                                       placeholder="Số nhà, đường" required>
                             </div>
 
                             <div class="row">
@@ -72,15 +108,75 @@
                                         <option value="Đà Nẵng">Đà Nẵng</option>
                                         <option value="Cần Thơ">Cần Thơ</option>
                                         <option value="Hải Phòng">Hải Phòng</option>
+                                        <option value="An Giang">An Giang</option>
+                                        <option value="Bà Rịa - Vũng Tàu">Bà Rịa - Vũng Tàu</option>
+                                        <option value="Bắc Giang">Bắc Giang</option>
+                                        <option value="Bắc Kạn">Bắc Kạn</option>
+                                        <option value="Bạc Liêu">Bạc Liêu</option>
+                                        <option value="Bắc Ninh">Bắc Ninh</option>
+                                        <option value="Bến Tre">Bến Tre</option>
+                                        <option value="Bình Định">Bình Định</option>
+                                        <option value="Bình Dương">Bình Dương</option>
+                                        <option value="Bình Phước">Bình Phước</option>
+                                        <option value="Bình Thuận">Bình Thuận</option>
+                                        <option value="Cà Mau">Cà Mau</option>
+                                        <option value="Cao Bằng">Cao Bằng</option>
+                                        <option value="Đắk Lắk">Đắk Lắk</option>
+                                        <option value="Đắk Nông">Đắk Nông</option>
+                                        <option value="Điện Biên">Điện Biên</option>
+                                        <option value="Đồng Nai">Đồng Nai</option>
+                                        <option value="Đồng Tháp">Đồng Tháp</option>
+                                        <option value="Gia Lai">Gia Lai</option>
+                                        <option value="Hà Giang">Hà Giang</option>
+                                        <option value="Hà Nam">Hà Nam</option>
+                                        <option value="Hà Tĩnh">Hà Tĩnh</option>
+                                        <option value="Hải Dương">Hải Dương</option>
+                                        <option value="Hậu Giang">Hậu Giang</option>
+                                        <option value="Hòa Bình">Hòa Bình</option>
+                                        <option value="Hưng Yên">Hưng Yên</option>
+                                        <option value="Khánh Hòa">Khánh Hòa</option>
+                                        <option value="Kiên Giang">Kiên Giang</option>
+                                        <option value="Kon Tum">Kon Tum</option>
+                                        <option value="Lai Châu">Lai Châu</option>
+                                        <option value="Lâm Đồng">Lâm Đồng</option>
+                                        <option value="Lạng Sơn">Lạng Sơn</option>
+                                        <option value="Lào Cai">Lào Cai</option>
+                                        <option value="Long An">Long An</option>
+                                        <option value="Nam Định">Nam Định</option>
+                                        <option value="Nghệ An">Nghệ An</option>
+                                        <option value="Ninh Bình">Ninh Bình</option>
+                                        <option value="Ninh Thuận">Ninh Thuận</option>
+                                        <option value="Phú Thọ">Phú Thọ</option>
+                                        <option value="Phú Yên">Phú Yên</option>
+                                        <option value="Quảng Bình">Quảng Bình</option>
+                                        <option value="Quảng Nam">Quảng Nam</option>
+                                        <option value="Quảng Ngãi">Quảng Ngãi</option>
+                                        <option value="Quảng Ninh">Quảng Ninh</option>
+                                        <option value="Quảng Trị">Quảng Trị</option>
+                                        <option value="Sóc Trăng">Sóc Trăng</option>
+                                        <option value="Sơn La">Sơn La</option>
+                                        <option value="Tây Ninh">Tây Ninh</option>
+                                        <option value="Thái Bình">Thái Bình</option>
+                                        <option value="Thái Nguyên">Thái Nguyên</option>
+                                        <option value="Thanh Hóa">Thanh Hóa</option>
+                                        <option value="Thừa Thiên Huế">Thừa Thiên Huế</option>
+                                        <option value="Tiền Giang">Tiền Giang</option>
+                                        <option value="Trà Vinh">Trà Vinh</option>
+                                        <option value="Tuyên Quang">Tuyên Quang</option>
+                                        <option value="Vĩnh Long">Vĩnh Long</option>
+                                        <option value="Vĩnh Phúc">Vĩnh Phúc</option>
+                                        <option value="Yên Bái">Yên Bái</option>
                                     </select>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="district" class="form-label">Quận/Huyện <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="district" th:field="*{district}" required>
+                                    <input type="text" class="form-control" id="district" th:field="*{district}" 
+                                           placeholder="VD: Quận 1, Huyện Củ Chi" required>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label for="ward" class="form-label">Phường/Xã <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="ward" th:field="*{ward}" required>
+                                    <input type="text" class="form-control" id="ward" th:field="*{ward}" 
+                                           placeholder="VD: Phường Bến Nghé" required>
                                 </div>
                             </div>
 
@@ -88,55 +184,6 @@
                                 <label for="logo" class="form-label">Logo cửa hàng</label>
                                 <input type="file" class="form-control" id="logo" name="logoFile" accept="image/*">
                                 <small class="text-muted">Định dạng: JPG, PNG. Kích thước tối đa: 2MB</small>
-                            </div>
-
-                            <h5 class="mb-3 mt-4"><i class="fas fa-file-alt"></i> Thông tin Pháp lý</h5>
-
-                            <div class="mb-3">
-                                <label for="businessType" class="form-label">Loại hình kinh doanh <span class="text-danger">*</span></label>
-                                <select class="form-select" id="businessType" th:field="*{businessType}" required>
-                                    <option value="">-- Chọn --</option>
-                                    <option value="INDIVIDUAL">Cá nhân</option>
-                                    <option value="COMPANY">Công ty</option>
-                                    <option value="HOUSEHOLD">Hộ kinh doanh</option>
-                                </select>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="taxCode" class="form-label">Mã số thuế</label>
-                                <input type="text" class="form-control" id="taxCode" th:field="*{taxCode}" 
-                                       placeholder="Nhập mã số thuế (nếu có)">
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="businessLicense" class="form-label">Giấy phép kinh doanh</label>
-                                <input type="file" class="form-control" id="businessLicense" name="licenseFile" accept="image/*,application/pdf">
-                                <small class="text-muted">Định dạng: JPG, PNG, PDF. Kích thước tối đa: 5MB</small>
-                            </div>
-
-                            <h5 class="mb-3 mt-4"><i class="fas fa-university"></i> Thông tin Thanh toán</h5>
-
-                            <div class="mb-3">
-                                <label for="bankName" class="form-label">Tên ngân hàng <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" id="bankName" th:field="*{bankName}" 
-                                       placeholder="VD: Vietcombank, Techcombank..." required>
-                            </div>
-
-                            <div class="row">
-                                <div class="col-md-6 mb-3">
-                                    <label for="bankAccountNumber" class="form-label">Số tài khoản <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="bankAccountNumber" th:field="*{bankAccountNumber}" required>
-                                </div>
-                                <div class="col-md-6 mb-3">
-                                    <label for="bankAccountName" class="form-label">Tên chủ tài khoản <span class="text-danger">*</span></label>
-                                    <input type="text" class="form-control" id="bankAccountName" th:field="*{bankAccountName}" required>
-                                </div>
-                            </div>
-
-                            <div class="mb-3">
-                                <label for="bankBranch" class="form-label">Chi nhánh</label>
-                                <input type="text" class="form-control" id="bankBranch" th:field="*{bankBranch}" 
-                                       placeholder="VD: Chi nhánh Đống Đa, Hà Nội">
                             </div>
 
                             <div class="form-check mb-4">

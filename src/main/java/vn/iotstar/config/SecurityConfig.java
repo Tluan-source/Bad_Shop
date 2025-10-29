@@ -32,6 +32,7 @@ public class SecurityConfig {
                     "/products", "/stores", "/stores/**", "/categories", "/categories/**", 
                     "/verify-otp", "/forgot", "/reset", "/payment/**", "/checkout/**").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/vendor/register").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/vendor/**").hasAnyRole("VENDOR", "ADMIN")
                 .requestMatchers("/shipper/**").hasRole("SHIPPER")
                 .requestMatchers("/user/**", "/cart/**", "/favorites/**").hasAnyRole("USER", "ADMIN", "VENDOR", "SHIPPER")
