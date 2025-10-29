@@ -1,7 +1,9 @@
 package vn.iotstar.controller;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,8 +14,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 import lombok.RequiredArgsConstructor;
 import vn.iotstar.entity.Order;
+import vn.iotstar.entity.Payment;
+import vn.iotstar.entity.Product;
 import vn.iotstar.entity.User;
+import vn.iotstar.repository.PaymentRepository;
 import vn.iotstar.service.OrderService;
+import vn.iotstar.service.ProductService;
 import vn.iotstar.service.UserService;
 
 @Controller
@@ -23,6 +29,8 @@ public class OrderController {
     
     private final OrderService orderService;
     private final UserService userService;
+    private final ProductService productService;
+    private final PaymentRepository paymentRepository;
     
     /**
      * Xem danh sách đơn hàng của user
@@ -72,7 +80,28 @@ public class OrderController {
             return "redirect:/orders";
         }
         
+        // Lấy thông tin Payment để hiển thị phương thức thanh toán
+        Payment payment = paymentRepository.findByOrderId(orderId).orElse(null);
+        
+        // Lấy sản phẩm liên quan dựa trên các sản phẩm trong đơn hàng
+        // Lấy category từ sản phẩm đầu tiên trong đơn hàng
+        if (!order.getOrderItems().isEmpty()) {
+            Product firstProduct = order.getOrderItems().get(0).getProduct();
+            String categoryId = firstProduct.getCategory().getId();
+            
+            // Lấy các sản phẩm liên quan cùng category (tối đa 8 sản phẩm)
+            List<Product> relatedProducts = productService.findByCategoryId(categoryId, PageRequest.of(0, 8))
+                    .stream()
+                    // Loại bỏ các sản phẩm đã có trong đơn hàng
+                    .filter(p -> order.getOrderItems().stream()
+                            .noneMatch(item -> item.getProduct().getId().equals(p.getId())))
+                    .collect(Collectors.toList());
+            
+            model.addAttribute("relatedProducts", relatedProducts);
+        }
+        
         model.addAttribute("order", order);
+        model.addAttribute("payment", payment);
         
         return "user/order-detail";
     }

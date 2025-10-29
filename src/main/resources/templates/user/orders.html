@@ -147,12 +147,12 @@
                                         <div class="row mb-3">
                                              <div class="col-md-6">
                                                   <div class="mb-2">
-                                                       <i
-                                                            class="fas fa-store me-2 text-primary"
-                                                       ></i>
-                                                       <strong
+                                                       <i class="fas fa-store me-2 text-primary"></i>
+                                                       <a 
+                                                            th:href="@{/stores/{id}(id=${order.store.id})}" 
+                                                            class="text-decoration-none fw-bold"
                                                             th:text="${order.store.name}"
-                                                       ></strong>
+                                                       ></a>
                                                   </div>
                                                   <div>
                                                        <i
@@ -209,6 +209,18 @@
                                                             class="mb-1"
                                                             th:text="${item.product.name}"
                                                        ></h6>
+                                                       <!-- Store name with link -->
+                                                       <p class="mb-1">
+                                                            <small class="text-muted">
+                                                                 <i class="fas fa-store me-1"></i>
+                                                                 Cửa hàng: 
+                                                                 <a 
+                                                                      th:href="@{/stores/{id}(id=${item.product.store.id})}" 
+                                                                      class="text-decoration-none fw-semibold"
+                                                                      th:text="${item.product.store.name}"
+                                                                 ></a>
+                                                            </small>
+                                                       </p>
                                                        <!-- Product attributes -->
                                                        <p
                                                             class="text-muted mb-1"

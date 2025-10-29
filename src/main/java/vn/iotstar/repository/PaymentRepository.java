@@ -10,4 +10,5 @@ import vn.iotstar.entity.Payment;
 @Repository
 public interface PaymentRepository extends JpaRepository<Payment, String> {
     Optional<Payment> findByTransactionId(String transactionId);
+    Optional<Payment> findByOrderId(String orderId);
 }
