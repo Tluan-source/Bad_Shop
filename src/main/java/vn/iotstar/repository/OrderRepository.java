@@ -1,16 +1,17 @@
 package vn.iotstar.repository;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import vn.iotstar.entity.Order;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
+import vn.iotstar.entity.Order;
 
 /**
  * Repository for Order entity
@@ -77,6 +78,12 @@ public interface OrderRepository extends JpaRepository<Order, String> {
 
        // Find orders that have an associated shipment (assigned to shipper)
        List<Order> findByStoreIdAndShipmentIsNotNullOrderByCreatedAtDesc(String storeId);
+           // Get top selling products by store
+    @Query("SELECT p.id, p.name, p.sold, SUM(oi.total) as revenue, c.name " +
+           "FROM Product p JOIN p.orderItems oi JOIN oi.order o JOIN p.category c " +
+           "WHERE p.store.id = :storeId AND o.status = 'DELIVERED' " +
+           "GROUP BY p.id, p.name, p.sold, c.name ORDER BY p.sold DESC")
+    List<Object[]> findTopSellingByStore(@Param("storeId") String storeId, Pageable pageable);
     
     // 🚚 Shipper queries - Orders chờ nhận (PROCESSING, kể cả có/không có shipment)
     Page<Order> findByStatus(Order.OrderStatus status, Pageable pageable);
@@ -122,38 +129,5 @@ public interface OrderRepository extends JpaRepository<Order, String> {
             @Param("keyword") String keyword,
             Pageable pageable);
     
-    // Get top selling products by store
-    @Query("SELECT p.id, p.name, p.sold, SUM(oi.total) as revenue, c.name " +
-           "FROM Product p JOIN p.orderItems oi JOIN oi.order o JOIN p.category c " +
-           "WHERE p.store.id = :storeId AND o.status = 'DELIVERED' " +
-           "GROUP BY p.id, p.name, p.sold, c.name ORDER BY p.sold DESC")
-    List<Object[]> findTopSellingByStore(@Param("storeId") String storeId, Pageable pageable);
-    
-    // ============ SHIPPER METHODS ============
-    
-    // Find orders by status (for shipper to see PROCESSING orders)
-    Page<Order> findByStatus(Order.OrderStatus status, Pageable pageable);
-    
-    // Count orders by status
-    Long countByStatus(Order.OrderStatus status);
-    
-    // Find orders by status and date range
-    Page<Order> findByStatusAndCreatedAtBetween(
-        Order.OrderStatus status, 
-        LocalDateTime startDate, 
-        LocalDateTime endDate, 
-        Pageable pageable
-    );
-    
-    // Find orders by status and keyword (search by ID, address, phone, user name)
-    @Query("SELECT o FROM Order o WHERE o.status = :status " +
-           "AND (LOWER(o.id) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(o.address) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(o.phone) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    Page<Order> findByStatusAndKeyword(
-        @Param("status") Order.OrderStatus status,
-        @Param("keyword") String keyword,
-        Pageable pageable
-    );
+
 }
