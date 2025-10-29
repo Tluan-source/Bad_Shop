@@ -167,7 +167,10 @@ public class VendorProductServiceImpl implements VendorProductService {
         product.setPromotionalPrice(updateDTO.getPromotionalPrice());
         product.setQuantity(updateDTO.getQuantity());
         product.setCategory(category);
-        product.setIsSelling(updateDTO.getIsSelling());
+        // Only update isSelling if the DTO explicitly provided a value to avoid overwriting with null
+        if (updateDTO.getIsSelling() != null) {
+            product.setIsSelling(updateDTO.getIsSelling());
+        }
         product.setUpdatedAt(LocalDateTime.now());
         
         // Update images: priority order - newImages (upload to Cloudinary and merge with remaining existing) > listImages (keep existing remaining) > imageUrls (replace with new URLs)
@@ -235,8 +238,11 @@ public class VendorProductServiceImpl implements VendorProductService {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> ResourceNotFoundException.product(productId));
         
-        // Hard delete - xóa hoàn toàn khỏi database
-        productRepository.delete(product);
+        // Soft delete: mark product as not selling (dừng bán) instead of physical delete
+        // This preserves the record while removing it from active listings
+        product.setIsSelling(false);
+        product.setUpdatedAt(LocalDateTime.now());
+        productRepository.save(product);
     }
     
     @Override
@@ -247,7 +253,9 @@ public class VendorProductServiceImpl implements VendorProductService {
         Product product = productRepository.findById(productId)
             .orElseThrow(() -> ResourceNotFoundException.product(productId));
         
-        product.setIsSelling(!product.getIsSelling());
+        // Null-safe toggle: treat null as false (ngừng bán) and toggle to true
+        boolean currentlySelling = Boolean.TRUE.equals(product.getIsSelling());
+        product.setIsSelling(!currentlySelling);
         product.setUpdatedAt(LocalDateTime.now());
         
         productRepository.save(product);
@@ -328,8 +336,9 @@ public class VendorProductServiceImpl implements VendorProductService {
         dto.setPromotionalPrice(product.getPromotionalPrice());
         dto.setQuantity(product.getQuantity());
         dto.setSold(product.getSold());
-        dto.setIsActive(product.getIsActive());
-        dto.setIsSelling(product.getIsSelling());
+    dto.setIsActive(product.getIsActive());
+    // Treat null isSelling as false (Ngừng bán) so products with null are shown as not selling
+    dto.setIsSelling(Boolean.TRUE.equals(product.getIsSelling()));
         dto.setListImages(product.getListImages());
         dto.setStyleValueIds(product.getStyleValueIds());
         dto.setRating(product.getRating());
