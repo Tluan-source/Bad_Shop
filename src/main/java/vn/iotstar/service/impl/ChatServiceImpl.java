@@ -1,5 +1,8 @@
 package vn.iotstar.service.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -104,7 +107,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public List<ConversationDTO> getUserConversations(String userId) {
         List<Conversation> conversations = conversationRepository.findByUserIdOrderByLastMessageTimeDesc(userId);
-        
+
         return conversations.stream().map(conv -> {
             ConversationDTO dto = new ConversationDTO();
             dto.setId(conv.getId());
@@ -113,7 +116,20 @@ public class ChatServiceImpl implements ChatService {
             dto.setUserAvatar(conv.getUser().getAvatar());
             dto.setStoreId(conv.getStore().getId());
             dto.setStoreName(conv.getStore().getName());
-            dto.setStoreAvatar(conv.getStore().getFeaturedImages());
+
+            // Parse featuredImages JSON to get the first image URL
+            String featuredImages = conv.getStore().getFeaturedImages();
+            String storeAvatar = null;
+            if (featuredImages != null && !featuredImages.isEmpty()) {
+                try {
+                    List<String> images = new ObjectMapper().readValue(featuredImages, new TypeReference<List<String>>() {});
+                    storeAvatar = images.isEmpty() ? null : images.get(0); // Lấy ảnh đầu tiên
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+            }
+            dto.setStoreAvatar(storeAvatar);
+
             dto.setLastMessage(conv.getLastMessage());
             dto.setLastMessageTime(conv.getLastMessageTime());
             dto.setUnreadCount(conv.getUnreadCountUser());
@@ -125,7 +141,7 @@ public class ChatServiceImpl implements ChatService {
     @Override
     public List<ConversationDTO> getVendorConversations(String vendorId) {
         List<Conversation> conversations = conversationRepository.findByStore_Owner_IdOrderByLastMessageTimeDesc(vendorId);
-        
+
         return conversations.stream().map(conv -> {
             ConversationDTO dto = new ConversationDTO();
             dto.setId(conv.getId());
@@ -134,7 +150,20 @@ public class ChatServiceImpl implements ChatService {
             dto.setUserAvatar(conv.getUser().getAvatar());
             dto.setStoreId(conv.getStore().getId());
             dto.setStoreName(conv.getStore().getName());
-            dto.setStoreAvatar(conv.getStore().getFeaturedImages());
+
+            // Parse featuredImages JSON to get the first image URL
+            String featuredImages = conv.getStore().getFeaturedImages();
+            String storeAvatar = null;
+            if (featuredImages != null && !featuredImages.isEmpty()) {
+                try {
+                    List<String> images = new ObjectMapper().readValue(featuredImages, new TypeReference<List<String>>() {});
+                    storeAvatar = images.isEmpty() ? null : images.get(0); // Lấy ảnh đầu tiên
+                } catch (JsonProcessingException e) {
+                    e.printStackTrace();
+                }
+            }
+            dto.setStoreAvatar(storeAvatar);
+
             dto.setLastMessage(conv.getLastMessage());
             dto.setLastMessageTime(conv.getLastMessageTime());
             dto.setUnreadCount(conv.getUnreadCountVendor());

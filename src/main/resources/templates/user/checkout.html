@@ -103,7 +103,9 @@
                                                        onchange="loadDistricts()"
                                                        required
                                                   >
-                                                       <option value="">-- Chọn Tỉnh/Thành phố --</option>
+                                                       <option value="">
+                                                            -- Chọn Tỉnh/Thành phố --
+                                                       </option>
                                                        <option
                                                             th:each="prov : ${provinces}"
                                                             th:value="${prov.id}"
@@ -123,7 +125,9 @@
                                                        onchange="loadWards()"
                                                        required
                                                   >
-                                                       <option value="">-- Chọn Quận/Huyện --</option>
+                                                       <option value="">
+                                                            -- Chọn Quận/Huyện --
+                                                       </option>
                                                   </select>
                                              </div>
                                              <div class="col-md-4">
@@ -137,7 +141,9 @@
                                                        name="ward"
                                                        required
                                                   >
-                                                       <option value="">-- Chọn Phường/Xã --</option>
+                                                       <option value="">
+                                                            -- Chọn Phường/Xã --
+                                                       </option>
                                                   </select>
                                              </div>
                                         </div>
@@ -184,7 +190,6 @@
                               </div>
                               <div class="card-body">
                                    <div class="form-check mb-3">
-                                       
                                         <label class="form-check-label" for="cod">
                                              <i class="fas fa-money-bill-wave me-2"></i>Thanh toán
                                              khi nhận hàng (COD)
@@ -328,15 +333,16 @@
           <script src="/js/checkout.js"></script>
           <script>
                function loadDistricts() {
-                    const provinceId = document.getElementById('province').value;
+                    const provinceId = document.getElementById("province").value;
                     if (provinceId) {
                          fetch(`/api/districts?provinceId=${provinceId}`)
-                              .then(response => response.json())
-                              .then(data => {
-                                   const districtSelect = document.getElementById('district');
-                                   districtSelect.innerHTML = '<option value="">-- Chọn Quận/Huyện --</option>';
-                                   data.forEach(district => {
-                                        const option = document.createElement('option');
+                              .then((response) => response.json())
+                              .then((data) => {
+                                   const districtSelect = document.getElementById("district");
+                                   districtSelect.innerHTML =
+                                        '<option value="">-- Chọn Quận/Huyện --</option>';
+                                   data.forEach((district) => {
+                                        const option = document.createElement("option");
                                         option.value = district.id;
                                         option.textContent = district.name;
                                         districtSelect.appendChild(option);
@@ -346,15 +352,16 @@
                }
 
                function loadWards() {
-                    const districtId = document.getElementById('district').value;
+                    const districtId = document.getElementById("district").value;
                     if (districtId) {
                          fetch(`/api/wards?districtId=${districtId}`)
-                              .then(response => response.json())
-                              .then(data => {
-                                   const wardSelect = document.getElementById('ward');
-                                   wardSelect.innerHTML = '<option value="">-- Chọn Phường/Xã --</option>';
-                                   data.forEach(ward => {
-                                        const option = document.createElement('option');
+                              .then((response) => response.json())
+                              .then((data) => {
+                                   const wardSelect = document.getElementById("ward");
+                                   wardSelect.innerHTML =
+                                        '<option value="">-- Chọn Phường/Xã --</option>';
+                                   data.forEach((ward) => {
+                                        const option = document.createElement("option");
                                         option.value = ward.id;
                                         option.textContent = ward.name;
                                         wardSelect.appendChild(option);

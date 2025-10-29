@@ -1,13 +1,21 @@
 package vn.iotstar.controller;
 
-import lombok.RequiredArgsConstructor;
+import java.security.Principal;
+import java.util.List;
+
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import lombok.RequiredArgsConstructor;
 import vn.iotstar.dto.ChatMessageRequest;
 import vn.iotstar.dto.ConversationDTO;
 import vn.iotstar.dto.MessageDTO;
@@ -16,9 +24,6 @@ import vn.iotstar.entity.Message;
 import vn.iotstar.entity.User;
 import vn.iotstar.repository.UserRepository;
 import vn.iotstar.service.ChatService;
-
-import java.security.Principal;
-import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
