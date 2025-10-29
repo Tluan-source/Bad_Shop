@@ -39,6 +39,12 @@ public class Promotion {
     @Column(name = "min_order_amount", precision = 15, scale = 2)
     private BigDecimal minOrderAmount = BigDecimal.ZERO;
     
+    @Column(name = "quantity")
+    private Integer quantity = 0;
+    
+    @Column(name = "usage_count")
+    private Integer usageCount = 0;
+    
     @Column(name = "start_date")
     private LocalDateTime startDate;
     
@@ -96,7 +102,18 @@ public class Promotion {
     
     public boolean isAvailable() {
         if (isActive == null) return false;
-        return isActive && !isExpired() && !isNotStarted();
+        if (quantity == null || usageCount == null) return false;
+        return isActive && !isExpired() && !isNotStarted() && usageCount < quantity;
+    }
+    
+    public int getRemainingQuantity() {
+        if (quantity == null || usageCount == null) return 0;
+        return quantity - usageCount;
+    }
+    
+    public double getUsagePercentage() {
+        if (quantity == null || quantity == 0 || usageCount == null) return 0;
+        return (usageCount * 100.0) / quantity;
     }
     
     public Integer getProductCount() {

@@ -12,4 +12,8 @@ public class CheckoutRequest {
     private String ward;
     private String note;
     private String paymentMethod; // COD, BANK_TRANSFER, etc.
+    
+    // Discount fields
+    private String voucherCode;      // Mã voucher (toàn sàn)
+    private String promotionId;      // ID promotion của shop
 }

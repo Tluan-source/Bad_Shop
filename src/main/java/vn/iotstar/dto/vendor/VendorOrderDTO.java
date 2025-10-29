@@ -28,6 +28,15 @@ public class VendorOrderDTO {
     private BigDecimal amountToStore;
     private BigDecimal amountToGd;      // Commission
     private BigDecimal discountAmount;
+    
+    // Discount details
+    private BigDecimal promotionDiscount;
+    private BigDecimal voucherDiscount;
+    private String promotionId;
+    private String promotionName;
+    private String voucherId;
+    private String voucherCode;
+    
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     

@@ -156,6 +156,44 @@
                                     </tr>
                                 </tbody>
                                 <tfoot>
+                                    <!-- Subtotal before discounts -->
+                                    <tr>
+                                        <td colspan="3" class="text-end"><strong>Tạm tính:</strong></td>
+                                        <td class="text-end">
+                                            <span th:text="${order.totalAmount != null && order.promotionDiscount != null && order.voucherDiscount != null ? 
+                                                #numbers.formatDecimal(order.totalAmount + order.promotionDiscount + order.voucherDiscount, 0, 'COMMA', 0, 'POINT') : 
+                                                (order.totalAmount != null ? #numbers.formatDecimal(order.totalAmount, 0, 'COMMA', 0, 'POINT') : '0')}">0</span> VNĐ
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Promotion Discount (Shop) -->
+                                    <tr th:if="${order.promotionDiscount != null && order.promotionDiscount > 0}">
+                                        <td colspan="3" class="text-end">
+                                            <strong class="text-success">
+                                                <i class="fas fa-gift me-1"></i>Khuyến mãi shop:
+                                            </strong>
+                                            <br>
+                                            <small class="text-muted" th:text="${order.promotionName}">Promotion name</small>
+                                        </td>
+                                        <td class="text-end text-success">
+                                            <strong>-<span th:text="${#numbers.formatDecimal(order.promotionDiscount, 0, 'COMMA', 0, 'POINT')}">0</span> VNĐ</strong>
+                                        </td>
+                                    </tr>
+                                    
+                                    <!-- Voucher Discount (Platform) -->
+                                    <tr th:if="${order.voucherDiscount != null && order.voucherDiscount > 0}">
+                                        <td colspan="3" class="text-end">
+                                            <strong class="text-danger">
+                                                <i class="fas fa-ticket-alt me-1"></i>Voucher toàn sàn:
+                                            </strong>
+                                            <br>
+                                            <small class="text-muted" th:text="'Mã: ' + ${order.voucherCode}">Voucher code</small>
+                                        </td>
+                                        <td class="text-end text-danger">
+                                            <strong>-<span th:text="${#numbers.formatDecimal(order.voucherDiscount, 0, 'COMMA', 0, 'POINT')}">0</span> VNĐ</strong>
+                                        </td>
+                                    </tr>
+                                    
                                     <tr>
                                         <td colspan="3" class="text-end"><strong>Phí vận chuyển:</strong></td>
                                         <td class="text-end">

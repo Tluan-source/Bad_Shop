@@ -16,6 +16,8 @@ import vn.iotstar.entity.*;
 import vn.iotstar.repository.CartItemRepository;
 import vn.iotstar.repository.ProductRepository;
 import vn.iotstar.repository.StyleValueRepository;
+import vn.iotstar.repository.VoucherRepository;
+import vn.iotstar.repository.PromotionRepository;
 import vn.iotstar.service.CartService;
 import vn.iotstar.service.CheckoutService;
 import vn.iotstar.service.OrderService;
@@ -24,10 +26,12 @@ import vn.iotstar.service.VNPayService;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/checkout")
@@ -41,6 +45,8 @@ public class CheckoutController {
     private final CartItemRepository cartItemRepository;
     private final ProductRepository productRepository;
     private final StyleValueRepository styleValueRepository;
+    private final VoucherRepository voucherRepository;
+    private final PromotionRepository promotionRepository;
     private final ObjectMapper objectMapper;
     private final VNPayService vnPayService;
     
@@ -168,32 +174,58 @@ public class CheckoutController {
         String email = auth.getName();
         User user = userService.findByEmail(email).orElseThrow();
         
-        BigDecimal total = items.stream()
+        // Group items by store
+        Map<String, List<CheckoutItemDTO>> itemsByStore = items.stream()
+            .collect(Collectors.groupingBy(CheckoutItemDTO::getStoreId));
+        
+        // Calculate total for each store
+        Map<String, BigDecimal> totalsByStore = new HashMap<>();
+        for (Map.Entry<String, List<CheckoutItemDTO>> entry : itemsByStore.entrySet()) {
+            BigDecimal storeTotal = entry.getValue().stream()
+                .map(CheckoutItemDTO::getTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            totalsByStore.put(entry.getKey(), storeTotal);
+        }
+        
+        BigDecimal grandTotal = items.stream()
             .map(CheckoutItemDTO::getTotal)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        // Load available vouchers (toàn sàn)
+        List<Voucher> availableVouchers = voucherRepository.findAvailableVouchers(LocalDateTime.now());
+        
+        // Load promotions for each store
+        Map<String, List<Promotion>> promotionsByStore = new HashMap<>();
+        for (String storeId : itemsByStore.keySet()) {
+            List<Promotion> storePromotions = promotionRepository.findActivePromotions(storeId, LocalDateTime.now());
+            promotionsByStore.put(storeId, storePromotions);
+        }
         
         List<UserAddress> addresses = checkoutService.getUserAddresses();
         UserAddress defaultAddress = checkoutService.getDefaultAddress();
         
         model.addAttribute("items", items);
-        model.addAttribute("total", total);
+        model.addAttribute("itemsByStore", itemsByStore);
+        model.addAttribute("totalsByStore", totalsByStore);
+        model.addAttribute("total", grandTotal);
         model.addAttribute("user", user);
         model.addAttribute("addresses", addresses);
         model.addAttribute("defaultAddress", defaultAddress);
+        model.addAttribute("availableVouchers", availableVouchers);
+        model.addAttribute("promotionsByStore", promotionsByStore);
         
         return "user/checkout";
     }
     
     @PostMapping("/place-order")
     @ResponseBody
-    public Map<String, Object> placeOrder(@RequestBody CheckoutRequest request, 
+    public Map<String, Object> placeOrder(@RequestBody Map<String, Object> requestData, 
                                           Authentication auth,
                                           HttpServletRequest httpRequest) {
         Map<String, Object> response = new HashMap<>();
         
         try {
             System.out.println("=== PLACE ORDER DEBUG ===");
-            System.out.println("Auth: " + (auth != null ? auth.getName() : "null"));
             
             if (auth == null || !auth.isAuthenticated()) {
                 response.put("success", false);
@@ -202,7 +234,6 @@ public class CheckoutController {
             }
             
             List<CheckoutItemDTO> items = checkoutService.getCheckoutItems();
-            System.out.println("Checkout items: " + (items != null ? items.size() : "null"));
             
             if (items == null || items.isEmpty()) {
                 response.put("success", false);
@@ -213,11 +244,29 @@ public class CheckoutController {
             String email = auth.getName();
             User user = userService.findByEmail(email).orElseThrow();
             
-            System.out.println("Payment method: " + request.getPaymentMethod());
+            // Parse request data
+            CheckoutRequest request = new CheckoutRequest();
+            request.setFullName((String) requestData.get("fullName"));
+            request.setPhone((String) requestData.get("phone"));
+            request.setAddress((String) requestData.get("address"));
+            request.setProvince((String) requestData.get("province"));
+            request.setDistrict((String) requestData.get("district"));
+            request.setWard((String) requestData.get("ward"));
+            request.setNote((String) requestData.get("note"));
+            request.setPaymentMethod((String) requestData.get("paymentMethod"));
+            request.setVoucherCode((String) requestData.get("voucherCode"));
             
-            // Create order
-            Order order = orderService.createOrder(items, request, user.getId());
-            System.out.println("Order created: " + order.getId());
+            // Parse promotions by store
+            @SuppressWarnings("unchecked")
+            Map<String, String> promotionsByStore = (Map<String, String>) requestData.get("promotionsByStore");
+            
+            System.out.println("Payment method: " + request.getPaymentMethod());
+            System.out.println("Voucher: " + request.getVoucherCode());
+            System.out.println("Promotions: " + promotionsByStore);
+            
+            // Create orders (one per store)
+            List<Order> orders = orderService.createMultiStoreOrders(items, request, promotionsByStore, user.getId());
+            System.out.println("Created " + orders.size() + " orders");
             
             // Clear checkout items
             checkoutService.clearCheckoutItems();
@@ -226,49 +275,50 @@ public class CheckoutController {
             String paymentMethod = request.getPaymentMethod();
             
             if ("VNPAY".equalsIgnoreCase(paymentMethod)) {
-                System.out.println("=== VNPAY PAYMENT PROCESSING ===");
-                System.out.println("Order ID: " + order.getId());
-                System.out.println("Amount: " + order.getAmountFromUser());
+                // Calculate total amount from all orders
+                BigDecimal totalAmount = orders.stream()
+                    .map(Order::getAmountFromUser)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
                 
-                // Generate VNPay payment URL
-                String orderInfo = "Thanh toan don hang " + order.getId();
-                System.out.println("Order Info: " + orderInfo);
+                String orderIds = orders.stream()
+                    .map(Order::getId)
+                    .reduce((a, b) -> a + "," + b)
+                    .orElse("");
+                
+                String orderInfo = "Thanh toan " + orders.size() + " don hang";
                 
                 String paymentUrl = vnPayService.createPaymentUrl(
-                    order.getAmountFromUser(),
+                    totalAmount,
                     orderInfo,
-                    order.getId(),
+                    orderIds,
                     httpRequest
                 );
-                
-                System.out.println("Generated VNPay URL: " + paymentUrl);
                 
                 if (paymentUrl != null && !paymentUrl.isEmpty()) {
                     response.put("success", true);
                     response.put("paymentMethod", "VNPAY");
                     response.put("paymentUrl", paymentUrl);
-                    response.put("orderId", order.getId());
-                    System.out.println("VNPay payment URL created successfully");
+                    response.put("orderIds", orderIds);
                 } else {
-                    System.out.println("ERROR: VNPay URL is null or empty");
                     response.put("success", false);
-                    response.put("message", "Không thể tạo liên kết thanh toán VNPay");
+                    response.put("message", "Không thể tạo link thanh toán VNPay");
                 }
             } else {
-                // COD or other payment methods
+                // COD payment
                 response.put("success", true);
-                response.put("message", "Đặt hàng thành công");
-                response.put("orderId", order.getId());
                 response.put("paymentMethod", "COD");
+                response.put("orderId", orders.get(0).getId());
+                response.put("message", "Đặt hàng thành công! Đã tạo " + orders.size() + " đơn hàng.");
             }
             
-            return response;
-            
         } catch (Exception e) {
+            System.err.println("Place order error: " + e.getMessage());
+            e.printStackTrace();
             response.put("success", false);
-            response.put("message", "Lỗi: " + e.getMessage());
-            return response;
+            response.put("message", "Có lỗi xảy ra: " + e.getMessage());
         }
+        
+        return response;
     }
     
     @GetMapping("/success")
