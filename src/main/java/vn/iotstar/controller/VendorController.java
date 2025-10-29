@@ -106,6 +106,60 @@ public class VendorController {
     private PromotionRepository promotionRepository;
     
     // ========================================
+    // VENDOR REGISTRATION (for USER role)
+    // ========================================
+    
+    @GetMapping("/register")
+    public String showRegistrationForm(Model model, Authentication auth) {
+        User user = userService.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        // Check if user already has a store
+        if (vendorRegistrationService.hasPendingRegistration(user.getId())) {
+            model.addAttribute("hasPending", true);
+            model.addAttribute("message", "Bạn đã có yêu cầu đăng ký vendor đang chờ admin phê duyệt.");
+            return "vendor/register";
+        }
+        
+        model.addAttribute("storeRegistration", new StoreRegistrationDTO());
+        model.addAttribute("hasPending", false);
+        return "vendor/register";
+    }
+    
+    @PostMapping("/register")
+    public String registerVendor(@Valid @ModelAttribute("storeRegistration") StoreRegistrationDTO registrationDTO,
+                                 BindingResult result,
+                                 @RequestParam(value = "logoFile", required = false) MultipartFile logoFile,
+                                 @RequestParam(value = "licenseFile", required = false) MultipartFile licenseFile,
+                                 Authentication auth,
+                                 RedirectAttributes redirectAttributes,
+                                 Model model) {
+        if (result.hasErrors()) {
+            model.addAttribute("hasPending", false);
+            return "vendor/register";
+        }
+        
+        try {
+            User user = userService.findByEmail(auth.getName())
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+            
+            // Register vendor - creates store but keeps user as USER role (waiting for admin approval)
+            String storeId = vendorRegistrationService.registerVendor(user, registrationDTO, logoFile, licenseFile);
+            
+            redirectAttributes.addFlashAttribute("success", 
+                "Đăng ký vendor thành công! Yêu cầu của bạn đang chờ admin phê duyệt. " +
+                "Bạn sẽ nhận được thông báo qua email khi được duyệt.");
+            
+            return "redirect:/user/profile";
+            
+        } catch (Exception e) {
+            model.addAttribute("error", "Lỗi: " + e.getMessage());
+            model.addAttribute("hasPending", false);
+            return "vendor/register";
+        }
+    }
+    
+    // ========================================
     // DASHBOARD
     // ========================================
     
@@ -635,62 +689,5 @@ public class VendorController {
         }
         
         return "redirect:/vendor/orders/" + id;
-    }
-    
-    // ========================================
-    // VENDOR REGISTRATION (for non-vendors)
-    // ========================================
-    
-    @GetMapping("/register")
-    public String registerForm(Model model, Authentication auth) {
-        User user = userService.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        // Check if already vendor
-        if (user.getRole() == User.UserRole.VENDOR) {
-            return "redirect:/vendor/dashboard";
-        }
-        
-        // Check if has pending registration
-        if (vendorRegistrationService.hasPendingRegistration(user.getId())) {
-            model.addAttribute("hasPending", true);
-            model.addAttribute("message", "Bạn đã đăng ký. Vui lòng đợi admin phê duyệt.");
-        }
-        
-        model.addAttribute("storeRegistration", new StoreRegistrationDTO());
-        
-        return "vendor/register";
-    }
-    
-    @PostMapping("/register")
-    public String registerStore(@Valid @ModelAttribute("storeRegistration") StoreRegistrationDTO storeDTO,
-                               BindingResult result,
-                               @RequestParam(required = false) MultipartFile logoFile,
-                               @RequestParam(required = false) MultipartFile licenseFile,
-                               Authentication auth,
-                               RedirectAttributes redirectAttributes,
-                               Model model) {
-        
-        if (result.hasErrors()) {
-            return "vendor/register";
-        }
-        
-        User user = userService.findByEmail(auth.getName())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        
-        try {
-            // Register vendor
-            String storeId = vendorRegistrationService.registerVendor(user, storeDTO, logoFile, licenseFile);
-            
-            redirectAttributes.addFlashAttribute("success", 
-                "Đăng ký thành công! Cửa hàng của bạn đang chờ admin phê duyệt. " +
-                "Bạn sẽ nhận được email thông báo khi được duyệt.");
-            
-            return "redirect:/";
-            
-        } catch (Exception e) {
-            model.addAttribute("error", "Lỗi: " + e.getMessage());
-            return "vendor/register";
-        }
     }
 }

@@ -97,6 +97,10 @@ public class AdminController {
         model.addAttribute("shippedCount", stats.get("shippedCount"));
         model.addAttribute("deliveredToday", stats.get("deliveredToday"));
         
+        // Get pending vendor registrations count
+        long pendingVendors = adminService.countPendingVendorRegistrations();
+        model.addAttribute("pendingVendors", pendingVendors);
+        
         // Get recent orders
         List<Order> recentOrders = adminService.getRecentOrders();
         model.addAttribute("recentOrders", recentOrders);
@@ -716,6 +720,100 @@ public class AdminController {
         return "admin/user-details";
     }
     
+    /**
+     * Toggle user status (ACTIVE/INACTIVE)
+     */
+    @PostMapping("/users/{id}/toggle-status")
+    public String toggleUserStatus(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        try {
+            Optional<User> userOpt = userRepository.findById(id);
+            if (!userOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng!");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/users";
+            }
+            
+            User user = userOpt.get();
+            
+            // Toggle between ACTIVE and INACTIVE (không thay đổi nếu là BANNED)
+            if (user.getStatus() == User.UserStatus.BANNED) {
+                redirectAttributes.addFlashAttribute("message", "Không thể thay đổi trạng thái của tài khoản đã bị cấm!");
+                redirectAttributes.addFlashAttribute("messageType", "warning");
+                return "redirect:/admin/users";
+            }
+            
+            if (user.getStatus() == User.UserStatus.ACTIVE) {
+                user.setStatus(User.UserStatus.INACTIVE);
+                redirectAttributes.addFlashAttribute("message", "Đã khóa tài khoản người dùng!");
+            } else {
+                user.setStatus(User.UserStatus.ACTIVE);
+                redirectAttributes.addFlashAttribute("message", "Đã mở khóa tài khoản người dùng!");
+            }
+            
+            userRepository.save(user);
+            redirectAttributes.addFlashAttribute("messageType", "success");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+        
+        return "redirect:/admin/users";
+    }
+    
+    /**
+     * Delete user
+     */
+    @PostMapping("/users/{id}/delete")
+    public String deleteUser(@PathVariable String id, RedirectAttributes redirectAttributes, Authentication authentication) {
+        try {
+            Optional<User> userOpt = userRepository.findById(id);
+            if (!userOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng!");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/users";
+            }
+            
+            User user = userOpt.get();
+            
+            // Không cho phép xóa chính mình
+            String currentUserEmail = authentication.getName();
+            if (user.getEmail().equals(currentUserEmail)) {
+                redirectAttributes.addFlashAttribute("message", "Không thể xóa tài khoản của chính bạn!");
+                redirectAttributes.addFlashAttribute("messageType", "warning");
+                return "redirect:/admin/users";
+            }
+            
+            // Kiểm tra xem user có cửa hàng không
+            if (user.getStores() != null && !user.getStores().isEmpty()) {
+                redirectAttributes.addFlashAttribute("message", 
+                    "Không thể xóa người dùng đang sở hữu " + user.getStores().size() + " cửa hàng! Hãy xóa cửa hàng trước.");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/users";
+            }
+            
+            // Kiểm tra xem user có đơn hàng không
+            if (user.getOrders() != null && !user.getOrders().isEmpty()) {
+                redirectAttributes.addFlashAttribute("message", 
+                    "Không thể xóa người dùng đã có " + user.getOrders().size() + " đơn hàng! Hãy vô hiệu hóa tài khoản thay vì xóa.");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/users";
+            }
+            
+            String userName = user.getFullName();
+            userRepository.deleteById(id);
+            
+            redirectAttributes.addFlashAttribute("message", "Đã xóa người dùng " + userName + " thành công!");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Lỗi khi xóa người dùng: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+        
+        return "redirect:/admin/users";
+    }
+    
     // ==================== STORE CRUD ====================
     
     /**
@@ -1119,6 +1217,23 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("messageType", "danger");
         }
         return "redirect:/admin/stores/" + storeId + "/details";
+    }
+    
+    // ==================== VENDOR REGISTRATIONS MANAGEMENT ====================
+    
+    /**
+     * View all pending vendor registrations
+     */
+    @GetMapping("/vendor-registrations")
+    public String vendorRegistrations(Model model, Authentication authentication) {
+        model.addAttribute("username", authentication.getName());
+        
+        // Get pending vendor registrations (stores with isActive = false)
+        List<Store> pendingStores = adminService.getPendingVendorRegistrations();
+        model.addAttribute("pendingStores", pendingStores);
+        model.addAttribute("totalPending", pendingStores.size());
+        
+        return "admin/vendor-registrations";
     }
     
     // ==================== SHIPPING PROVIDER CRUD ====================
