@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import vn.iotstar.entity.Product;
@@ -70,5 +71,13 @@ public class ProductService {
 
     public List<Product> getProductsByCategory(String categoryId) {
         return productRepository.findByCategoryIdAndIsActiveTrueAndIsSellingTrue(categoryId);
+    }
+    
+    public List<Product> findByCategoryId(String categoryId, Pageable pageable) {
+        return productRepository.findByCategoryIdAndIsActiveTrueAndIsSellingTrue(categoryId)
+                .stream()
+                .skip(pageable.getOffset())
+                .limit(pageable.getPageSize())
+                .collect(Collectors.toList());
     }
 }

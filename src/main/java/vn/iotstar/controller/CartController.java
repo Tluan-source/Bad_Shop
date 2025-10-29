@@ -39,7 +39,15 @@ public class CartController {
         List<CartItem> cartItems = cartService.getCartItems();
         BigDecimal cartTotal = cartService.getCartTotal();
         
+        // Group cart items by store
+        Map<String, List<CartItem>> itemsByStore = new java.util.LinkedHashMap<>();
+        for (CartItem item : cartItems) {
+            String storeId = item.getProduct().getStore().getId();
+            itemsByStore.computeIfAbsent(storeId, k -> new java.util.ArrayList<>()).add(item);
+        }
+        
         model.addAttribute("cartItems", cartItems);
+        model.addAttribute("itemsByStore", itemsByStore);
         model.addAttribute("cartTotal", cartTotal);
         
         return "user/cart";
