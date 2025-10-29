@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/head :: head}">
+    <title>Chat - Vendor Dashboard</title>
+</head>
+<body>
+    <div th:replace="~{fragments/header :: header}"></div>
+    
+    <link rel="stylesheet" th:href="@{/css/vendor-style.css}" />
+    <style>
+        .chat-container {
+            height: calc(100vh - 150px);
+            display: flex;
+            background: #f8f9fa;
+        }
+        
+        .conversations-list {
+            width: 350px;
+            border-right: 1px solid #dee2e6;
+            background: white;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .conversations-header {
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+            background: #fff;
+        }
+        
+        .conversations-body {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .conversation-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+        }
+        
+        .conversation-item:hover {
+            background: #f8f9fa;
+        }
+        
+        .conversation-item.active {
+            background: #e7f3ff;
+            border-left: 3px solid #0d6efd;
+        }
+        
+        .conversation-avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #28a745;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .conversation-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .conversation-name {
+            font-weight: 600;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .conversation-preview {
+            font-size: 0.875rem;
+            color: #6c757d;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .conversation-time {
+            font-size: 0.75rem;
+            color: #adb5bd;
+            margin-left: 8px;
+        }
+        
+        .unread-badge {
+            background: #dc3545;
+            color: white;
+            border-radius: 12px;
+            padding: 2px 8px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+        
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+            background: white;
+            display: flex;
+            align-items: center;
+        }
+        
+        .chat-header-avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #28a745;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 12px;
+        }
+        
+        .chat-header-info h5 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+        
+        .chat-header-info small {
+            color: #6c757d;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        
+        .message-group {
+            margin-bottom: 20px;
+        }
+        
+        .message {
+            display: flex;
+            margin-bottom: 12px;
+        }
+        
+        .message.sent {
+            justify-content: flex-end;
+        }
+        
+        .message-content {
+            max-width: 60%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            word-wrap: break-word;
+        }
+        
+        .message.received .message-content {
+            background: white;
+            border: 1px solid #e9ecef;
+        }
+        
+        .message.sent .message-content {
+            background: #28a745;
+            color: white;
+        }
+        
+        .message-time {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-top: 4px;
+        }
+        
+        .message.sent .message-time {
+            color: rgba(255,255,255,0.7);
+            text-align: right;
+        }
+        
+        .chat-input {
+            padding: 20px;
+            border-top: 1px solid #dee2e6;
+            background: white;
+        }
+        
+        .chat-input-form {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .chat-input-form input {
+            flex: 1;
+            border-radius: 24px;
+            padding: 12px 20px;
+            border: 1px solid #dee2e6;
+        }
+        
+        .chat-input-form button {
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .empty-state {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #adb5bd;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+        
+        @media (max-width: 768px) {
+            .conversations-list {
+                width: 100%;
+                position: absolute;
+                z-index: 10;
+                height: 100%;
+            }
+            
+            .conversations-list.hide-mobile {
+                display: none;
+            }
+            
+            .chat-main {
+                width: 100%;
+            }
+        }
+    </style>
+
+    <div class="container-fluid mt-4">
+        <div class="row">
+            <!-- Sidebar -->
+            <div th:replace="~{vendor/fragments/sidebar :: sidebar('chat')}"></div>
+
+            <!-- Main content -->
+            <div class="col-md-10">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-comments"></i> Tin nhắn</h2>
+                </div>
+
+                <div class="card">
+                    <div class="chat-container">
+                        <!-- Conversations List -->
+                        <div class="conversations-list" id="conversationsList">
+                            <div class="conversations-header">
+                                <h5 class="mb-0">Tin nhắn</h5>
+                                <small class="text-muted">
+                                    <span th:text="${conversations.size()}">0</span> cuộc hội thoại
+                                </small>
+                            </div>
+                            <div class="conversations-body">
+                                <div th:if="${conversations.isEmpty()}" class="text-center p-4">
+                                    <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                    <p class="text-muted">Chưa có tin nhắn nào</p>
+                                </div>
+                                <div th:each="conv : ${conversations}" 
+                                     class="conversation-item" 
+                                     th:classappend="${convStat.first} ? 'active' : ''"
+                                     th:data-conversation-id="${conv.id}"
+                                     th:data-user-id="${conv.userId}"
+                                     th:data-user-name="${conv.userName}"
+                                     onclick="loadConversation(this)">
+                                    <div class="conversation-avatar" th:text="${conv.userName.substring(0,1).toUpperCase()}">U</div>
+                                    <div class="conversation-info">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div class="conversation-name" th:text="${conv.userName}">User Name</div>
+                                            <div class="conversation-time" th:if="${conv.lastMessageTime != null}" 
+                                                 th:text="${#temporals.format(conv.lastMessageTime, 'HH:mm')}">1 phút</div>
+                                        </div>
+                                        <div class="conversation-preview" th:text="${conv.lastMessage != null ? conv.lastMessage : 'Bắt đầu cuộc hội thoại'}">Last message...</div>
+                                    </div>
+                                    <span th:if="${conv.unreadCount > 0}" class="unread-badge" th:text="${conv.unreadCount}">1</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Main -->
+                        <div class="chat-main" id="chatMain">
+                            <div th:if="${conversations.isEmpty()}" class="empty-state">
+                                <i class="fas fa-comments"></i>
+                                <h5>Chưa có tin nhắn</h5>
+                                <p>Khách hàng sẽ liên hệ với bạn qua đây</p>
+                            </div>
+                            
+                            <div th:unless="${conversations.isEmpty()}" style="display: flex; flex-direction: column; height: 100%;">
+                                <!-- Chat Header -->
+                                <div class="chat-header" id="chatHeader">
+                                    <div class="chat-header-avatar" id="chatAvatar">U</div>
+                                    <div class="chat-header-info">
+                                        <h5 id="chatUserName">Chọn cuộc hội thoại</h5>
+                                        <small id="chatUserStatus">Online</small>
+                                    </div>
+                                </div>
+
+                                <!-- Messages -->
+                                <div class="chat-messages" id="chatMessages">
+                                    <!-- Messages will be loaded here -->
+                                </div>
+
+                                <!-- Input -->
+                                <div class="chat-input">
+                                    <form class="chat-input-form" id="messageForm" onsubmit="sendMessage(event)">
+                                        <input type="text" 
+                                               id="messageInput" 
+                                               class="form-control" 
+                                               placeholder="Nhập tin nhắn..." 
+                                               required
+                                               autocomplete="off">
+                                        <button type="submit" class="btn btn-success">
+                                            <i class="fas fa-paper-plane"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <!-- WebSocket and Chat JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script th:inline="javascript">
+        let stompClient = null;
+        let currentConversationId = null;
+        let currentUserId = null;
+        let currentUserName = '';
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            connectWebSocket();
+            
+            // Load first conversation if exists
+            const firstConv = document.querySelector('.conversation-item');
+            if (firstConv) {
+                loadConversation(firstConv);
+            }
+        });
+
+        function connectWebSocket() {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function(frame) {
+                console.log('Connected to WebSocket');
+                
+                // Subscribe to personal messages
+                stompClient.subscribe('/user/queue/messages', function(message) {
+                    const msg = JSON.parse(message.body);
+                    handleIncomingMessage(msg);
+                });
+            }, function(error) {
+                console.error('WebSocket error:', error);
+                setTimeout(connectWebSocket, 5000); // Retry after 5 seconds
+            });
+        }
+
+        function loadConversation(element) {
+            // Update active state
+            document.querySelectorAll('.conversation-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            element.classList.add('active');
+
+            // Get conversation data
+            currentConversationId = element.dataset.conversationId;
+            currentUserId = element.dataset.userId;
+            currentUserName = element.dataset.userName;
+
+            // Update header
+            document.getElementById('chatUserName').textContent = currentUserName;
+            document.getElementById('chatAvatar').textContent = currentUserName.charAt(0).toUpperCase();
+
+            // Clear unread badge
+            const badge = element.querySelector('.unread-badge');
+            if (badge) {
+                badge.remove();
+            }
+
+            // Load messages
+            loadMessages();
+        }
+
+        function loadMessages() {
+            if (!currentConversationId) return;
+
+            fetch(`/api/chat/messages/${currentConversationId}`)
+                .then(response => response.json())
+                .then(messages => {
+                    displayMessages(messages);
+                })
+                .catch(error => {
+                    console.error('Error loading messages:', error);
+                });
+        }
+
+        function displayMessages(messages) {
+            const container = document.getElementById('chatMessages');
+            container.innerHTML = '';
+
+            messages.forEach(msg => {
+                appendMessage(msg);
+            });
+
+            scrollToBottom();
+        }
+
+        function appendMessage(msg) {
+            const container = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${msg.senderType === 'VENDOR' ? 'sent' : 'received'}`;
+            
+            const time = formatTime(msg.createdAt);
+            
+            messageDiv.innerHTML = `
+                <div class="message-content">
+                    <div>${escapeHtml(msg.content)}</div>
+                    <div class="message-time">${time}</div>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+        }
+
+        function sendMessage(event) {
+            event.preventDefault();
+            
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+            
+            if (!content || !currentConversationId) return;
+
+            const message = {
+                conversationId: currentConversationId,
+                content: content,
+                senderType: 'VENDOR'
+            };
+
+            if (stompClient && stompClient.connected) {
+                stompClient.send('/app/chat.send', {}, JSON.stringify(message));
+                input.value = '';
+                
+                // Optimistically add message to UI
+                appendMessage({
+                    content: content,
+                    senderType: 'VENDOR',
+                    createdAt: new Date().toISOString()
+                });
+                scrollToBottom();
+            } else {
+                alert('Không thể gửi tin nhắn. Vui lòng thử lại.');
+                connectWebSocket();
+            }
+        }
+
+        function handleIncomingMessage(msg) {
+            // Update conversation list
+            if (msg.conversationId == currentConversationId) {
+                appendMessage(msg);
+                scrollToBottom();
+            } else {
+                // Show notification or update unread count
+                updateConversationPreview(msg);
+            }
+        }
+
+        function updateConversationPreview(msg) {
+            const convItem = document.querySelector(`[data-conversation-id="${msg.conversationId}"]`);
+            if (convItem) {
+                const preview = convItem.querySelector('.conversation-preview');
+                if (preview) {
+                    preview.textContent = msg.content;
+                }
+                
+                // Add unread badge
+                let badge = convItem.querySelector('.unread-badge');
+                if (!badge) {
+                    badge = document.createElement('span');
+                    badge.className = 'unread-badge';
+                    badge.textContent = '1';
+                    convItem.appendChild(badge);
+                } else {
+                    badge.textContent = parseInt(badge.textContent) + 1;
+                }
+                
+                // Move conversation to top
+                const parent = convItem.parentNode;
+                parent.insertBefore(convItem, parent.firstChild);
+            }
+        }
+
+        function scrollToBottom() {
+            const container = document.getElementById('chatMessages');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function formatTime(timestamp) {
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            
+            if (diffMins < 1) return 'Vừa xong';
+            if (diffMins < 60) return `${diffMins} phút trước`;
+            
+            const diffHours = Math.floor(diffMins / 60);
+            if (diffHours < 24) return `${diffHours} giờ trước`;
+            
+            return date.toLocaleDateString('vi-VN', { 
+                day: '2-digit', 
+                month: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function escapeHtml(text) {
+            const map = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            };
+            return text.replace(/[&<>"']/g, m => map[m]);
+        }
+    </script>
+</body>
+</html>

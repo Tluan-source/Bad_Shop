@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head>
+    <title>Vendor Header with Sidebar</title>
+    <link rel="stylesheet" th:href="@{/css/vendor-style.css}" />
+    <style>
+        .vendor-sidebar {
+            position: fixed;
+            left: 0;
+            top: 56px;
+            width: 250px;
+            height: calc(100vh - 56px);
+            background-color: #f8f9fa;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+        }
+        .vendor-sidebar.collapsed {
+            transform: translateX(-250px);
+        }
+        .vendor-content {
+            margin-left: 250px;
+            transition: margin-left 0.3s ease;
+            min-height: calc(100vh - 56px);
+        }
+        .vendor-content.expanded {
+            margin-left: 0;
+        }
+        .sidebar-toggle {
+            position: fixed;
+            left: 260px;
+            top: 70px;
+            z-index: 1001;
+            transition: left 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .sidebar-toggle.collapsed {
+            left: 10px;
+        }
+        .sidebar-menu .nav-link {
+            color: #495057;
+            padding: 12px 20px;
+            border-radius: 0;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+        .sidebar-menu .nav-link:hover {
+            background-color: #e9ecef;
+            color: #28a745;
+        }
+        .sidebar-menu .nav-link.active {
+            background-color: #28a745;
+            color: white;
+        }
+        .sidebar-menu .nav-link i {
+            width: 20px;
+            margin-right: 10px;
+            text-align: center;
+        }
+        .sidebar-menu hr {
+            margin: 0.5rem 0;
+            border-color: #dee2e6;
+        }
+        .sidebar-menu .px-3 {
+            background-color: #e9ecef;
+        }
+    </style>
+</head>
+<body>
+<header th:fragment="vendor-header">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+        <div class="container-fluid">
+            <a class="navbar-brand d-flex align-items-center" th:href="@{/vendor/dashboard}">
+                <i class="fas fa-store fa-lg me-2"></i>
+                <span><strong>VENDOR</strong> Dashboard</span>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarVendor">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div class="collapse navbar-collapse" id="navbarVendor">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/}">
+                            <i class="fas fa-home me-1"></i>Về trang chủ
+                        </a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="vendorDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-tie me-2"></i>
+                            <span sec:authentication="name">Vendor</span>
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="vendorDropdown" style="min-width: 280px;">
+                            <li class="px-3 py-2">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="rounded-circle bg-light p-2 me-2">
+                                        <i class="fas fa-store fa-2x text-success"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-0 fw-bold" sec:authentication="name">Vendor</h6>
+                                        <small class="text-muted">Nhà cung cấp</small>
+                                    </div>
+                                </div>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <a class="dropdown-item py-2" th:href="@{/vendor/profile}">
+                                    <i class="fas fa-id-card me-2 text-primary"></i>
+                                    <span>Xem thông tin chi tiết</span>
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item py-2" th:href="@{/vendor/settings}">
+                                    <i class="fas fa-cog me-2 text-secondary"></i>
+                                    <span>Cài đặt</span>
+                                </a>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form th:action="@{/logout}" method="post" class="px-2">
+                                    <button type="submit" class="dropdown-item py-2 text-danger">
+                                        <i class="fas fa-sign-out-alt me-2"></i>
+                                        <span>Đăng xuất</span>
+                                    </button>
+                                </form>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Sidebar -->
+    <div class="vendor-sidebar" id="vendorSidebar">
+        <div class="sidebar-menu">
+            <div class="p-3 border-bottom">
+                <h6 class="mb-0 text-success"><i class="fas fa-bars me-2"></i>Menu Quản Lý</h6>
+            </div>
+            <ul class="nav flex-column">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/vendor/dashboard}">
+                        <i class="fas fa-tachometer-alt"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/vendor/store}">
+                        <i class="fas fa-store-alt"></i>Cửa hàng của tôi
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/vendor/products}">
+                        <i class="fas fa-box-open"></i>Sản phẩm
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/vendor/orders}">
+                        <i class="fas fa-shopping-bag"></i>Đơn hàng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/vendor/revenue}">
+                        <i class="fas fa-dollar-sign"></i>Doanh thu
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/vendor/wallet}">
+                        <i class="fas fa-wallet"></i>Ví tiền
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <hr class="my-2">
+                    <div class="px-3 py-2">
+                        <small class="text-muted"><i class="fas fa-comments me-1"></i>TIN NHẮN</small>
+                    </div>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/vendor/chat}">
+                        <i class="fas fa-store text-success"></i>Tin nhắn khách hàng
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/user/chat}">
+                        <i class="fas fa-shopping-cart text-primary"></i>Chat với Shop khác
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Sidebar Toggle Button -->
+    <button class="btn btn-success btn-sm sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">
+        <i class="fas fa-bars"></i>
+    </button>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('vendorSidebar');
+            const toggle = document.getElementById('sidebarToggle');
+            const contents = document.querySelectorAll('.vendor-content');
+            
+            sidebar.classList.toggle('collapsed');
+            toggle.classList.toggle('collapsed');
+            contents.forEach(content => content.classList.toggle('expanded'));
+            
+            // Save state to localStorage
+            const isCollapsed = sidebar.classList.contains('collapsed');
+            localStorage.setItem('vendorSidebarCollapsed', isCollapsed);
+        }
+
+        // Restore sidebar state on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const isCollapsed = localStorage.getItem('vendorSidebarCollapsed') === 'true';
+            if (isCollapsed) {
+                toggleSidebar();
+            }
+            
+            // Highlight active menu item
+            const currentPath = window.location.pathname;
+            document.querySelectorAll('.sidebar-menu .nav-link').forEach(link => {
+                if (link.getAttribute('href') === currentPath) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</header>
+</body>
+</html>

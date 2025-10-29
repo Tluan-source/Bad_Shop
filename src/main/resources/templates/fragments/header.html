@@ -139,7 +139,11 @@
                                                        hàng của tôi
                                                   </a>
                                              </li>
-                                             
+                                             <li sec:authorize="!hasRole('ADMIN')">
+                                                  <a class="dropdown-item" th:href="@{/user/chat}">
+                                                       <i class="fas fa-comments me-2"></i>Tin nhắn
+                                                  </a>
+                                             </li>
                                              <li><hr class="dropdown-divider" /></li>
                                              
                                              <!-- Vendor/Shop Management Menu -->
