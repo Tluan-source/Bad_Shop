@@ -1,10 +1,13 @@
-﻿<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
      <head th:replace="~{fragments/head :: head}">
           <title>Sản phẩm yêu thích - Badminton Marketplace</title>
      </head>
      <body>
-          <div th:replace="~{fragments/header :: header}"></div>
+          <th:block th:replace="~{fragments/header :: header}"></th:block>
 
           <!-- Breadcrumb -->
           <section class="breadcrumb-section py-3 bg-light">
@@ -53,9 +56,9 @@
                               <div class="card h-100 shadow-sm position-relative">
                                    <!-- Remove Favorite Button -->
                                    <button
-                                        class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2"
+                                        class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 remove-favorite-btn"
                                         style="z-index: 10"
-                                        th:onclick="'removeFavorite(\'' + ${favorite.product.id} + '\')'"
+                                        th:attr="data-product-id=${favorite.product.id}"
                                    >
                                         <i class="fas fa-times"></i>
                                    </button>
@@ -158,15 +161,15 @@
                                              <div class="btn-group" role="group">
                                                   <button
                                                        type="button"
-                                                       class="btn btn-outline-success btn-sm"
-                                                       th:onclick="'addToCart(\'' + ${favorite.product.id} + '\')'"
+                                                       class="btn btn-outline-success btn-sm add-to-cart-btn"
+                                                       th:attr="data-product-id=${favorite.product.id}"
                                                   >
                                                        <i class="fas fa-cart-plus me-1"></i>Giỏ hàng
                                                   </button>
                                                   <button
                                                        type="button"
-                                                       class="btn btn-success btn-sm"
-                                                       th:onclick="'buyNow(\'' + ${favorite.product.id} + '\')'"
+                                                       class="btn btn-success btn-sm buy-now-btn"
+                                                       th:attr="data-product-id=${favorite.product.id}"
                                                   >
                                                        <i class="fas fa-shopping-bag me-1"></i>Mua
                                                        ngay
@@ -192,7 +195,7 @@
                </div>
           </section>
 
-          <div th:replace="~{fragments/footer :: footer}"></div>
+          <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 
           <!-- Toast for notifications -->
           <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
@@ -263,15 +266,37 @@
                          });
                }
 
-               function addToCart(productId) {
-                    // Chuyển đến trang chi tiết để chọn thuộc tính
-                    window.location.href = `/products/${productId}`;
-               }
+               // Event listeners for buttons
+               document.addEventListener("DOMContentLoaded", () => {
+                    // Remove favorite button click event
+                    const removeFavoriteButtons = document.querySelectorAll(".remove-favorite-btn");
+                    removeFavoriteButtons.forEach((button) => {
+                         button.addEventListener("click", (e) => {
+                              const productId = e.currentTarget.getAttribute("data-product-id");
+                              removeFavorite(productId);
+                         });
+                    });
 
-               function buyNow(productId) {
-                    // Chuyển đến trang chi tiết để chọn thuộc tính trước khi mua
-                    window.location.href = `/products/${productId}`;
-               }
+                    // Add to cart button click event
+                    const addToCartButtons = document.querySelectorAll(".add-to-cart-btn");
+                    addToCartButtons.forEach((button) => {
+                         button.addEventListener("click", (e) => {
+                              const productId = e.currentTarget.getAttribute("data-product-id");
+                              // Chuyển đến trang chi tiết để chọn thuộc tính
+                              window.location.href = `/products/${productId}`;
+                         });
+                    });
+
+                    // Buy now button click event
+                    const buyNowButtons = document.querySelectorAll(".buy-now-btn");
+                    buyNowButtons.forEach((button) => {
+                         button.addEventListener("click", (e) => {
+                              const productId = e.currentTarget.getAttribute("data-product-id");
+                              // Chuyển đến trang chi tiết để chọn thuộc tính trước khi mua
+                              window.location.href = `/products/${productId}`;
+                         });
+                    });
+               });
           </script>
      </body>
 </html>

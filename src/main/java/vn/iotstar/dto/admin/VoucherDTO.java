@@ -70,4 +70,13 @@ public class VoucherDTO {
         voucher.setIsActive(this.isActive != null ? this.isActive : true);
         return voucher;
     }
+    
+    // Custom getter methods for template compatibility
+    public boolean isExpired() {
+        return this.isExpired != null && this.isExpired;
+    }
+    
+    public boolean isAvailable() {
+        return this.isAvailable != null && this.isAvailable;
+    }
 }

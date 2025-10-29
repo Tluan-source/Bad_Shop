@@ -1,16 +1,17 @@
 package vn.iotstar.repository;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import vn.iotstar.entity.Order;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
+import vn.iotstar.entity.Order;
 
 /**
  * Repository for Order entity
@@ -37,7 +38,8 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     Long countByStoreIdAndStatus(String storeId, Order.OrderStatus status);
     
     // Find orders by user
-    List<Order> findByUserIdOrderByCreatedAtDesc(String userId);
+    @Query("SELECT o FROM Order o WHERE o.user.id = :userId ORDER BY COALESCE(o.createdAt, o.updatedAt, CURRENT_TIMESTAMP) DESC")
+    List<Order> findByUserIdOrderByCreatedAtDesc(@Param("userId") String userId);
     
     // Find orders by date range
     @Query("SELECT o FROM Order o WHERE o.store.id = :storeId " +
@@ -77,11 +79,56 @@ public interface OrderRepository extends JpaRepository<Order, String> {
 
        // Find orders that have an associated shipment (assigned to shipper)
        List<Order> findByStoreIdAndShipmentIsNotNullOrderByCreatedAtDesc(String storeId);
-    
-    // Get top selling products by store
+           // Get top selling products by store
     @Query("SELECT p.id, p.name, p.sold, SUM(oi.total) as revenue, c.name " +
            "FROM Product p JOIN p.orderItems oi JOIN oi.order o JOIN p.category c " +
            "WHERE p.store.id = :storeId AND o.status = 'DELIVERED' " +
            "GROUP BY p.id, p.name, p.sold, c.name ORDER BY p.sold DESC")
     List<Object[]> findTopSellingByStore(@Param("storeId") String storeId, Pageable pageable);
+    
+    // 🚚 Shipper queries - Orders chờ nhận (PROCESSING, kể cả có/không có shipment)
+    Page<Order> findByStatus(Order.OrderStatus status, Pageable pageable);
+    
+    long countByStatus(Order.OrderStatus status);
+    
+    @Query("SELECT o FROM Order o WHERE o.status = :status " +
+           "AND o.createdAt BETWEEN :start AND :end")
+    Page<Order> findByStatusAndCreatedAtBetween(
+            @Param("status") Order.OrderStatus status,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
+            Pageable pageable);
+    
+    @Query("SELECT o FROM Order o WHERE o.status = :status " +
+           "AND (LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(o.address) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(o.id) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<Order> searchByStatusAndKeyword(
+            @Param("status") Order.OrderStatus status,
+            @Param("keyword") String keyword,
+            Pageable pageable);
+    
+    // 🚚 Shipper queries - Orders chờ nhận (PROCESSING và chưa có shipment) - LEGACY
+    Page<Order> findByStatusAndShipmentIsNull(Order.OrderStatus status, Pageable pageable);
+    
+    long countByStatusAndShipmentIsNull(Order.OrderStatus status);
+    
+    @Query("SELECT o FROM Order o WHERE o.status = :status AND o.shipment IS NULL " +
+           "AND o.createdAt BETWEEN :start AND :end")
+    Page<Order> findByStatusAndShipmentIsNullAndCreatedAtBetween(
+            @Param("status") Order.OrderStatus status,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
+            Pageable pageable);
+    
+    @Query("SELECT o FROM Order o WHERE o.status = :status AND o.shipment IS NULL " +
+           "AND (LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(o.address) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(o.id) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<Order> searchByStatusAndShipmentIsNullAndKeyword(
+            @Param("status") Order.OrderStatus status,
+            @Param("keyword") String keyword,
+            Pageable pageable);
+    
+
 }

@@ -215,39 +215,40 @@ public class CheckoutController {
             
             System.out.println("Payment method: " + request.getPaymentMethod());
             
-            // Create order
-            Order order = orderService.createOrder(items, request, user.getId());
-            System.out.println("Order created: " + order.getId());
-            
+            // Create orders for multiple stores
+            List<Order> orders = orderService.createOrders(items, request, user.getId());
+            System.out.println("Orders created: " + orders.size());
+
             // Clear checkout items
             checkoutService.clearCheckoutItems();
-            
-            // Handle payment method
+
+            // Handle payment method for the first order (example)
+            Order firstOrder = orders.get(0);
             String paymentMethod = request.getPaymentMethod();
-            
+
             if ("VNPAY".equalsIgnoreCase(paymentMethod)) {
                 System.out.println("=== VNPAY PAYMENT PROCESSING ===");
-                System.out.println("Order ID: " + order.getId());
-                System.out.println("Amount: " + order.getAmountFromUser());
-                
+                System.out.println("Order ID: " + firstOrder.getId());
+                System.out.println("Amount: " + firstOrder.getAmountFromUser());
+
                 // Generate VNPay payment URL
-                String orderInfo = "Thanh toan don hang " + order.getId();
+                String orderInfo = "Thanh toan don hang " + firstOrder.getId();
                 System.out.println("Order Info: " + orderInfo);
-                
+
                 String paymentUrl = vnPayService.createPaymentUrl(
-                    order.getAmountFromUser(),
+                    firstOrder.getAmountFromUser(),
                     orderInfo,
-                    order.getId(),
+                    firstOrder.getId(),
                     httpRequest
                 );
-                
+
                 System.out.println("Generated VNPay URL: " + paymentUrl);
-                
+
                 if (paymentUrl != null && !paymentUrl.isEmpty()) {
                     response.put("success", true);
                     response.put("paymentMethod", "VNPAY");
                     response.put("paymentUrl", paymentUrl);
-                    response.put("orderId", order.getId());
+                    response.put("orderId", firstOrder.getId());
                     System.out.println("VNPay payment URL created successfully");
                 } else {
                     System.out.println("ERROR: VNPay URL is null or empty");
@@ -258,7 +259,7 @@ public class CheckoutController {
                 // COD or other payment methods
                 response.put("success", true);
                 response.put("message", "Đặt hàng thành công");
-                response.put("orderId", order.getId());
+                response.put("orderId", firstOrder.getId());
                 response.put("paymentMethod", "COD");
             }
             

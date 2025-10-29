@@ -217,8 +217,7 @@
                                             </td>
                                             <td th:text="${#temporals.format(o.orderDate, 'dd/MM/yyyy HH:mm')}">01/01/2024</td>
                                             <td>
-                                                <span th:if="${o.shipmentStatus == 'ASSIGNED'}" class="badge bg-secondary">Đã phân công</span>
-                                                <span th:if="${o.shipmentStatus == 'ACCEPTED'}" class="badge bg-info">Đã chấp nhận</span>
+                                                <span th:if="${o.shipmentStatus == null}" class="badge bg-secondary">Chưa giao</span>
                                                 <span th:if="${o.shipmentStatus == 'DELIVERING'}" class="badge bg-primary">Đang giao</span>
                                                 <span th:if="${o.shipmentStatus == 'DELIVERED'}" class="badge bg-success">Đã giao</span>
                                                 <span th:if="${o.shipmentStatus == 'FAILED'}" class="badge bg-danger">Thất bại</span>

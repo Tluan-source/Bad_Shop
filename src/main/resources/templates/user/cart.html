@@ -1,10 +1,12 @@
-﻿<!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      lang="vi">
      <head th:replace="~{fragments/head :: head}">
           <title>Giỏ hàng - Badminton Marketplace</title>
      </head>
      <body>
-          <div th:replace="~{fragments/header :: header}"></div>
+          <th:block th:replace="~{fragments/header :: header}"></th:block>
 
           <!-- Breadcrumb -->
           <section class="breadcrumb-section py-3 bg-light">
@@ -45,7 +47,8 @@
                     <!-- Cart Items -->
                     <div th:if="${cartItems != null && !cartItems.isEmpty()}" class="row">
                          <div class="col-lg-8">
-                              <div class="card shadow-sm mb-4">
+                              <!-- Global Select All -->
+                              <div class="card shadow-sm mb-3">
                                    <div class="card-header bg-white border-bottom">
                                         <div class="form-check">
                                              <input
@@ -63,9 +66,44 @@
                                              </label>
                                         </div>
                                    </div>
+                              </div>
+
+                              <!-- Cart Items Grouped by Store -->
+                              <div th:each="storeEntry : ${itemsByStore}" class="card shadow-sm mb-3">
+                                   <div class="card-header bg-light border-bottom">
+                                        <div class="d-flex align-items-center justify-content-between">
+                                             <div class="form-check">
+                                                  <input
+                                                       class="form-check-input store-checkbox"
+                                                       type="checkbox"
+                                                       th:id="'store-' + ${storeEntry.value[0].product.store.id}"
+                                                       th:data-store-id="${storeEntry.value[0].product.store.id}"
+                                                  />
+                                                  <label
+                                                       class="form-check-label"
+                                                       th:for="'store-' + ${storeEntry.value[0].product.store.id}"
+                                                  >
+                                                       <i class="fas fa-store text-primary me-2"></i>
+                                                       <a 
+                                                            th:href="@{/stores/{id}(id=${storeEntry.value[0].product.store.id})}"
+                                                            class="text-decoration-none fw-bold text-dark"
+                                                            th:text="${storeEntry.value[0].product.store.name}"
+                                                       >
+                                                            Tên cửa hàng
+                                                       </a>
+                                                  </label>
+                                             </div>
+                                             <a 
+                                                  th:href="@{/stores/{id}(id=${storeEntry.value[0].product.store.id})}"
+                                                  class="btn btn-sm btn-outline-primary"
+                                             >
+                                                  <i class="fas fa-external-link-alt me-1"></i>Xem shop
+                                             </a>
+                                        </div>
+                                   </div>
                                    <div class="card-body">
                                         <div
-                                             th:each="item : ${cartItems}"
+                                             th:each="item : ${storeEntry.value}"
                                              class="cart-item mb-3 pb-3 border-bottom"
                                         >
                                              <div class="row align-items-center">
@@ -74,6 +112,7 @@
                                                             class="form-check-input item-checkbox"
                                                             type="checkbox"
                                                             th:data-item-id="${item.id}"
+                                                            th:data-store-id="${item.product.store.id}"
                                                             th:data-price="${item.product.promotionalPrice != null ? item.product.promotionalPrice : item.product.price}"
                                                             th:data-quantity="${item.quantity}"
                                                        />
@@ -95,12 +134,6 @@
                                                                  Tên sản phẩm
                                                             </a>
                                                        </h6>
-                                                       <p
-                                                            class="text-muted mb-1 small"
-                                                            th:text="${item.product.store.name}"
-                                                       >
-                                                            Tên cửa hàng
-                                                       </p>
                                                        <p
                                                             class="mb-0 fw-bold text-danger item-price"
                                                             th:data-item-id="${item.id}"
@@ -212,7 +245,7 @@
                </div>
           </section>
 
-          <div th:replace="~{fragments/footer :: footer}"></div>
+          <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 
           <!-- Toast for notifications -->
           <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 11">
@@ -286,6 +319,16 @@
                     document.getElementById("total").textContent = formatCurrency(totalAmount);
                }
 
+               function updateStoreCheckbox(storeId) {
+                    const storeCheckbox = document.querySelector('.store-checkbox[data-store-id="' + storeId + '"]');
+                    if (!storeCheckbox) return;
+
+                    const itemCheckboxes = document.querySelectorAll('.item-checkbox[data-store-id="' + storeId + '"]');
+                    const checkedItemCheckboxes = document.querySelectorAll('.item-checkbox[data-store-id="' + storeId + '"]:checked');
+
+                    storeCheckbox.checked = itemCheckboxes.length > 0 && itemCheckboxes.length === checkedItemCheckboxes.length;
+               }
+
                function updateSelectedCount() {
                     const checkboxes = document.querySelectorAll(".item-checkbox:checked");
                     const count = checkboxes.length;
@@ -299,6 +342,13 @@
 
                     const selectAll = document.getElementById("selectAll");
                     selectAll.checked = count > 0 && count === allCheckboxes.length;
+
+                    // Update all store checkboxes
+                    const storeCheckboxes = document.querySelectorAll('.store-checkbox');
+                    storeCheckboxes.forEach(cb => {
+                         const storeId = cb.getAttribute('data-store-id');
+                         updateStoreCheckbox(storeId);
+                    });
 
                     // Update order summary
                     updateOrderSummary();
@@ -472,6 +522,21 @@
                          selectAllCheckbox.addEventListener("change", toggleSelectAll);
                          console.log("Select all checkbox initialized");
                     }
+
+                    // Setup store checkboxes
+                    const storeCheckboxes = document.querySelectorAll(".store-checkbox");
+                    console.log("Found " + storeCheckboxes.length + " store checkboxes");
+                    storeCheckboxes.forEach((cb) => {
+                         cb.addEventListener("change", function() {
+                              const storeId = this.getAttribute("data-store-id");
+                              const isChecked = this.checked;
+                              const itemCheckboxes = document.querySelectorAll('.item-checkbox[data-store-id="' + storeId + '"]');
+                              itemCheckboxes.forEach((itemCb) => {
+                                   itemCb.checked = isChecked;
+                              });
+                              updateSelectedCount();
+                         });
+                    });
 
                     // Setup item checkboxes
                     const itemCheckboxes = document.querySelectorAll(".item-checkbox");

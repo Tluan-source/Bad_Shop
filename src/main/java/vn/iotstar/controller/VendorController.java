@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -160,6 +161,9 @@ public class VendorController {
         updateDTO.setName(store.getName());
         updateDTO.setBio(store.getBio());
         updateDTO.setFeaturedImages(store.getFeaturedImages());
+    // Populate email so vendor can update shop email from this form
+    updateDTO.setEmail(store.getEmail());
+    updateDTO.setPhone(store.getPhone());
         
         model.addAttribute("storeDTO", updateDTO);
         
@@ -170,7 +174,9 @@ public class VendorController {
     public String updateStore(@Valid @ModelAttribute("storeDTO") StoreUpdateDTO updateDTO,
                              BindingResult result,
                              Authentication auth,
-                             RedirectAttributes redirectAttributes) {
+                             RedirectAttributes redirectAttributes,
+                             @RequestParam(value = "featuredImagesFiles", required = false) List<MultipartFile> featuredImagesFiles,
+                             @RequestParam(value = "existingFeaturedImages", required = false) String existingFeaturedImagesJson) {
         if (result.hasErrors()) {
             return "vendor/store-edit";
         }
@@ -179,6 +185,41 @@ public class VendorController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         String storeId = securityService.getCurrentVendorStoreId(user.getId());
         
+        // Build final featured images list: start with kept existing images (if any), then append newly uploaded images
+        com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+        java.util.List<String> finalList = new java.util.ArrayList<>();
+        if (existingFeaturedImagesJson != null && !existingFeaturedImagesJson.trim().isEmpty()) {
+            try {
+                java.util.List<String> existing = mapper.readValue(existingFeaturedImagesJson,
+                        mapper.getTypeFactory().constructCollectionType(java.util.List.class, String.class));
+                if (existing != null) finalList.addAll(existing);
+            } catch (Exception ex) {
+                // ignore parse errors
+            }
+        }
+
+        if (featuredImagesFiles != null && !featuredImagesFiles.isEmpty()) {
+            try {
+                java.util.List<String> uploaded = cloudinaryService.uploadFiles(featuredImagesFiles);
+                if (uploaded != null && !uploaded.isEmpty()) {
+                    finalList.addAll(uploaded);
+                }
+            } catch (Exception ex) {
+                // ignore upload errors
+            }
+        }
+
+        try {
+            if (!finalList.isEmpty()) {
+                updateDTO.setFeaturedImages(mapper.writeValueAsString(finalList));
+            } else {
+                // set to empty array string to indicate no images
+                updateDTO.setFeaturedImages("[]");
+            }
+        } catch (Exception ex) {
+            // ignore
+        }
+
         storeService.updateStore(storeId, updateDTO, user.getId());
         
         redirectAttributes.addFlashAttribute("success", "Cập nhật thông tin cửa hàng thành công!");

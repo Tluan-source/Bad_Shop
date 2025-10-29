@@ -197,19 +197,46 @@ public class VoucherService {
         long activeVouchers = voucherRepository.countByIsActiveTrue();
         long expiredVouchers = voucherRepository.countExpiredVouchers(LocalDateTime.now());
         
-        return new VoucherStats(totalVouchers, activeVouchers, expiredVouchers);
+        // Calculate total usage count
+        List<Voucher> allVouchers = voucherRepository.findAll();
+        long totalUsageCount = allVouchers.stream()
+            .mapToLong(Voucher::getUsageCount)
+            .sum();
+        
+        // Calculate total discount amount given
+        BigDecimal totalDiscount = allVouchers.stream()
+            .filter(v -> v.getUsageCount() > 0)
+            .map(v -> {
+                if (v.getDiscountType() == Voucher.DiscountType.FIXED) {
+                    return v.getDiscountValue().multiply(BigDecimal.valueOf(v.getUsageCount()));
+                } else {
+                    // For percentage, estimate based on max discount if available
+                    if (v.getMaxDiscount() != null) {
+                        return v.getMaxDiscount().multiply(BigDecimal.valueOf(v.getUsageCount()));
+                    }
+                    return BigDecimal.ZERO;
+                }
+            })
+            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        return new VoucherStats(totalVouchers, activeVouchers, expiredVouchers, totalUsageCount, totalDiscount);
     }
     
     // Inner class for statistics
     public static class VoucherStats {
-        public final long total;
-        public final long active;
-        public final long expired;
+        public final long totalVouchers;
+        public final long activeVouchers;
+        public final long expiredVouchers;
+        public final long totalUsageCount;
+        public final BigDecimal totalDiscount;
         
-        public VoucherStats(long total, long active, long expired) {
-            this.total = total;
-            this.active = active;
-            this.expired = expired;
+        public VoucherStats(long totalVouchers, long activeVouchers, long expiredVouchers, 
+                           long totalUsageCount, BigDecimal totalDiscount) {
+            this.totalVouchers = totalVouchers;
+            this.activeVouchers = activeVouchers;
+            this.expiredVouchers = expiredVouchers;
+            this.totalUsageCount = totalUsageCount;
+            this.totalDiscount = totalDiscount;
         }
     }
 }

@@ -30,7 +30,6 @@ import vn.iotstar.entity.Order;
 import vn.iotstar.entity.Product;
 import vn.iotstar.entity.Store;
 import vn.iotstar.entity.User;
-import vn.iotstar.entity.Voucher;
 import vn.iotstar.repository.CategoryRepository;
 import vn.iotstar.repository.OrderRepository;
 import vn.iotstar.repository.ProductRepository;
@@ -264,6 +263,25 @@ public class AdminController {
         model.addAttribute("cancelledCount", cancelledCount);
         
         return "admin/orders";
+    }
+    
+    /**
+     * View order details
+     */
+    @GetMapping("/orders/{orderId}/details")
+    public String orderDetails(@PathVariable String orderId, Model model, Authentication authentication) {
+        model.addAttribute("username", authentication.getName());
+        
+        Optional<Order> orderOpt = orderRepository.findById(orderId);
+        if (!orderOpt.isPresent()) {
+            model.addAttribute("error", "Không tìm thấy đơn hàng!");
+            return "redirect:/admin/orders";
+        }
+        
+        Order order = orderOpt.get();
+        model.addAttribute("order", order);
+        
+        return "admin/order-details";
     }
     
     @GetMapping("/reports")
@@ -748,6 +766,8 @@ public class AdminController {
     @PostMapping("/stores/create")
     public String createStore(
             @RequestParam String name,
+            @RequestParam String email,
+            @RequestParam(required = false) String phone,
             @RequestParam String bio,
             @RequestParam String slug,
             @RequestParam String ownerId,
@@ -761,9 +781,19 @@ public class AdminController {
                 return "redirect:/admin/stores";
             }
             
+            // Check if email already exists
+            Optional<Store> existingStore = storeRepository.findByEmail(email);
+            if (existingStore.isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Email cửa hàng đã tồn tại!");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/stores";
+            }
+            
             Store store = new Store();
             store.setId("S" + System.currentTimeMillis());
             store.setName(name);
+            store.setEmail(email);
+            store.setPhone(phone);
             store.setBio(bio);
             store.setSlug(slug);
             store.setOwner(ownerOpt.get());
@@ -776,6 +806,73 @@ public class AdminController {
             redirectAttributes.addFlashAttribute("messageType", "success");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+        return "redirect:/admin/stores";
+    }
+    
+    /**
+     * Toggle store status (active/inactive)
+     */
+    @PostMapping("/stores/{id}/toggle-status")
+    public String toggleStoreStatus(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        try {
+            Optional<Store> storeOpt = storeRepository.findById(id);
+            if (!storeOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy cửa hàng!");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/stores";
+            }
+            
+            Store store = storeOpt.get();
+            // Handle null isActive value - treat null as false
+            Boolean currentStatus = store.getIsActive();
+            if (currentStatus == null) {
+                currentStatus = false;
+            }
+            store.setIsActive(!currentStatus);
+            storeRepository.save(store);
+            
+            redirectAttributes.addFlashAttribute("message", 
+                store.getIsActive() ? "Đã kích hoạt cửa hàng!" : "Đã vô hiệu hóa cửa hàng!");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+        }
+        return "redirect:/admin/stores";
+    }
+    
+    /**
+     * Delete store
+     */
+    @PostMapping("/stores/{id}/delete")
+    public String deleteStore(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        try {
+            Optional<Store> storeOpt = storeRepository.findById(id);
+            if (!storeOpt.isPresent()) {
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy cửa hàng!");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/stores";
+            }
+            
+            Store store = storeOpt.get();
+            
+            // Check if store has products
+            long productCount = productRepository.countByStoreId(store.getId());
+            if (productCount > 0) {
+                redirectAttributes.addFlashAttribute("message", 
+                    "Không thể xóa cửa hàng đang có " + productCount + " sản phẩm!");
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                return "redirect:/admin/stores";
+            }
+            
+            storeRepository.deleteById(id);
+            
+            redirectAttributes.addFlashAttribute("message", "Xóa cửa hàng thành công!");
+            redirectAttributes.addFlashAttribute("messageType", "success");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("message", "Lỗi khi xóa cửa hàng: " + e.getMessage());
             redirectAttributes.addFlashAttribute("messageType", "danger");
         }
         return "redirect:/admin/stores";
@@ -1250,5 +1347,152 @@ public class AdminController {
         model.addAttribute("activePromotions", activeCount);
         
         return "admin/promotions";
+    }
+    
+    /**
+     * Create new category
+     */
+    @PostMapping("/categories/create")
+    public String createCategory(@RequestParam String name,
+                                 @RequestParam String slug,
+                                 @RequestParam(required = false) String description,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            // Check if slug already exists
+            Optional<Category> existing = categoryRepository.findBySlug(slug);
+            if (existing.isPresent()) {
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                redirectAttributes.addFlashAttribute("message", "Slug đã tồn tại! Vui lòng sử dụng slug khác.");
+                return "redirect:/admin/categories";
+            }
+            
+            Category category = new Category();
+            category.setId("CAT_" + System.currentTimeMillis());
+            category.setName(name);
+            category.setSlug(slug);
+            category.setDescription(description);
+            category.setIsActive(true);
+            
+            categoryRepository.save(category);
+            
+            redirectAttributes.addFlashAttribute("messageType", "success");
+            redirectAttributes.addFlashAttribute("message", "Tạo danh mục thành công!");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            redirectAttributes.addFlashAttribute("message", "Lỗi khi tạo danh mục: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/categories";
+    }
+    
+    /**
+     * Update category
+     */
+    @PostMapping("/categories/{id}/update")
+    public String updateCategory(@PathVariable String id,
+                                 @RequestParam String name,
+                                 @RequestParam String slug,
+                                 @RequestParam(required = false) String description,
+                                 RedirectAttributes redirectAttributes) {
+        try {
+            Optional<Category> optCategory = categoryRepository.findById(id);
+            if (optCategory.isEmpty()) {
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy danh mục!");
+                return "redirect:/admin/categories";
+            }
+            
+            // Check if slug is taken by another category
+            Optional<Category> existingSlug = categoryRepository.findBySlug(slug);
+            if (existingSlug.isPresent() && !existingSlug.get().getId().equals(id)) {
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                redirectAttributes.addFlashAttribute("message", "Slug đã được sử dụng bởi danh mục khác!");
+                return "redirect:/admin/categories";
+            }
+            
+            Category category = optCategory.get();
+            category.setName(name);
+            category.setSlug(slug);
+            category.setDescription(description);
+            
+            categoryRepository.save(category);
+            
+            redirectAttributes.addFlashAttribute("messageType", "success");
+            redirectAttributes.addFlashAttribute("message", "Cập nhật danh mục thành công!");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            redirectAttributes.addFlashAttribute("message", "Lỗi khi cập nhật danh mục: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/categories";
+    }
+    
+    /**
+     * Delete category
+     */
+    @PostMapping("/categories/{id}/delete")
+    public String deleteCategory(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        try {
+            Optional<Category> optCategory = categoryRepository.findById(id);
+            if (optCategory.isEmpty()) {
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy danh mục!");
+                return "redirect:/admin/categories";
+            }
+            
+            Category category = optCategory.get();
+            
+            // Check if category has products
+            long productCount = productRepository.countByCategory_Id(id);
+            if (productCount > 0) {
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                redirectAttributes.addFlashAttribute("message", 
+                    "Không thể xóa danh mục đang có " + productCount + " sản phẩm!");
+                return "redirect:/admin/categories";
+            }
+            
+            categoryRepository.deleteById(id);
+            
+            redirectAttributes.addFlashAttribute("messageType", "success");
+            redirectAttributes.addFlashAttribute("message", "Xóa danh mục thành công!");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            redirectAttributes.addFlashAttribute("message", "Lỗi khi xóa danh mục: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/categories";
+    }
+    
+    /**
+     * Toggle category status (active/inactive)
+     */
+    @PostMapping("/categories/{id}/toggle-status")
+    public String toggleCategoryStatus(@PathVariable String id, RedirectAttributes redirectAttributes) {
+        try {
+            Optional<Category> optCategory = categoryRepository.findById(id);
+            if (optCategory.isEmpty()) {
+                redirectAttributes.addFlashAttribute("messageType", "danger");
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy danh mục!");
+                return "redirect:/admin/categories";
+            }
+            
+            Category category = optCategory.get();
+            category.setIsActive(!category.getIsActive());
+            
+            categoryRepository.save(category);
+            
+            redirectAttributes.addFlashAttribute("messageType", "success");
+            redirectAttributes.addFlashAttribute("message", 
+                category.getIsActive() ? "Đã kích hoạt danh mục!" : "Đã vô hiệu hóa danh mục!");
+            
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            redirectAttributes.addFlashAttribute("message", "Lỗi khi thay đổi trạng thái: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/categories";
     }
 }
