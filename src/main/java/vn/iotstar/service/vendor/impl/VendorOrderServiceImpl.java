@@ -351,6 +351,19 @@ public class VendorOrderServiceImpl implements VendorOrderService {
         dto.setAmountToStore(order.getAmountToStore());
         dto.setAmountToGd(order.getAmountToGd());
         dto.setDiscountAmount(order.getDiscountAmount());
+        
+        // Discount details
+        dto.setPromotionDiscount(order.getPromotionDiscount());
+        dto.setVoucherDiscount(order.getVoucherDiscount());
+        if (order.getPromotion() != null) {
+            dto.setPromotionId(order.getPromotion().getId());
+            dto.setPromotionName(order.getPromotion().getName());
+        }
+        if (order.getVoucher() != null) {
+            dto.setVoucherId(order.getVoucher().getId());
+            dto.setVoucherCode(order.getVoucher().getCode());
+        }
+        
         dto.setCreatedAt(order.getCreatedAt());
         dto.setUpdatedAt(order.getUpdatedAt());
         

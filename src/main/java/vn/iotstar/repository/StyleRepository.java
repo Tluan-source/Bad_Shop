@@ -1,10 +1,12 @@
 package vn.iotstar.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
-import vn.iotstar.entity.Style;
-
 import java.util.List;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+
+import vn.iotstar.entity.Style;
 
 /**
  * Repository for Style entity
@@ -29,4 +31,10 @@ public interface StyleRepository extends JpaRepository<Style, String> {
      * (Cần implement ở service layer vì categoryIds là JSON)
      */
     // List<Style> findByCategoryIdsContaining(String categoryId);
+    
+    @Query(
+    value = "SELECT * FROM styles s WHERE JSON_VALUE(s.category_ids, '$') LIKE %:categoryId% AND s.is_deleted = 0",
+    nativeQuery = true
+    )
+    List<Style> findByCategoryId(String categoryId);
 }

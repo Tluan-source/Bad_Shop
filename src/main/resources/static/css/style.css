@@ -14,7 +14,7 @@ body {
 
 /* Hero Slider Section */
 .hero-slider {
-     height: 700px; /* Tăng chiều cao từ 600px lên 700px */
+     height: 550px; /* Tăng chiều cao từ 600px lên 700px */
      position: relative;
 }
 
@@ -31,7 +31,7 @@ body {
      background-size: cover;
      background-position: center;
      background-repeat: no-repeat;
-     padding: 80px 0; /* Thêm padding trên dưới cho thoáng */
+     padding: 100px 0; /* Thêm padding trên dưới cho thoáng */
 }
 
 .hero-slide::before {
@@ -76,15 +76,24 @@ body {
 }
 
 .hero-bg-1 {
-     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+     background: linear-gradient(135deg, rgba(102, 126, 234, 0.5), rgba(118, 75, 162, 0.5)),
+          url("https://res.cloudinary.com/duzkugddg/image/upload/v1761814841/bg-1.1_crvblq.jpg");
+     background-size: cover;
+     background-position: center;
 }
 
 .hero-bg-2 {
-     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+     background: linear-gradient(135deg, rgba(240, 147, 251, 0.5), rgba(245, 87, 108, 0.5)),
+          url("https://res.cloudinary.com/duzkugddg/image/upload/v1761814597/bg-2_yu7fxi.webp");
+     background-size: cover;
+     background-position: center;
 }
 
 .hero-bg-3 {
-     background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+     background: linear-gradient(135deg, rgba(79, 172, 254, 0.5), rgba(0, 242, 254, 0.5)),
+          url("https://res.cloudinary.com/duzkugddg/image/upload/v1761814599/bg-3_lgzevs.webp");
+     background-size: cover;
+     background-position: center;
 }
 
 .animate-slide-in {
@@ -1244,4 +1253,19 @@ body {
 
 .product-actions .btn-success:hover:not(:disabled) {
      background-color: #1e7e34;
+}
+.avatar-wrapper {
+     position: relative;
+     display: inline-block;
+}
+
+.avatar-wrapper img {
+     border-radius: 50%;
+     border: 2px solid #e0e0e0;
+}
+
+.avatar-wrapper .camera-btn:hover {
+     background-color: #f0f0f0;
+     transform: scale(1.05);
+     transition: all 0.2s ease-in-out;
 }

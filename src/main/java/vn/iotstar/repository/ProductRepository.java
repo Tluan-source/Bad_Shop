@@ -67,4 +67,9 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     
     // Count products by category
     Long countByCategory_Id(String categoryId);
+
+    List<Product> findByNameContainingIgnoreCaseAndIsActiveTrue(String keyword);
+
+    List<Product> findByNameContainingIgnoreCase(String keyword);
+
 }
