@@ -1,143 +1,313 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
-<head th:replace="~{fragments/head :: head}">
-    <title>Tạo Khuyến mãi - Badminton Marketplace</title>
-</head>
-<body>
-    <div th:replace="~{fragments/header :: header}"></div>
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+>
+     <head th:replace="~{fragments/head :: head}">
+          <title>Tạo Khuyến mãi - Badminton Marketplace</title>
+     </head>
+     <body>
+          <div th:replace="~{fragments/header :: header}"></div>
 
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <!-- Sidebar -->
-            <div th:replace="~{vendor/fragments/sidebar :: sidebar('promotions-add')}"></div>
+          <div class="container-fluid mt-4">
+               <div class="row">
+                    <!-- Sidebar -->
+                    <div
+                         th:replace="~{vendor/fragments/sidebar :: sidebar('promotions-add')}"
+                    ></div>
 
-            <!-- Main content -->
-            <div class="col-md-10">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2><i class="fas fa-plus-circle"></i> Tạo Chương trình Khuyến mãi mới</h2>
-                    <a th:href="@{/vendor/promotions}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> Quay lại
-                    </a>
-                </div>
+                    <!-- Main content -->
+                    <div class="col-md-10">
+                         <div class="d-flex justify-content-between align-items-center mb-4">
+                              <h2>
+                                   <i class="fas fa-plus-circle"></i> Tạo Chương trình Khuyến mãi
+                                   mới
+                              </h2>
+                              <a th:href="@{/vendor/promotions}" class="btn btn-secondary">
+                                   <i class="fas fa-arrow-left"></i> Quay lại
+                              </a>
+                         </div>
 
-                <div class="card">
-                    <div class="card-body">
-                        <form th:action="@{/vendor/promotions/add}" method="post" th:object="${promotion}">
-                            <div class="row">
-                                <div class="col-md-8">
-                                    <h5 class="mb-3"><i class="fas fa-info-circle"></i> Thông tin khuyến mãi</h5>
-                                    
-                                    <div class="mb-3">
-                                        <label for="name" class="form-label">Tên chương trình <span class="text-danger">*</span></label>
-                                        <input type="text" class="form-control" id="name" th:field="*{name}" 
-                                               placeholder="VD: Flash Sale 12.12" required>
-                                    </div>
+                         <div class="card">
+                              <div class="card-body">
+                                   <form
+                                        th:action="@{/vendor/promotions/add}"
+                                        method="post"
+                                        th:object="${promotion}"
+                                   >
+                                        <div class="row">
+                                             <div class="col-md-8">
+                                                  <h5 class="mb-3">
+                                                       <i class="fas fa-info-circle"></i> Thông tin
+                                                       khuyến mãi
+                                                  </h5>
 
-                                    <div class="mb-3">
-                                        <label for="description" class="form-label">Mô tả</label>
-                                        <textarea class="form-control" id="description" rows="3" th:field="*{description}"
-                                                  placeholder="Mô tả chi tiết về chương trình khuyến mãi"></textarea>
-                                    </div>
+                                                  <div class="mb-3">
+                                                       <label for="name" class="form-label"
+                                                            >Tên chương trình
+                                                            <span class="text-danger"
+                                                                 >*</span
+                                                            ></label
+                                                       >
+                                                       <input
+                                                            type="text"
+                                                            class="form-control"
+                                                            id="name"
+                                                            th:field="*{name}"
+                                                            placeholder="VD: Flash Sale 12.12"
+                                                            required
+                                                       />
+                                                  </div>
 
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="discountType" class="form-label">Loại giảm giá <span class="text-danger">*</span></label>
-                                            <select class="form-select" id="discountType" th:field="*{discountType}" required>
-                                                <option value="">-- Chọn loại --</option>
-                                                <option value="PERCENTAGE">Phần trăm (%)</option>
-                                                <option value="FIXED">Số tiền cố định (VNĐ)</option>
-                                            </select>
+                                                  <div class="mb-3">
+                                                       <label for="description" class="form-label"
+                                                            >Mô tả</label
+                                                       >
+                                                       <textarea
+                                                            class="form-control"
+                                                            id="description"
+                                                            rows="3"
+                                                            th:field="*{description}"
+                                                            placeholder="Mô tả chi tiết về chương trình khuyến mãi"
+                                                       ></textarea>
+                                                  </div>
+
+                                                  <div class="row">
+                                                       <div class="col-md-6 mb-3">
+                                                            <label
+                                                                 for="discountType"
+                                                                 class="form-label"
+                                                                 >Loại giảm giá
+                                                                 <span class="text-danger"
+                                                                      >*</span
+                                                                 ></label
+                                                            >
+                                                            <select
+                                                                 class="form-select"
+                                                                 id="discountType"
+                                                                 th:field="*{discountType}"
+                                                                 required
+                                                            >
+                                                                 <option value="">
+                                                                      -- Chọn loại --
+                                                                 </option>
+                                                                 <option value="PERCENTAGE">
+                                                                      Phần trăm (%)
+                                                                 </option>
+                                                                 <option value="FIXED">
+                                                                      Số tiền cố định (VNĐ)
+                                                                 </option>
+                                                            </select>
+                                                       </div>
+                                                       <div class="col-md-6 mb-3">
+                                                            <label
+                                                                 for="discountValue"
+                                                                 class="form-label"
+                                                                 >Giá trị giảm
+                                                                 <span class="text-danger"
+                                                                      >*</span
+                                                                 ></label
+                                                            >
+                                                            <input
+                                                                 type="number"
+                                                                 class="form-control"
+                                                                 id="discountValue"
+                                                                 th:field="*{discountValue}"
+                                                                 min="0"
+                                                                 step="0.01"
+                                                                 required
+                                                            />
+                                                            <small class="text-muted"
+                                                                 >Nhập số từ 0-100 nếu là %, nhập số
+                                                                 tiền nếu là VNĐ</small
+                                                            >
+                                                       </div>
+                                                  </div>
+
+                                                  <div class="row">
+                                                       <div class="col-md-6 mb-3">
+                                                            <label
+                                                                 for="startDate"
+                                                                 class="form-label"
+                                                                 >Ngày bắt đầu
+                                                                 <span class="text-danger"
+                                                                      >*</span
+                                                                 ></label
+                                                            >
+                                                            <input
+                                                                 type="datetime-local"
+                                                                 class="form-control"
+                                                                 id="startDate"
+                                                                 th:field="*{startDate}"
+                                                                 required
+                                                            />
+                                                       </div>
+                                                       <div class="col-md-6 mb-3">
+                                                            <label for="endDate" class="form-label"
+                                                                 >Ngày kết thúc
+                                                                 <span class="text-danger"
+                                                                      >*</span
+                                                                 ></label
+                                                            >
+                                                            <input
+                                                                 type="datetime-local"
+                                                                 class="form-control"
+                                                                 id="endDate"
+                                                                 th:field="*{endDate}"
+                                                                 required
+                                                            />
+                                                       </div>
+                                                  </div>
+
+                                                  <div class="mb-3">
+                                                       <label
+                                                            for="minOrderAmount"
+                                                            class="form-label"
+                                                            >Giá trị đơn hàng tối thiểu</label
+                                                       >
+                                                       <input
+                                                            type="number"
+                                                            class="form-control"
+                                                            id="minOrderAmount"
+                                                            th:field="*{minOrderAmount}"
+                                                            min="0"
+                                                            placeholder="0 = Không giới hạn"
+                                                       />
+                                                  </div>
+
+                                                  <div class="mb-3">
+                                                       <label for="maxDiscount" class="form-label"
+                                                            >Giảm tối đa (VNĐ)</label
+                                                       >
+                                                       <input
+                                                            type="number"
+                                                            class="form-control"
+                                                            id="maxDiscount"
+                                                            th:field="*{maxDiscount}"
+                                                            min="0"
+                                                            placeholder="0 = Không giới hạn"
+                                                       />
+                                                  </div>
+
+                                                  <div class="mb-3">
+                                                       <label for="quantity" class="form-label"
+                                                            >Số lượng voucher
+                                                            <span class="text-danger"
+                                                                 >*</span
+                                                            ></label
+                                                       >
+                                                       <input
+                                                            type="number"
+                                                            class="form-control"
+                                                            id="quantity"
+                                                            th:field="*{quantity}"
+                                                            min="0"
+                                                            placeholder="0 = Không giới hạn"
+                                                            required
+                                                       />
+                                                       <small class="text-muted"
+                                                            >Nhập 0 để không giới hạn lượt sử
+                                                            dụng</small
+                                                       >
+                                                  </div>
+
+                                                  <!-- Số lượng mỗi người được dùng (nếu bạn dùng usageLimit) -->
+                                                  <div class="mb-3">
+                                                       <label for="usageLimit" class="form-label"
+                                                            >Giới hạn sử dụng mỗi người</label
+                                                       >
+                                                       <input
+                                                            type="number"
+                                                            class="form-control"
+                                                            id="usageLimit"
+                                                            th:field="*{usageLimit}"
+                                                            min="0"
+                                                            placeholder="0 = Không giới hạn"
+                                                       />
+                                                  </div>
+                                             </div>
+
+                                             <div class="col-md-4">
+                                                  <h5 class="mb-3">
+                                                       <i class="fas fa-cog"></i> Cài đặt
+                                                  </h5>
+
+                                                  <div class="card bg-light">
+                                                       <div class="card-body">
+                                                            <div class="mb-3">
+                                                                 <div class="form-check">
+                                                                      <input
+                                                                           class="form-check-input"
+                                                                           type="checkbox"
+                                                                           id="isActive"
+                                                                           th:field="*{isActive}"
+                                                                      />
+                                                                      <label
+                                                                           class="form-check-label"
+                                                                           for="isActive"
+                                                                      >
+                                                                           <strong
+                                                                                >Kích hoạt
+                                                                                ngay</strong
+                                                                           >
+                                                                      </label>
+                                                                 </div>
+                                                            </div>
+
+                                                            <div class="mb-3">
+                                                                 <div class="form-check">
+                                                                      <input
+                                                                           class="form-check-input"
+                                                                           type="checkbox"
+                                                                           id="applyToAll"
+                                                                           th:field="*{applyToAll}"
+                                                                      />
+                                                                      <label
+                                                                           class="form-check-label"
+                                                                           for="applyToAll"
+                                                                      >
+                                                                           Áp dụng cho tất cả sản
+                                                                           phẩm
+                                                                      </label>
+                                                                 </div>
+                                                            </div>
+
+                                                            <div class="alert alert-info mt-3">
+                                                                 <small>
+                                                                      <i
+                                                                           class="fas fa-info-circle"
+                                                                      ></i>
+                                                                      <strong>Lưu ý:</strong> Nếu
+                                                                      không chọn "Áp dụng cho tất
+                                                                      cả", bạn có thể chọn sản phẩm
+                                                                      cụ thể sau khi tạo khuyến mãi.
+                                                                 </small>
+                                                            </div>
+                                                       </div>
+                                                  </div>
+                                             </div>
                                         </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="discountValue" class="form-label">Giá trị giảm <span class="text-danger">*</span></label>
-                                            <input type="number" class="form-control" id="discountValue" th:field="*{discountValue}" 
-                                                   min="0" step="0.01" required>
-                                            <small class="text-muted">Nhập số từ 0-100 nếu là %, nhập số tiền nếu là VNĐ</small>
+
+                                        <hr class="my-4" />
+
+                                        <div class="d-flex justify-content-end gap-2">
+                                             <a
+                                                  th:href="@{/vendor/promotions}"
+                                                  class="btn btn-secondary"
+                                             >
+                                                  <i class="fas fa-times"></i> Hủy
+                                             </a>
+                                             <button type="submit" class="btn btn-primary">
+                                                  <i class="fas fa-save"></i> Tạo khuyến mãi
+                                             </button>
                                         </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6 mb-3">
-                                            <label for="startDate" class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
-                                            <input type="datetime-local" class="form-control" id="startDate" th:field="*{startDate}" required>
-                                        </div>
-                                        <div class="col-md-6 mb-3">
-                                            <label for="endDate" class="form-label">Ngày kết thúc <span class="text-danger">*</span></label>
-                                            <input type="datetime-local" class="form-control" id="endDate" th:field="*{endDate}" required>
-                                        </div>
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="minOrderAmount" class="form-label">Giá trị đơn hàng tối thiểu</label>
-                                        <input type="number" class="form-control" id="minOrderAmount" th:field="*{minOrderAmount}" 
-                                               min="0" placeholder="0 = Không giới hạn">
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="maxDiscount" class="form-label">Giảm tối đa (VNĐ)</label>
-                                        <input type="number" class="form-control" id="maxDiscount" th:field="*{maxDiscount}" 
-                                               min="0" placeholder="0 = Không giới hạn">
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label for="usageLimit" class="form-label">Số lượng sử dụng</label>
-                                        <input type="number" class="form-control" id="usageLimit" th:field="*{usageLimit}" 
-                                               min="0" placeholder="0 = Không giới hạn">
-                                    </div>
-                                </div>
-
-                                <div class="col-md-4">
-                                    <h5 class="mb-3"><i class="fas fa-cog"></i> Cài đặt</h5>
-                                    
-                                    <div class="card bg-light">
-                                        <div class="card-body">
-                                            <div class="mb-3">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="isActive" th:field="*{isActive}">
-                                                    <label class="form-check-label" for="isActive">
-                                                        <strong>Kích hoạt ngay</strong>
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            <div class="mb-3">
-                                                <div class="form-check">
-                                                    <input class="form-check-input" type="checkbox" id="applyToAll" th:field="*{applyToAll}">
-                                                    <label class="form-check-label" for="applyToAll">
-                                                        Áp dụng cho tất cả sản phẩm
-                                                    </label>
-                                                </div>
-                                            </div>
-
-                                            <div class="alert alert-info mt-3">
-                                                <small>
-                                                    <i class="fas fa-info-circle"></i>
-                                                    <strong>Lưu ý:</strong> Nếu không chọn "Áp dụng cho tất cả", 
-                                                    bạn có thể chọn sản phẩm cụ thể sau khi tạo khuyến mãi.
-                                                </small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <hr class="my-4">
-
-                            <div class="d-flex justify-content-end gap-2">
-                                <a th:href="@{/vendor/promotions}" class="btn btn-secondary">
-                                    <i class="fas fa-times"></i> Hủy
-                                </a>
-                                <button type="submit" class="btn btn-primary">
-                                    <i class="fas fa-save"></i> Tạo khuyến mãi
-                                </button>
-                            </div>
-                        </form>
+                                   </form>
+                              </div>
+                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
+               </div>
+          </div>
 
-    <div th:replace="~{fragments/footer :: footer}"></div>
-</body>
+          <div th:replace="~{fragments/footer :: footer}"></div>
+     </body>
 </html>

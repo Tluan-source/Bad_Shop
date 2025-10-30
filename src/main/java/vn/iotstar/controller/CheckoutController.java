@@ -272,8 +272,8 @@ public class CheckoutController {
             System.out.println("Created " + orders.size() + " orders");
             
             // Create orders for multiple stores
-            List<Order> orders = orderService.createOrders(items, request, user.getId());
-            System.out.println("Orders created: " + orders.size());
+            // List<Order> orders = orderService.createOrders(items, request, user.getId());
+            // System.out.println("Orders created: " + orders.size());
 
             // Clear checkout items
             checkoutService.clearCheckoutItems();
@@ -304,27 +304,27 @@ public class CheckoutController {
                 
                 System.out.println("=== VNPAY PAYMENT PROCESSING ===");
 
-                String orderInfo = "Thanh toan don hang " + firstOrder.getId();
-                String paymentUrl = vnPayService.createPaymentUrl(
-                    firstOrder.getAmountFromUser(),
-                    orderInfo,
-                    firstOrder.getId(),
-                    httpRequest
-                );
+                // String orderInfo = "Thanh toan don hang " + firstOrder.getId();
+                // String paymentUrl = vnPayService.createPaymentUrl(
+                //     firstOrder.getAmountFromUser(),
+                //     orderInfo,
+                //     firstOrder.getId(),
+                //     httpRequest
+                // );
 
                 if (paymentUrl != null && !paymentUrl.isEmpty()) {
                     response.put("success", true);
                     response.put("paymentMethod", "VNPAY");
                     response.put("paymentUrl", paymentUrl);
                     response.put("orderIds", orderIds);
-                    response.put("orderId", firstOrder.getId());
+                    response.put("orderId", orders.get(0).getId());
                 } else {
                     response.put("success", false);
                     response.put("message", "Không thể tạo link thanh toán VNPay");
                 }
-            } else {
-                // COD payment
-                response.put("success", true);
+            // } else {
+            //     // COD payment
+            //     response.put("success", true);
 
             } else if ("BANK_QR".equalsIgnoreCase(paymentMethod)) {
                 System.out.println("=== BANK QR PAYMENT ===");

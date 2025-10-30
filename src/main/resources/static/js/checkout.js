@@ -20,11 +20,11 @@ document.addEventListener("DOMContentLoaded", function () {
           // Get text and remove all non-numeric characters except dot/comma
           let text = subtotalElement.textContent || subtotalElement.innerText;
           // Remove currency symbol and whitespace
-          text = text.replace(/[^\d,\.]/g, '');
+          text = text.replace(/[^\d,\.]/g, "");
           // Remove dots (thousand separators) and replace comma with dot if needed
-          text = text.replace(/\./g, '').replace(/,/g, '.');
+          text = text.replace(/\./g, "").replace(/,/g, ".");
           originalTotal = parseFloat(text);
-          
+
           // Fallback: if still NaN, try to parse from the element
           if (isNaN(originalTotal)) {
                originalTotal = 0;
@@ -40,9 +40,8 @@ document.addEventListener("DOMContentLoaded", function () {
 
      console.log("Initialized - Original Total:", originalTotal);
      console.log("Store Subtotals:", storeSubtotals);
-});
+}); /* ===================== FILL SAVED ADDRESS ===================== */
 
-﻿/* ===================== FILL SAVED ADDRESS ===================== */
 function fillAddress() {
      const select = document.getElementById("savedAddress");
      const selectedOption = select.options[select.selectedIndex];
@@ -107,10 +106,10 @@ function removeVoucher() {
      selectedVoucher = null;
      document.getElementById("voucherCode").value = "";
      document.getElementById("selectedVoucherInfo").style.display = "none";
-     
+
      // Recalculate to remove voucher discount
      calculateTotal();
-     
+
      showToast("Đã bỏ chọn voucher", "info");
 }
 
@@ -125,19 +124,19 @@ function updatePromotionDiscount(selectElement) {
      if (!selectedOption.value) {
           // Remove promotion - RESET TO ORIGINAL
           delete selectedPromotions[storeId];
-          
+
           // Hide promotion info below select
           const promoInfo = document.getElementById(`promoInfo-${storeId}`);
           if (promoInfo) {
                promoInfo.style.display = "none";
           }
-          
+
           // Reset promotion discount display to 0
           const promoDiscountElement = document.getElementById(`promoDiscount-${storeId}`);
           if (promoDiscountElement) {
                promoDiscountElement.textContent = "0";
           }
-          
+
           // Hide store promotion discount row in summary
           const storePromoRow = document.getElementById(`storePromoRow-${storeId}`);
           const storePromoDiscount = document.getElementById(`storePromoDiscount-${storeId}`);
@@ -148,14 +147,14 @@ function updatePromotionDiscount(selectElement) {
           if (storePromoDiscount) {
                storePromoDiscount.textContent = "-0₫";
           }
-          
+
           // Reset store total to original (no discount)
           const storeTotal = storeSubtotals[storeId] || 0;
           const storeTotalElement = document.getElementById(`storeTotal-${storeId}`);
           if (storeTotalElement) {
                storeTotalElement.textContent = formatCurrency(storeTotal);
           }
-          
+
           showToast("Đã bỏ chọn khuyến mãi", "info");
      } else {
           // Add promotion
@@ -184,18 +183,18 @@ function updatePromotionDiscount(selectElement) {
 
           // Calculate and show discount for this store
           const discount = calculatePromotionDiscount(promotionData, storeTotal);
-          
+
           // Update promotion info below select
           const promoDiscountElement = document.getElementById(`promoDiscount-${storeId}`);
           if (promoDiscountElement) {
                promoDiscountElement.textContent = formatCurrency(discount);
           }
-          
+
           const promoInfo = document.getElementById(`promoInfo-${storeId}`);
           if (promoInfo) {
                promoInfo.style.display = "block";
           }
-          
+
           // Show store promotion discount row in summary
           const storePromoRow = document.getElementById(`storePromoRow-${storeId}`);
           const storePromoDiscount = document.getElementById(`storePromoDiscount-${storeId}`);
@@ -204,7 +203,7 @@ function updatePromotionDiscount(selectElement) {
                storePromoRow.style.removeProperty("display");
                storePromoRow.style.display = "flex";
           }
-          
+
           // Update store total after promotion
           const storeTotalElement = document.getElementById(`storeTotal-${storeId}`);
           if (storeTotalElement) {
@@ -258,7 +257,7 @@ function calculateVoucherDiscount(voucher, amount) {
 function calculateTotal() {
      let totalPromotionDiscount = 0;
      let totalVoucherDiscount = 0;
-     
+
      // Object to store each store's amount after promotion
      const storeAmountsAfterPromotion = {};
 
@@ -268,11 +267,11 @@ function calculateTotal() {
           const storeTotal = storeSubtotals[storeId] || 0;
           const discount = calculatePromotionDiscount(promotion, storeTotal);
           totalPromotionDiscount += discount;
-          
+
           // Store amount after promotion for this store
           storeAmountsAfterPromotion[storeId] = storeTotal - discount;
      });
-     
+
      // For stores without promotion, use original amount
      Object.keys(storeSubtotals).forEach((storeId) => {
           if (!storeAmountsAfterPromotion[storeId]) {
@@ -288,25 +287,27 @@ function calculateTotal() {
           // Bước 1: Tính % voucher cho TỪNG SHOP
           const voucherDiscountsByStore = {};
           let totalVoucherBeforeMax = 0;
-          
+
           Object.keys(storeAmountsAfterPromotion).forEach((storeId) => {
                const storeAmount = storeAmountsAfterPromotion[storeId];
                const storeVoucherDiscount = calculateVoucherDiscount(selectedVoucher, storeAmount);
                voucherDiscountsByStore[storeId] = storeVoucherDiscount;
                totalVoucherBeforeMax += storeVoucherDiscount;
           });
-          
+
           // Bước 2: Kiểm tra maxDiscount
           const maxDiscount = selectedVoucher.max ? parseFloat(selectedVoucher.max) : 0;
-          
+
           if (maxDiscount > 0 && totalVoucherBeforeMax > maxDiscount) {
                // Tổng voucher vượt quá max, cần scale down theo tỷ lệ
                const scaleFactor = maxDiscount / totalVoucherBeforeMax;
-               
+
                Object.keys(voucherDiscountsByStore).forEach((storeId) => {
-                    voucherDiscountsByStore[storeId] = Math.round(voucherDiscountsByStore[storeId] * scaleFactor);
+                    voucherDiscountsByStore[storeId] = Math.round(
+                         voucherDiscountsByStore[storeId] * scaleFactor
+                    );
                });
-               
+
                totalVoucherDiscount = maxDiscount;
           } else {
                // Không vượt quá max, dùng tổng ban đầu
@@ -382,30 +383,11 @@ function placeOrder(event) {
 
      // Get promotions by store
      const promotionsByStore = {};
-     Object.keys(selectedPromotions).forEach(storeId => {
+     Object.keys(selectedPromotions).forEach((storeId) => {
           promotionsByStore[storeId] = selectedPromotions[storeId].id;
      });
 
-     // Get form data
-     const formData = {
-          fullName: document.getElementById("fullName").value,
-          phone: document.getElementById("phone").value,
-          address: document.getElementById("address").value,
-          province: document.getElementById("province").value,
-          district: document.getElementById("district").value,
-          ward: document.getElementById("ward").value,
-          note: document.getElementById("note").value,
-          paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
-          voucherCode: selectedVoucher ? selectedVoucher.code : null,
-          promotionsByStore: promotionsByStore
-     };
-
-     console.log("Sending order data:", formData);
-
-     // Setup headers
-     const headers = {
-          "Content-Type": "application/json",
-     };
+     // Build sending data
      const data = {
           fullName: document.getElementById("fullName").value.trim(),
           phone: document.getElementById("phone").value.trim(),
@@ -414,6 +396,8 @@ function placeOrder(event) {
           longitude: document.getElementById("longitude").value,
           note: document.getElementById("note").value.trim(),
           paymentMethod: document.querySelector('input[name="paymentMethod"]:checked')?.value,
+          voucherCode: selectedVoucher ? selectedVoucher.code : null,
+          promotionsByStore,
      };
 
      if (!data.latitude || !data.longitude)
@@ -421,7 +405,9 @@ function placeOrder(event) {
 
      if (!data.paymentMethod) return showToast("Vui lòng chọn phương thức thanh toán!", "warning");
 
-     const headers = { "Content-Type": "application/json" };
+     const headers = {
+          "Content-Type": "application/json",
+     };
      headers[pageData.csrfHeader] = pageData.csrfToken;
 
      const btn = event.target;
@@ -431,25 +417,21 @@ function placeOrder(event) {
 
      fetch("/checkout/place-order", {
           method: "POST",
-          headers: headers,
+          headers,
           body: JSON.stringify(data),
      })
           .then((res) => res.json())
           .then((data) => {
                if (!data.success) {
                     showToast(data.message || "Lỗi đặt hàng!", "error");
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
                     return;
                }
 
-               // ✅ VNPAY
                if (data.paymentMethod === "VNPAY") {
                     window.location.href = data.paymentUrl;
                     return;
                }
 
-               // ✅ BANK QR
                if (data.paymentMethod === "BANK_QR") {
                     window.currentOrderId = data.orderId;
                     document.getElementById("qrImage").src = data.qrImage;
@@ -457,15 +439,10 @@ function placeOrder(event) {
                          "vi-VN"
                     ).format(data.amount);
                     document.getElementById("qrDesc").innerText = data.description;
-
                     new bootstrap.Modal(document.getElementById("bankQrModal")).show();
-
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
                     return;
                }
 
-               // ✅ COD
                window.location.href = "/checkout/success?orderId=" + data.orderId;
           })
           .catch(() => showToast("Không thể kết nối máy chủ!", "error"))

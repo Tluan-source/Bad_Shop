@@ -229,18 +229,23 @@ public class OrderService {
     }
     
     @Transactional
-    public Order createOrder(List<CheckoutItemDTO> items, CheckoutRequest request, String userId) {
-    public List<Order> createOrders(List<CheckoutItemDTO> items, CheckoutRequest request, String userId) {
-        // Group items by store
-        Map<String, List<CheckoutItemDTO>> itemsByStore = new HashMap<>();
-        for (CheckoutItemDTO item : items) {
-            itemsByStore.computeIfAbsent(item.getStoreId(), k -> new ArrayList<>()).add(item);
-        }
+public List<Order> createOrders(List<CheckoutItemDTO> items, CheckoutRequest request, String userId) {
 
-        User user = userRepository.findById(userId).orElseThrow();
+    // Gom sản phẩm theo từng shop
+    Map<String, List<CheckoutItemDTO>> itemsByStore = new HashMap<>();
+    for (CheckoutItemDTO item : items) {
+        itemsByStore.computeIfAbsent(item.getStoreId(), k -> new ArrayList<>()).add(item);
+    }
+
+    User user = userRepository.findById(userId).orElseThrow();
+    List<Order> orders = new ArrayList<>();
+
+    for (Map.Entry<String, List<CheckoutItemDTO>> entry : itemsByStore.entrySet()) {
+        String storeId = entry.getKey();
+        List<CheckoutItemDTO> storeItems = entry.getValue();
+
         Store store = storeRepository.findById(storeId).orElseThrow();
-        
-        // Create order
+
         Order order = new Order();
         order.setId(UUID.randomUUID().toString());
         order.setUser(user);
@@ -249,19 +254,17 @@ public class OrderService {
         order.setPhone(request.getPhone());
         order.setStatus(Order.OrderStatus.NOT_PROCESSED);
         order.setIsPaidBefore(false);
-        
-        // Set timestamps explicitly to ensure they are not null
+
         LocalDateTime now = LocalDateTime.now();
         order.setCreatedAt(now);
         order.setUpdatedAt(now);
-        
-        // Calculate totals
+
         BigDecimal subtotal = BigDecimal.ZERO;
         List<OrderItem> orderItems = new ArrayList<>();
-        
+
         for (CheckoutItemDTO item : storeItems) {
             Product product = productRepository.findById(item.getProductId()).orElseThrow();
-            
+
             OrderItem orderItem = new OrderItem();
             orderItem.setId(UUID.randomUUID().toString());
             orderItem.setOrder(order);
@@ -269,164 +272,52 @@ public class OrderService {
             orderItem.setQuantity(item.getQuantity());
             orderItem.setPrice(item.getPrice());
             orderItem.setTotal(item.getTotal());
-            
-            // Save style value IDs as JSON
+
             if (item.getStyleValueIds() != null && !item.getStyleValueIds().isEmpty()) {
                 try {
                     orderItem.setStyleValueIds(objectMapper.writeValueAsString(item.getStyleValueIds()));
                 } catch (Exception e) {
                     orderItem.setStyleValueIds("[]");
-        List<Order> orders = new ArrayList<>();
-
-        for (Map.Entry<String, List<CheckoutItemDTO>> entry : itemsByStore.entrySet()) {
-            String storeId = entry.getKey();
-            List<CheckoutItemDTO> storeItems = entry.getValue();
-
-            Store store = storeRepository.findById(storeId).orElseThrow();
-
-            // Create order
-            Order order = new Order();
-            order.setId(UUID.randomUUID().toString());
-            order.setUser(user);
-            order.setStore(store);
-            order.setAddress(formatAddress(request));
-            order.setPhone(request.getPhone());
-            order.setStatus(Order.OrderStatus.NOT_PROCESSED);
-            order.setIsPaidBefore(false);
-
-            // Set timestamps explicitly to ensure they are not null
-            LocalDateTime now = LocalDateTime.now();
-            order.setCreatedAt(now);
-            order.setUpdatedAt(now);
-
-            // Calculate totals
-            BigDecimal total = BigDecimal.ZERO;
-            List<OrderItem> orderItems = new ArrayList<>();
-
-            for (CheckoutItemDTO item : storeItems) {
-                Product product = productRepository.findById(item.getProductId()).orElseThrow();
-
-                OrderItem orderItem = new OrderItem();
-                orderItem.setId(UUID.randomUUID().toString());
-                orderItem.setOrder(order);
-                orderItem.setProduct(product);
-                orderItem.setQuantity(item.getQuantity());
-                orderItem.setPrice(item.getPrice());
-                orderItem.setTotal(item.getTotal());
-
-                // Save style value IDs as JSON
-                if (item.getStyleValueIds() != null && !item.getStyleValueIds().isEmpty()) {
-                    try {
-                        orderItem.setStyleValueIds(objectMapper.writeValueAsString(item.getStyleValueIds()));
-                    } catch (Exception e) {
-                        orderItem.setStyleValueIds("[]");
-                    }
                 }
-
-                orderItems.add(orderItem);
-                total = total.add(item.getTotal());
-
-                // Update product quantity and sold count
-                product.setQuantity(product.getQuantity() - item.getQuantity());
-                product.setSold(product.getSold() + item.getQuantity());
-                productRepository.save(product);
             }
-            
+
             orderItems.add(orderItem);
             subtotal = subtotal.add(item.getTotal());
-            
-            // Update product quantity and sold count
+
             product.setQuantity(product.getQuantity() - item.getQuantity());
             product.setSold(product.getSold() + item.getQuantity());
             productRepository.save(product);
         }
-        
+
         order.setOrderItems(orderItems);
-        
-        // === ÁP DỤNG GIẢM GIÁ ===
-        Promotion promotion = null;
-        Voucher voucher = null;
-        
-        // Validate và áp dụng promotion (giảm giá của shop)
-        if (request.getPromotionId() != null && !request.getPromotionId().trim().isEmpty()) {
-            promotion = discountService.validatePromotion(request.getPromotionId(), storeId, subtotal)
-                    .orElse(null);
-            if (promotion != null) {
-                order.setPromotion(promotion);
-                // Tăng usage count của promotion
-                promotion.setUsageCount(promotion.getUsageCount() + 1);
-                promotionRepository.save(promotion);
-            }
-        }
-        
-        // Validate và áp dụng voucher (giảm giá toàn sàn)
-        if (request.getVoucherCode() != null && !request.getVoucherCode().trim().isEmpty()) {
-            voucher = discountService.validateVoucher(request.getVoucherCode(), subtotal)
-                    .orElse(null);
-            if (voucher != null) {
-                order.setVoucher(voucher);
-                // Tăng usage count của voucher
-                voucher.setUsageCount(voucher.getUsageCount() + 1);
-                voucherRepository.save(voucher);
-            }
-        }
-        
-        // Tính toán tổng giảm giá
-        DiscountResult discountResult = discountService.calculateTotalDiscount(subtotal, promotion, voucher);
-        
-        order.setPromotionDiscount(discountResult.getPromotionDiscount());
-        order.setVoucherDiscount(discountResult.getVoucherDiscount());
-        order.setDiscountAmount(discountResult.getTotalDiscount());
-        
-        // Tính toán số tiền cuối cùng
-        BigDecimal finalAmount = discountResult.getFinalAmount();
-        
-        order.setAmountFromUser(finalAmount);
-        order.setAmountFromStore(finalAmount);
-        order.setAmountToStore(finalAmount);
-        
-        // Create payment record
+        order.setAmountFromUser(subtotal);
+        order.setAmountFromStore(subtotal);
+        order.setAmountToStore(subtotal);
+
         Payment payment = new Payment();
         payment.setId(UUID.randomUUID().toString());
         payment.setOrder(order);
-        payment.setAmount(finalAmount);  // Số tiền sau khi giảm giá
+        payment.setAmount(subtotal);
         payment.setStatus(Payment.PaymentStatus.PENDING);
-        payment.setPaymentMethod("VNPAY".equalsIgnoreCase(request.getPaymentMethod()) ? Payment.PaymentMethod.VNPAY : Payment.PaymentMethod.COD);
-        
-        order.setPayment(payment);
-        
-        return orderRepository.save(order);
 
-            order.setAmountFromUser(total);
-            order.setAmountFromStore(total);
-            order.setAmountToStore(total);
-            order.setOrderItems(orderItems);
-
-            // Create payment record
-            Payment payment = new Payment();
-            payment.setId(UUID.randomUUID().toString());
-            payment.setOrder(order);
-            payment.setAmount(total);
-            payment.setStatus(Payment.PaymentStatus.PENDING);
-
-            String method = request.getPaymentMethod().toUpperCase();
-
-            switch (method) {
-                case "VNPAY":
-                    payment.setPaymentMethod(Payment.PaymentMethod.VNPAY);
-                    break;
-                case "BANK_QR":
-                    payment.setPaymentMethod(Payment.PaymentMethod.BANK_QR);
-                    break;
-                default:
-                    payment.setPaymentMethod(Payment.PaymentMethod.COD);
-            }
-
-            order.setPayment(payment);
-            orders.add(orderRepository.save(order));
+        switch (request.getPaymentMethod().toUpperCase()) {
+            case "VNPAY":
+                payment.setPaymentMethod(Payment.PaymentMethod.VNPAY);
+                break;
+            case "BANK_QR":
+                payment.setPaymentMethod(Payment.PaymentMethod.BANK_QR);
+                break;
+            default:
+                payment.setPaymentMethod(Payment.PaymentMethod.COD);
         }
-        return orders;
+
+        order.setPayment(payment);
+        orders.add(orderRepository.save(order));
     }
+
+    return orders;
+}
+
     
     private String formatAddress(CheckoutRequest request) {
         StringBuilder address = new StringBuilder();
