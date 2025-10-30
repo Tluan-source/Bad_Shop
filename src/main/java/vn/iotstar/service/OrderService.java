@@ -21,14 +21,19 @@ import vn.iotstar.entity.Order;
 import vn.iotstar.entity.OrderItem;
 import vn.iotstar.entity.Payment;
 import vn.iotstar.entity.Product;
+import vn.iotstar.entity.Promotion;
 import vn.iotstar.entity.Store;
 import vn.iotstar.entity.User;
+import vn.iotstar.entity.Voucher;
 import vn.iotstar.repository.OrderItemRepository;
 import vn.iotstar.repository.OrderRepository;
 import vn.iotstar.repository.ProductRepository;
+import vn.iotstar.repository.PromotionRepository;
 import vn.iotstar.repository.StoreRepository;
 import vn.iotstar.repository.StyleValueRepository;
 import vn.iotstar.repository.UserRepository;
+import vn.iotstar.repository.VoucherRepository;
+import vn.iotstar.service.DiscountService.DiscountResult;
 
 @Service
 @RequiredArgsConstructor
@@ -40,9 +45,191 @@ public class OrderService {
     private final UserRepository userRepository;
     private final StoreRepository storeRepository;
     private final StyleValueRepository styleValueRepository;
+    private final VoucherRepository voucherRepository;
+    private final PromotionRepository promotionRepository;
+    private final DiscountService discountService;
     private final ObjectMapper objectMapper;
     
     @Transactional
+    public List<Order> createMultiStoreOrders(List<CheckoutItemDTO> items, CheckoutRequest request, 
+                                               Map<String, String> promotionsByStore, String userId) {
+        // Group items by store
+        Map<String, List<CheckoutItemDTO>> itemsByStore = new HashMap<>();
+        for (CheckoutItemDTO item : items) {
+            itemsByStore.computeIfAbsent(item.getStoreId(), k -> new ArrayList<>()).add(item);
+        }
+        
+        User user = userRepository.findById(userId).orElseThrow();
+        List<Order> createdOrders = new ArrayList<>();
+        
+        // === LOGIC MỚI: Tính TỔNG TẤT CẢ SHOP để validate voucher ===
+        BigDecimal grandTotal = items.stream()
+                .map(CheckoutItemDTO::getTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        // Validate voucher toàn sàn (check theo TỔNG TẤT CẢ SHOP)
+        Voucher voucher = null;
+        Map<String, BigDecimal> voucherDiscountsByStore = new HashMap<>();
+        
+        if (request.getVoucherCode() != null && !request.getVoucherCode().trim().isEmpty()) {
+            voucher = discountService.validateVoucher(request.getVoucherCode(), grandTotal)
+                    .orElseThrow(() -> new RuntimeException("Voucher không hợp lệ hoặc không đủ điều kiện sử dụng"));
+        }
+        
+        // === BƯỚC 1: Tính promotion và amount sau promotion cho TẤT CẢ shop ===
+        Map<String, BigDecimal> storeAmountsAfterPromotion = new HashMap<>();
+        Map<String, Promotion> promotionsByStoreId = new HashMap<>();
+        
+        for (Map.Entry<String, List<CheckoutItemDTO>> entry : itemsByStore.entrySet()) {
+            String storeId = entry.getKey();
+            List<CheckoutItemDTO> storeItems = entry.getValue();
+            
+            // Calculate subtotal for this store
+            BigDecimal subtotal = storeItems.stream()
+                    .map(CheckoutItemDTO::getTotal)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            // Validate promotion cho shop này
+            Promotion promotion = null;
+            String promotionId = promotionsByStore != null ? promotionsByStore.get(storeId) : null;
+            
+            if (promotionId != null && !promotionId.trim().isEmpty()) {
+                promotion = discountService.validatePromotion(promotionId, storeId, subtotal)
+                        .orElse(null);
+                if (promotion != null) {
+                    promotionsByStoreId.put(storeId, promotion);
+                }
+            }
+            
+            // Tính discount từ promotion
+            BigDecimal promotionDiscount = BigDecimal.ZERO;
+            if (promotion != null) {
+                promotionDiscount = discountService.calculatePromotionDiscount(promotion, subtotal);
+            }
+            
+            // Lưu amount sau promotion
+            BigDecimal afterPromotion = subtotal.subtract(promotionDiscount);
+            storeAmountsAfterPromotion.put(storeId, afterPromotion);
+        }
+        
+        // === BƯỚC 2: Tính voucher discount cho TẤT CẢ shop (áp dụng maxDiscount đúng) ===
+        if (voucher != null) {
+            voucherDiscountsByStore = discountService.calculateVoucherDiscountsForAllStores(
+                    voucher, grandTotal, storeAmountsAfterPromotion);
+        }
+        
+        // === BƯỚC 3: Tạo đơn hàng cho từng shop với discount đã tính ===
+        for (Map.Entry<String, List<CheckoutItemDTO>> entry : itemsByStore.entrySet()) {
+            String storeId = entry.getKey();
+            List<CheckoutItemDTO> storeItems = entry.getValue();
+            
+            Store store = storeRepository.findById(storeId).orElseThrow();
+            
+            // Create order
+            Order order = new Order();
+            order.setId(UUID.randomUUID().toString());
+            order.setUser(user);
+            order.setStore(store);
+            order.setAddress(formatAddress(request));
+            order.setPhone(request.getPhone());
+            order.setStatus(Order.OrderStatus.NOT_PROCESSED);
+            order.setIsPaidBefore(false);
+            
+            LocalDateTime now = LocalDateTime.now();
+            order.setCreatedAt(now);
+            order.setUpdatedAt(now);
+            
+            // Calculate subtotal for this store
+            BigDecimal subtotal = BigDecimal.ZERO;
+            List<OrderItem> orderItems = new ArrayList<>();
+            
+            for (CheckoutItemDTO item : storeItems) {
+                Product product = productRepository.findById(item.getProductId()).orElseThrow();
+                
+                OrderItem orderItem = new OrderItem();
+                orderItem.setId(UUID.randomUUID().toString());
+                orderItem.setOrder(order);
+                orderItem.setProduct(product);
+                orderItem.setQuantity(item.getQuantity());
+                orderItem.setPrice(item.getPrice());
+                orderItem.setTotal(item.getTotal());
+                
+                // Save style value IDs as JSON
+                if (item.getStyleValueIds() != null && !item.getStyleValueIds().isEmpty()) {
+                    try {
+                        orderItem.setStyleValueIds(objectMapper.writeValueAsString(item.getStyleValueIds()));
+                    } catch (Exception e) {
+                        orderItem.setStyleValueIds("[]");
+                    }
+                }
+                
+                orderItems.add(orderItem);
+                subtotal = subtotal.add(item.getTotal());
+            }
+            
+            order.setOrderItems(orderItems);
+            
+            // === ÁP DỤNG PROMOTION CỦA SHOP ===
+            Promotion promotion = promotionsByStoreId.get(storeId);
+            
+            if (promotion != null) {
+                order.setPromotion(promotion);
+                promotion.setUsageCount(promotion.getUsageCount() + 1);
+                promotionRepository.save(promotion);
+            }
+            
+            // Tính giảm giá từ promotion
+            BigDecimal promotionDiscount = BigDecimal.ZERO;
+            if (promotion != null) {
+                promotionDiscount = discountService.calculatePromotionDiscount(promotion, subtotal);
+            }
+            
+            order.setPromotionDiscount(promotionDiscount);
+            
+            // Số tiền sau promotion
+            BigDecimal afterPromotion = subtotal.subtract(promotionDiscount);
+            
+            // === ÁP DỤNG VOUCHER (đã tính sẵn với maxDiscount) ===
+            BigDecimal voucherDiscount = voucherDiscountsByStore.getOrDefault(storeId, BigDecimal.ZERO);
+            if (voucher != null && voucherDiscount.compareTo(BigDecimal.ZERO) > 0) {
+                order.setVoucher(voucher);
+            }
+            
+            order.setVoucherDiscount(voucherDiscount);
+            order.setDiscountAmount(promotionDiscount.add(voucherDiscount));
+            
+            // Số tiền cuối cùng
+            BigDecimal finalAmount = afterPromotion.subtract(voucherDiscount);
+            
+            order.setAmountFromUser(finalAmount);
+            order.setAmountFromStore(finalAmount);
+            order.setAmountToStore(finalAmount);
+            
+            // Create payment record
+            Payment payment = new Payment();
+            payment.setId(UUID.randomUUID().toString());
+            payment.setOrder(order);
+            payment.setAmount(finalAmount);
+            payment.setStatus(Payment.PaymentStatus.PENDING);
+            payment.setPaymentMethod("VNPAY".equalsIgnoreCase(request.getPaymentMethod()) 
+                    ? Payment.PaymentMethod.VNPAY : Payment.PaymentMethod.COD);
+            
+            order.setPayment(payment);
+            
+            createdOrders.add(orderRepository.save(order));
+        }
+        
+        // Tăng usage count của voucher (chỉ 1 lần)
+        if (voucher != null) {
+            voucher.setUsageCount(voucher.getUsageCount() + 1);
+            voucherRepository.save(voucher);
+        }
+        
+        return createdOrders;
+    }
+    
+    @Transactional
+    public Order createOrder(List<CheckoutItemDTO> items, CheckoutRequest request, String userId) {
     public List<Order> createOrders(List<CheckoutItemDTO> items, CheckoutRequest request, String userId) {
         // Group items by store
         Map<String, List<CheckoutItemDTO>> itemsByStore = new HashMap<>();
@@ -51,6 +238,44 @@ public class OrderService {
         }
 
         User user = userRepository.findById(userId).orElseThrow();
+        Store store = storeRepository.findById(storeId).orElseThrow();
+        
+        // Create order
+        Order order = new Order();
+        order.setId(UUID.randomUUID().toString());
+        order.setUser(user);
+        order.setStore(store);
+        order.setAddress(formatAddress(request));
+        order.setPhone(request.getPhone());
+        order.setStatus(Order.OrderStatus.NOT_PROCESSED);
+        order.setIsPaidBefore(false);
+        
+        // Set timestamps explicitly to ensure they are not null
+        LocalDateTime now = LocalDateTime.now();
+        order.setCreatedAt(now);
+        order.setUpdatedAt(now);
+        
+        // Calculate totals
+        BigDecimal subtotal = BigDecimal.ZERO;
+        List<OrderItem> orderItems = new ArrayList<>();
+        
+        for (CheckoutItemDTO item : storeItems) {
+            Product product = productRepository.findById(item.getProductId()).orElseThrow();
+            
+            OrderItem orderItem = new OrderItem();
+            orderItem.setId(UUID.randomUUID().toString());
+            orderItem.setOrder(order);
+            orderItem.setProduct(product);
+            orderItem.setQuantity(item.getQuantity());
+            orderItem.setPrice(item.getPrice());
+            orderItem.setTotal(item.getTotal());
+            
+            // Save style value IDs as JSON
+            if (item.getStyleValueIds() != null && !item.getStyleValueIds().isEmpty()) {
+                try {
+                    orderItem.setStyleValueIds(objectMapper.writeValueAsString(item.getStyleValueIds()));
+                } catch (Exception e) {
+                    orderItem.setStyleValueIds("[]");
         List<Order> orders = new ArrayList<>();
 
         for (Map.Entry<String, List<CheckoutItemDTO>> entry : itemsByStore.entrySet()) {
@@ -106,6 +331,71 @@ public class OrderService {
                 product.setSold(product.getSold() + item.getQuantity());
                 productRepository.save(product);
             }
+            
+            orderItems.add(orderItem);
+            subtotal = subtotal.add(item.getTotal());
+            
+            // Update product quantity and sold count
+            product.setQuantity(product.getQuantity() - item.getQuantity());
+            product.setSold(product.getSold() + item.getQuantity());
+            productRepository.save(product);
+        }
+        
+        order.setOrderItems(orderItems);
+        
+        // === ÁP DỤNG GIẢM GIÁ ===
+        Promotion promotion = null;
+        Voucher voucher = null;
+        
+        // Validate và áp dụng promotion (giảm giá của shop)
+        if (request.getPromotionId() != null && !request.getPromotionId().trim().isEmpty()) {
+            promotion = discountService.validatePromotion(request.getPromotionId(), storeId, subtotal)
+                    .orElse(null);
+            if (promotion != null) {
+                order.setPromotion(promotion);
+                // Tăng usage count của promotion
+                promotion.setUsageCount(promotion.getUsageCount() + 1);
+                promotionRepository.save(promotion);
+            }
+        }
+        
+        // Validate và áp dụng voucher (giảm giá toàn sàn)
+        if (request.getVoucherCode() != null && !request.getVoucherCode().trim().isEmpty()) {
+            voucher = discountService.validateVoucher(request.getVoucherCode(), subtotal)
+                    .orElse(null);
+            if (voucher != null) {
+                order.setVoucher(voucher);
+                // Tăng usage count của voucher
+                voucher.setUsageCount(voucher.getUsageCount() + 1);
+                voucherRepository.save(voucher);
+            }
+        }
+        
+        // Tính toán tổng giảm giá
+        DiscountResult discountResult = discountService.calculateTotalDiscount(subtotal, promotion, voucher);
+        
+        order.setPromotionDiscount(discountResult.getPromotionDiscount());
+        order.setVoucherDiscount(discountResult.getVoucherDiscount());
+        order.setDiscountAmount(discountResult.getTotalDiscount());
+        
+        // Tính toán số tiền cuối cùng
+        BigDecimal finalAmount = discountResult.getFinalAmount();
+        
+        order.setAmountFromUser(finalAmount);
+        order.setAmountFromStore(finalAmount);
+        order.setAmountToStore(finalAmount);
+        
+        // Create payment record
+        Payment payment = new Payment();
+        payment.setId(UUID.randomUUID().toString());
+        payment.setOrder(order);
+        payment.setAmount(finalAmount);  // Số tiền sau khi giảm giá
+        payment.setStatus(Payment.PaymentStatus.PENDING);
+        payment.setPaymentMethod("VNPAY".equalsIgnoreCase(request.getPaymentMethod()) ? Payment.PaymentMethod.VNPAY : Payment.PaymentMethod.COD);
+        
+        order.setPayment(payment);
+        
+        return orderRepository.save(order);
 
             order.setAmountFromUser(total);
             order.setAmountFromStore(total);
