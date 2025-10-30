@@ -56,6 +56,10 @@ public class User {
     @Column(columnDefinition = "NVARCHAR(MAX)")
     private String bio;
     
+    @ManyToOne
+    @JoinColumn(name = "shipping_provider_id")
+    private ShippingProvider shippingProvider;
+    
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;

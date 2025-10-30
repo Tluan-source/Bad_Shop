@@ -252,15 +252,33 @@
                               <div class="card-header-custom">Tổng quan đơn hàng</div>
                               <div class="card-body-custom">
                                    <div class="info-row">
-                                        <div class="info-label">Tạm tính:</div>
+                                        <div class="info-label">Tổng tiền sản phẩm:</div>
                                         <div
                                              class="info-value text-end"
-                                             th:text="${#numbers.formatDecimal(order.amountFromUser, 0, 'COMMA', 0, 'POINT') + ' đ'}"
+                                             th:text="${#numbers.formatDecimal(subtotal, 0, 'COMMA', 0, 'POINT') + ' đ'}"
                                         ></div>
+                                   </div>
+                                   <div class="info-row" th:if="${order.discountAmount != null && order.discountAmount > 0}">
+                                        <div class="info-label">Giảm giá:</div>
+                                        <div
+                                             class="info-value text-end text-success"
+                                             th:text="'-' + ${#numbers.formatDecimal(order.discountAmount, 0, 'COMMA', 0, 'POINT') + ' đ'}"
+                                        ></div>
+                                   </div>
+                                   <div class="info-row" th:if="${order.shippingProvider != null}">
+                                        <div class="info-label">Nhà vận chuyển:</div>
+                                        <div class="info-value text-end">
+                                             <span th:text="${order.shippingProvider.name}"></span>
+                                        </div>
                                    </div>
                                    <div class="info-row">
                                         <div class="info-label">Phí vận chuyển:</div>
-                                        <div class="info-value text-end">0 đ</div>
+                                        <div 
+                                             class="info-value text-end"
+                                             th:text="${order.shippingProvider != null ? 
+                                                       #numbers.formatDecimal(order.shippingProvider.shippingFee, 0, 'COMMA', 0, 'POINT') + ' đ' : 
+                                                       (order.shippingFee != null ? #numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ')}"
+                                        ></div>
                                    </div>
                                    <div class="info-row border-top pt-3 mt-2">
                                         <div class="info-label">
@@ -269,7 +287,7 @@
                                         <div class="info-value text-end">
                                              <strong
                                                   class="text-danger fs-5"
-                                                  th:text="${#numbers.formatDecimal(order.amountFromUser, 0, 'COMMA', 0, 'POINT') + ' đ'}"
+                                                  th:text="${#numbers.formatDecimal(subtotal + actualShippingFee, 0, 'COMMA', 0, 'POINT') + ' đ'}"
                                              ></strong>
                                         </div>
                                    </div>

@@ -1,5 +1,6 @@
 package vn.iotstar.controller;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -83,6 +84,19 @@ public class OrderController {
         // Lấy thông tin Payment để hiển thị phương thức thanh toán
         Payment payment = paymentRepository.findByOrderId(orderId).orElse(null);
         
+        // Tính tổng tiền sản phẩm (subtotal)
+        BigDecimal subtotal = order.getOrderItems().stream()
+                .map(item -> item.getTotal())
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        
+        // Lấy phí vận chuyển thực tế (ưu tiên từ ShippingProvider)
+        BigDecimal actualShippingFee = BigDecimal.ZERO;
+        if (order.getShippingProvider() != null) {
+            actualShippingFee = order.getShippingProvider().getShippingFee();
+        } else if (order.getShippingFee() != null) {
+            actualShippingFee = order.getShippingFee();
+        }
+        
         // Lấy sản phẩm liên quan dựa trên các sản phẩm trong đơn hàng
         // Lấy category từ sản phẩm đầu tiên trong đơn hàng
         if (!order.getOrderItems().isEmpty()) {
@@ -102,6 +116,8 @@ public class OrderController {
         
         model.addAttribute("order", order);
         model.addAttribute("payment", payment);
+        model.addAttribute("subtotal", subtotal);
+        model.addAttribute("actualShippingFee", actualShippingFee);
         
         return "user/order-detail";
     }

@@ -43,6 +43,7 @@ public class CheckoutController {
     private final StyleValueRepository styleValueRepository;
     private final ObjectMapper objectMapper;
     private final VNPayService vnPayService;
+    private final vn.iotstar.repository.ShippingProviderRepository shippingProviderRepository;
     
     @PostMapping("/buy-now")
     public String buyNow(@RequestBody BuyNowRequest request, 
@@ -175,11 +176,18 @@ public class CheckoutController {
         List<UserAddress> addresses = checkoutService.getUserAddresses();
         UserAddress defaultAddress = checkoutService.getDefaultAddress();
         
+        // Get all active shipping providers
+        List<vn.iotstar.entity.ShippingProvider> shippingProviders = shippingProviderRepository.findAll()
+            .stream()
+            .filter(vn.iotstar.entity.ShippingProvider::getIsActive)
+            .toList();
+        
         model.addAttribute("items", items);
         model.addAttribute("total", total);
         model.addAttribute("user", user);
         model.addAttribute("addresses", addresses);
         model.addAttribute("defaultAddress", defaultAddress);
+        model.addAttribute("shippingProviders", shippingProviders);
         
         return "user/checkout";
     }

@@ -12,4 +12,5 @@ public class CheckoutRequest {
     private String ward;
     private String note;
     private String paymentMethod; // COD, BANK_TRANSFER, etc.
+    private String shippingProviderId; // ID của nhà vận chuyển được chọn
 }

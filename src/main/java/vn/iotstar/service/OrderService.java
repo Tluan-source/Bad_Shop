@@ -23,12 +23,16 @@ import vn.iotstar.entity.Payment;
 import vn.iotstar.entity.Product;
 import vn.iotstar.entity.Store;
 import vn.iotstar.entity.User;
+import vn.iotstar.entity.ShippingProvider;
+import vn.iotstar.entity.Shipment;
 import vn.iotstar.repository.OrderItemRepository;
 import vn.iotstar.repository.OrderRepository;
 import vn.iotstar.repository.ProductRepository;
 import vn.iotstar.repository.StoreRepository;
 import vn.iotstar.repository.StyleValueRepository;
 import vn.iotstar.repository.UserRepository;
+import vn.iotstar.repository.ShippingProviderRepository;
+import vn.iotstar.repository.ShipmentRepository;
 
 @Service
 @RequiredArgsConstructor
@@ -41,6 +45,8 @@ public class OrderService {
     private final StoreRepository storeRepository;
     private final StyleValueRepository styleValueRepository;
     private final ObjectMapper objectMapper;
+    private final ShippingProviderRepository shippingProviderRepository;
+    private final ShipmentRepository shipmentRepository;
     
     @Transactional
     public List<Order> createOrders(List<CheckoutItemDTO> items, CheckoutRequest request, String userId) {
@@ -51,6 +57,18 @@ public class OrderService {
         }
 
         User user = userRepository.findById(userId).orElseThrow();
+        
+        // Get shipping fee and provider from selected shipping provider
+        BigDecimal shippingFee = BigDecimal.ZERO;
+        ShippingProvider shippingProvider = null;
+        if (request.getShippingProviderId() != null && !request.getShippingProviderId().isEmpty()) {
+            Optional<ShippingProvider> providerOpt = shippingProviderRepository.findById(request.getShippingProviderId());
+            if (providerOpt.isPresent()) {
+                shippingProvider = providerOpt.get();
+                shippingFee = shippingProvider.getShippingFee();
+            }
+        }
+        
         List<Order> orders = new ArrayList<>();
 
         for (Map.Entry<String, List<CheckoutItemDTO>> entry : itemsByStore.entrySet()) {
@@ -75,7 +93,7 @@ public class OrderService {
             order.setUpdatedAt(now);
 
             // Calculate totals
-            BigDecimal total = BigDecimal.ZERO;
+            BigDecimal productTotal = BigDecimal.ZERO;
             List<OrderItem> orderItems = new ArrayList<>();
 
             for (CheckoutItemDTO item : storeItems) {
@@ -99,29 +117,34 @@ public class OrderService {
                 }
 
                 orderItems.add(orderItem);
-                total = total.add(item.getTotal());
+                productTotal = productTotal.add(item.getTotal());
 
-                // Update product quantity and sold count
-                product.setQuantity(product.getQuantity() - item.getQuantity());
-                product.setSold(product.getSold() + item.getQuantity());
-                productRepository.save(product);
+                // REMOVED: Don't update product quantity here
+                // Product quantity will be deducted when vendor confirms the order
+                // This prevents double deduction bug
             }
 
-            order.setAmountFromUser(total);
-            order.setAmountFromStore(total);
-            order.setAmountToStore(total);
+            // Calculate total with shipping fee
+            BigDecimal totalWithShipping = productTotal.add(shippingFee);
+
+            order.setShippingFee(shippingFee); // Set shipping fee vào order
+            order.setShippingProvider(shippingProvider); // Set shipping provider vào order
+            order.setAmountFromUser(totalWithShipping);
+            order.setAmountFromStore(totalWithShipping);
+            order.setAmountToStore(totalWithShipping);
             order.setOrderItems(orderItems);
 
-            // Create payment record
+            // Create payment record with total including shipping fee
             Payment payment = new Payment();
             payment.setId(UUID.randomUUID().toString());
             payment.setOrder(order);
-            payment.setAmount(total);
+            payment.setAmount(totalWithShipping);
             payment.setStatus(Payment.PaymentStatus.PENDING);
             payment.setPaymentMethod("VNPAY".equalsIgnoreCase(request.getPaymentMethod()) ? Payment.PaymentMethod.VNPAY : Payment.PaymentMethod.COD);
 
             order.setPayment(payment);
 
+            // Save order (KHÔNG tạo Shipment ở đây - sẽ tạo khi shipper nhận đơn)
             orders.add(orderRepository.save(order));
         }
 
@@ -202,6 +225,7 @@ public class OrderService {
     }
     
     public Optional<Order> getOrderById(String orderId) {
-        return orderRepository.findById(orderId);
+        Order order = orderRepository.findByIdWithFullDetails(orderId);
+        return Optional.ofNullable(order);
     }
 }

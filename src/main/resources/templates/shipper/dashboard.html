@@ -7,15 +7,28 @@
 	<div th:replace="~{fragments/header-shipper :: header-shipper}"></div>
 
 	<div class="container-fluid mt-4">
-		<div class="alert alert-success alert-dismissible fade show"
-			role="alert">
-			<i class="fas fa-check-circle"></i> Chào mừng <strong
-				sec:authentication="name">Shipper</strong> đến với trang quản lý
-			giao hàng!
+		<!-- Thông báo lỗi nếu shipper chưa được gán nhà vận chuyển -->
+		<div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
+			<i class="fas fa-exclamation-triangle"></i> <strong th:text="${error}"></strong>
+			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+		</div>
+		
+		<!-- Thông báo chào mừng với thông tin nhà vận chuyển -->
+		<div th:unless="${error}" class="alert alert-success alert-dismissible fade show" role="alert">
+			<i class="fas fa-check-circle"></i> Chào mừng <strong sec:authentication="name">Shipper</strong> 
+			đến với trang quản lý giao hàng!
+			<span th:if="${shippingProviderName}" class="ms-2">
+				| <i class="fas fa-shipping-fast"></i> Nhà vận chuyển: <strong th:text="${shippingProviderName}"></strong>
+			</span>
 			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 		</div>
 
-		<h2 class="mb-4">Dashboard - Tổng quan giao hàng</h2>
+		<h2 class="mb-4">
+			Dashboard - Tổng quan giao hàng
+			<span th:if="${shippingProviderName}" class="badge bg-primary ms-2">
+				<i class="fas fa-truck"></i> <span th:text="${shippingProviderName}"></span>
+			</span>
+		</h2>
 
 		<!-- 🔍 Form tìm kiếm - Đơn giản và gọn gàng -->
 		<form class="row g-3 mb-4" method="get" th:action="@{/shipper/dashboard}">

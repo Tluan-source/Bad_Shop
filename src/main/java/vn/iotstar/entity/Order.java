@@ -36,6 +36,10 @@ public class Order {
     @JoinColumn(name = "promotion_id")
     private Promotion promotion;
     
+    @ManyToOne
+    @JoinColumn(name = "shipping_provider_id")
+    private ShippingProvider shippingProvider;
+    
     @Column(columnDefinition = "NVARCHAR(500)")
     private String address;
     
