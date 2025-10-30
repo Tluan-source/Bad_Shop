@@ -134,8 +134,11 @@ public class CheckoutController {
                     ? product.getPromotionalPrice() 
                     : product.getPrice());
                 item.setQuantity(cartItem.getQuantity());
-                item.setStyleValueIds(null); // Cart items don't have style values for now
-                item.setStyleValues("");
+                // 🔹 Parse styleValueIds từ JSON trong CartItem (nếu có)
+                item.setStyleValueIds(parseStyleIds(cartItem.getStyleValueIds()));
+
+                // 🔹 Hiển thị dạng "Màu: Xanh, Size: 39"
+                item.setStyleValues(getStyleValuesDisplay(item.getStyleValueIds()));
                 item.setTotal(cartItem.getPrice());
                 item.setStoreId(product.getStore().getId());
                 item.setStoreName(product.getStore().getName());
@@ -304,5 +307,13 @@ public class CheckoutController {
         }
         
         return String.join(", ", styleValues);
+    }
+    private List<String> parseStyleIds(String json) {
+        try {
+            if (json == null || json.isBlank() || json.equals("[]")) return new ArrayList<>();
+            return objectMapper.readValue(json, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
     }
 }

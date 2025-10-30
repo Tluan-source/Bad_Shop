@@ -147,9 +147,11 @@
                                         <div class="row mb-3">
                                              <div class="col-md-6">
                                                   <div class="mb-2">
-                                                       <i class="fas fa-store me-2 text-primary"></i>
-                                                       <a 
-                                                            th:href="@{/stores/{id}(id=${order.store.id})}" 
+                                                       <i
+                                                            class="fas fa-store me-2 text-primary"
+                                                       ></i>
+                                                       <a
+                                                            th:href="@{/stores/{id}(id=${order.store.id})}"
                                                             class="text-decoration-none fw-bold"
                                                             th:text="${order.store.name}"
                                                        ></a>
@@ -169,7 +171,9 @@
                                              <div class="col-md-6 text-md-end mt-2 mt-md-0">
                                                   <div>
                                                        <i class="fas fa-user me-2 text-info"></i>
-                                                       <small th:text="${order.user.fullName}"></small>
+                                                       <small
+                                                            th:text="${order.user.fullName}"
+                                                       ></small>
                                                   </div>
                                                   <div>
                                                        <i
@@ -213,9 +217,9 @@
                                                        <p class="mb-1">
                                                             <small class="text-muted">
                                                                  <i class="fas fa-store me-1"></i>
-                                                                 Cửa hàng: 
-                                                                 <a 
-                                                                      th:href="@{/stores/{id}(id=${item.product.store.id})}" 
+                                                                 Cửa hàng:
+                                                                 <a
+                                                                      th:href="@{/stores/{id}(id=${item.product.store.id})}"
                                                                       class="text-decoration-none fw-semibold"
                                                                       th:text="${item.product.store.name}"
                                                                  ></a>
@@ -293,6 +297,18 @@
                                                   class="btn btn-outline-primary"
                                              >
                                                   <i class="fas fa-eye me-2"></i>Xem chi tiết
+                                             </a>
+                                        </div>
+                                        <!-- Add review button for delivered orders -->
+                                        <div
+                                             th:if="${order.status?.name() == 'DELIVERED'}"
+                                             class="text-end mt-3"
+                                        >
+                                             <a
+                                                  th:href="@{/reviews/submit-review(orderId=${order.id})}"
+                                                  class="btn btn-success"
+                                             >
+                                                  <i class="fas fa-star me-2"></i>Đánh giá sản phẩm
                                              </a>
                                         </div>
                                    </div>

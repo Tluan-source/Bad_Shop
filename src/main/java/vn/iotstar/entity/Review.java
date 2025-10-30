@@ -35,9 +35,9 @@ public class Review {
     @Column(columnDefinition = "NVARCHAR(1000)")
     private String comment;
     
-    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
-    private List<ReviewImage> images;
+    private List<ReviewImage> reviewImages;
 
     @CreationTimestamp
     @Column(name = "created_at")
@@ -46,4 +46,7 @@ public class Review {
     @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
+
+    @Transient
+    private boolean reviewed;
 }

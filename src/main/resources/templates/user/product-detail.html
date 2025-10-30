@@ -567,7 +567,97 @@
                     </div>
                </div>
           </section>
+          <!-- Product Reviews Section -->
+          <section class="bg-white shadow-sm my-4 py-4">
+               <div class="container">
+                    <h4 class="mb-4" style="color: #333; font-weight: 600">
+                         <i class="fas fa-star text-warning me-2"></i>Đánh Giá Sản Phẩm
+                    </h4>
 
+                    <!-- Nếu chưa có đánh giá -->
+                    <div
+                         th:if="${#lists.isEmpty(reviews)}"
+                         class="alert alert-light border text-center"
+                    >
+                         Chưa có đánh giá nào cho sản phẩm này.
+                    </div>
+
+                    <!-- Danh sách đánh giá -->
+                    <div
+                         th:each="review : ${reviews}"
+                         class="border rounded-3 p-3 mb-4"
+                         style="background: #fafafa"
+                    >
+                         <!-- Thông tin người dùng -->
+                         <div class="d-flex align-items-center mb-3">
+                              <img
+                                   th:src="${review.user.avatar != null ? review.user.avatar : '/images/default-avatar.png'}"
+                                   alt="Avatar"
+                                   class="rounded-circle me-3"
+                                   style="width: 50px; height: 50px; object-fit: cover"
+                              />
+                              <div>
+                                   <h6 class="mb-0" th:text="${review.user.fullName}">
+                                        Người dùng
+                                   </h6>
+                                   <small
+                                        class="text-muted"
+                                        th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy HH:mm')}"
+                                        >28/10/2025</small
+                                   >
+                              </div>
+                         </div>
+
+                         <!-- Rating -->
+                         <div class="mb-2">
+                              <span th:each="i : ${#numbers.sequence(1,5)}">
+                                   <i
+                                        th:classappend="${i <= review.rating ? 'fas' : 'far'} + ' fa-star text-warning'"
+                                   ></i>
+                              </span>
+                              <span class="ms-2 fw-semibold" th:text="${review.rating} + '/5'"
+                                   >5/5</span
+                              >
+                         </div>
+
+                         <!-- Thuộc tính đơn hàng -->
+                         <div
+                              th:if="${review.orderItem != null and !#lists.isEmpty(review.orderItem.styleValueNames)}"
+                              class="text-muted small mb-2"
+                         >
+                              <i class="fas fa-tags me-1 text-secondary"></i>
+                              <span
+                                   th:each="attr, iterStat : ${review.orderItem.styleValueNames}"
+                                   th:text="${attr} + (${!iterStat.last ? ', ' : ''})"
+                              ></span>
+                         </div>
+
+                         <!-- Nội dung bình luận -->
+                         <p class="mb-3" th:text="${review.comment}">
+                              Sản phẩm rất tốt, đóng gói kỹ, giao nhanh.
+                         </p>
+
+                         <!-- Ảnh review -->
+                         <div
+                              th:if="${!#lists.isEmpty(review.reviewImages)}"
+                              class="d-flex flex-wrap gap-2"
+                         >
+                              <a
+                                   th:each="img : ${review.reviewImages}"
+                                   th:href="${img.url}"
+                                   target="_blank"
+                              >
+                                   <img
+                                        th:src="${img.url}"
+                                        alt="Ảnh đánh giá"
+                                        class="rounded-2"
+                                        style="width: 100px; height: 100px; object-fit: cover"
+                                   />
+                              </a>
+                         </div>
+                    </div>
+               </div>
+          </section>
           <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 
           <!-- Toast Notification -->

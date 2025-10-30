@@ -3,7 +3,7 @@ package vn.iotstar;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = "vn.iotstar")
 public class BadmintonMarketplaceApplication {
 
 	public static void main(String[] args) {

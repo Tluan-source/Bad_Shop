@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import vn.iotstar.entity.User;
@@ -96,6 +97,43 @@ public class UserProfileController {
             redirectAttributes.addFlashAttribute("messageType", "error");
         }
         
+        return "redirect:/user/profile";
+    }
+    @PostMapping("/avatar")
+    public String updateAvatar(@RequestParam("avatar") MultipartFile file,
+                            RedirectAttributes redirectAttributes) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+
+        try {
+            Optional<User> userOpt = userProfileService.getUserByEmail(email);
+            if (userOpt.isEmpty()) {
+                redirectAttributes.addFlashAttribute("message", "Không tìm thấy người dùng!");
+                redirectAttributes.addFlashAttribute("messageType", "error");
+                return "redirect:/user/profile";
+            }
+
+            User user = userOpt.get();
+
+            if (file != null && !file.isEmpty()) {
+                // Upload ảnh lên Cloudinary
+                String imageUrl = userProfileService.uploadAvatar(file);
+                user.setAvatar(imageUrl);
+                userProfileService.updateProfile(user);
+
+                redirectAttributes.addFlashAttribute("message", "Cập nhật ảnh đại diện thành công!");
+                redirectAttributes.addFlashAttribute("messageType", "success");
+            } else {
+                redirectAttributes.addFlashAttribute("message", "Vui lòng chọn ảnh hợp lệ!");
+                redirectAttributes.addFlashAttribute("messageType", "error");
+            }
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            redirectAttributes.addFlashAttribute("message", "Lỗi khi tải ảnh: " + e.getMessage());
+            redirectAttributes.addFlashAttribute("messageType", "error");
+        }
+
         return "redirect:/user/profile";
     }
 }
