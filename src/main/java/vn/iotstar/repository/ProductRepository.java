@@ -72,4 +72,12 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     List<Product> findByNameContainingIgnoreCase(String keyword);
 
+    // RAG helper: get active/selling products by category and max effective price (promo or price)
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.isSelling = true " +
+           "AND p.category.id = :categoryId AND COALESCE(p.promotionalPrice, p.price) <= :maxPrice " +
+           "ORDER BY COALESCE(p.promotionalPrice, p.price) ASC")
+    List<Product> findTopByCategoryAndMaxPrice(@Param("categoryId") String categoryId,
+                                               @Param("maxPrice") java.math.BigDecimal maxPrice,
+                                               org.springframework.data.domain.Pageable pageable);
+
 }

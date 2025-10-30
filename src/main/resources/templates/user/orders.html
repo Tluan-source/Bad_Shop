@@ -13,6 +13,7 @@
                     border-radius: 8px;
                     margin-bottom: 20px;
                     transition: box-shadow 0.3s;
+                    position: relative;
                }
                .order-card:hover {
                     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
@@ -73,6 +74,11 @@
                }
                .product-info {
                     flex: 1;
+               }
+               .truncate {
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
                }
                .empty-state {
                     text-align: center;
@@ -144,7 +150,7 @@
                                    <!-- Order body -->
                                    <div class="order-body">
                                         <!-- Store and delivery info -->
-                                        <div class="row mb-3">
+                                        <div class="row mb-3 g-2">
                                              <div class="col-md-6">
                                                   <div class="mb-2">
                                                        <i
@@ -152,7 +158,8 @@
                                                        ></i>
                                                        <a
                                                             th:href="@{/stores/{id}(id=${order.store.id})}"
-                                                            class="text-decoration-none fw-bold"
+                                                            class="text-decoration-none fw-bold truncate d-inline-block"
+                                                            style="max-width: 100%"
                                                             th:text="${order.store.name}"
                                                        ></a>
                                                   </div>
@@ -163,6 +170,7 @@
                                                        <small class="text-muted">
                                                             Giao đến:
                                                             <span
+                                                                 th:title="${order.address}"
                                                                  th:text="${#strings.length(order.address) > 50 ? #strings.substring(order.address, 0, 50) + '...' : order.address}"
                                                             ></span>
                                                        </small>
@@ -171,9 +179,7 @@
                                              <div class="col-md-6 text-md-end mt-2 mt-md-0">
                                                   <div>
                                                        <i class="fas fa-user me-2 text-info"></i>
-                                                       <small
-                                                            th:text="${order.user.fullName}"
-                                                       ></small>
+                                                       <small class="truncate d-inline-block" style="max-width: 100%" th:text="${order.user.fullName}"></small>
                                                   </div>
                                                   <div>
                                                        <i
@@ -187,14 +193,12 @@
                                         <hr class="my-3" />
 
                                         <!-- Products summary -->
-                                        <div class="mb-3">
-                                             <strong>
+                                        <div class="mb-3 d-flex align-items-center">
+                                             <strong class="me-2">
                                                   <i class="fas fa-box me-2"></i>
-                                                  Sản phẩm (<span
-                                                       th:text="${#lists.size(order.orderItems)}"
-                                                  ></span>
-                                                  món):
+                                                  Sản phẩm
                                              </strong>
+                                             <span class="badge bg-secondary" th:text="${#lists.size(order.orderItems)}"></span>
                                         </div>
 
                                         <!-- Products - Show max 2 items -->
@@ -207,12 +211,10 @@
                                                        th:src="${item.product.firstImage}"
                                                        th:alt="${item.product.name}"
                                                        class="product-image"
+                                                       loading="lazy"
                                                   />
                                                   <div class="product-info">
-                                                       <h6
-                                                            class="mb-1"
-                                                            th:text="${item.product.name}"
-                                                       ></h6>
+                                                       <h6 class="mb-1 truncate" th:title="${item.product.name}" th:text="${item.product.name}"></h6>
                                                        <!-- Store name with link -->
                                                        <p class="mb-1">
                                                             <small class="text-muted">
@@ -220,7 +222,8 @@
                                                                  Cửa hàng:
                                                                  <a
                                                                       th:href="@{/stores/{id}(id=${item.product.store.id})}"
-                                                                      class="text-decoration-none fw-semibold"
+                                                                      class="text-decoration-none fw-semibold truncate d-inline-block"
+                                                                      style="max-width: 100%"
                                                                       th:text="${item.product.store.name}"
                                                                  ></a>
                                                             </small>
@@ -257,24 +260,17 @@
                                         </div>
 
                                         <!-- Show more products indicator -->
-                                        <div
-                                             th:if="${#lists.size(order.orderItems) > 2}"
-                                             class="text-center py-2"
-                                        >
-                                             <small class="text-muted">
-                                                  <i class="fas fa-ellipsis-h me-1"></i>
-                                                  Còn
-                                                  <span
-                                                       th:text="${#lists.size(order.orderItems) - 2}"
-                                                  ></span>
-                                                  sản phẩm khác
-                                             </small>
+                                        <div th:if="${#lists.size(order.orderItems) > 2}" class="text-center py-2">
+                                             <a th:href="@{/orders/{id}(id=${order.id})}" class="text-muted text-decoration-none">
+                                                  <small>
+                                                       <i class="fas fa-ellipsis-h me-1"></i>
+                                                       Còn <span th:text="${#lists.size(order.orderItems) - 2}"></span> sản phẩm khác
+                                                  </small>
+                                             </a>
                                         </div>
 
                                         <!-- Order footer -->
-                                        <div
-                                             class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top"
-                                        >
+                                        <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
                                              <div>
                                                   <div class="mb-1">
                                                        <i
@@ -292,10 +288,7 @@
                                                        ></strong>
                                                   </div>
                                              </div>
-                                             <a
-                                                  th:href="@{/orders/{id}(id=${order.id})}"
-                                                  class="btn btn-outline-primary"
-                                             >
+                                             <a th:href="@{/orders/{id}(id=${order.id})}" class="btn btn-outline-primary btn-sm stretched-link">
                                                   <i class="fas fa-eye me-2"></i>Xem chi tiết
                                              </a>
                                         </div>
@@ -306,7 +299,7 @@
                                         >
                                              <a
                                                   th:href="@{/reviews/submit-review(orderId=${order.id})}"
-                                                  class="btn btn-success"
+                                                  class="btn btn-success btn-sm"
                                              >
                                                   <i class="fas fa-star me-2"></i>Đánh giá sản phẩm
                                              </a>

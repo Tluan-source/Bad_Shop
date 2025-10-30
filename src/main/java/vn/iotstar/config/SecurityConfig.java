@@ -30,7 +30,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/css/**", "/js/**", "/images/**", "/uploads/**", "/register", "/login", 
                     "/products", "/stores", "/stores/**", "/categories", "/categories/**", 
-                    "/verify-otp", "/forgot", "/reset", "/payment/**", "/checkout/**").permitAll()
+                    "/verify-otp", "/forgot", "/reset", "/payment/**", "/checkout/**", "/api/ai-chat").permitAll()
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .requestMatchers("/vendor/register").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/vendor/**").hasAnyRole("VENDOR", "ADMIN")
@@ -52,7 +52,7 @@ public class SecurityConfig {
             .authenticationProvider(authenticationProvider())
             .csrf(csrf -> csrf
                 .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/checkout/from-cart", "/admin/shipping/delete", "/admin/categories/*/delete")
+                .ignoringRequestMatchers("/checkout/from-cart", "/admin/shipping/delete", "/admin/categories/*/delete", "/api/ai-chat")
             );
         
         return http.build();

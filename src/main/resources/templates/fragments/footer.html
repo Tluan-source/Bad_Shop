@@ -10,7 +10,7 @@
                          <!-- Company Info -->
                          <div class="col-lg-4 col-md-6">
                               <h5 class="text-white fw-bold mb-3">
-                                   <i class="fas fa-badminton me-2"></i>Badminton Store
+                                   <i class="fas fa-badminton me-2"></i>Bad Shop
                               </h5>
                               <p class="text-muted">
                                    Hệ thống mua bán dụng cụ cầu lông uy tín hàng đầu Việt Nam.
@@ -119,12 +119,140 @@
                     <!-- Copyright -->
                     <div class="text-center pt-3 border-top border-secondary">
                          <p class="text-muted mb-0">
-                              &copy; 2025 Badminton Store. All rights reserved. |
+                              &copy; 2025 Bad Shop. All rights reserved. |
                               <a href="#" class="text-muted">Chính sách bảo mật</a> |
                               <a href="#" class="text-muted">Điều khoản sử dụng</a>
                          </p>
                     </div>
                </div>
+          <!-- AI Chatbox Floating Widget (inside fragment so it renders everywhere) -->
+          <div id="ai-chatbox" style="position:fixed; right:20px; bottom:20px; z-index:1050;">
+               <button id="ai-open" class="btn btn-primary rounded-circle" style="
+                         width:64px;
+                         height:64px;
+                         border:none;
+                         background:transparent;
+                         padding:0;
+                         cursor:pointer;
+                         position:relative;
+                         display:flex;
+                         justify-content:center;
+                         align-items:center;
+                    ">
+                    <img src="https://res.cloudinary.com/duzkugddg/image/upload/v1761833180/avatars/goxoojrmczya2lnwqtla.png"
+                         alt="AI Bot"
+                         style="
+                              width:64px;
+                              height:64px;
+                              border-radius:50%;
+                              object-fit:cover;
+                              display:block;
+                         ">
+               </button>
+               <div id="ai-panel" class="card shadow" style="width:400px; max-width:95vw; display:none;">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                         <img src="https://res.cloudinary.com/duzkugddg/image/upload/v1761833180/avatars/goxoojrmczya2lnwqtla.png"
+                         alt="AI Bot" style="width:50px;">
+                         <strong class="text-black">Trợ lý AI Bad Shop</strong>
+                         <button id="ai-close" class="btn btn-sm btn-outline-secondary">×</button>
+                    </div>
+                    <div id="ai-messages" class="card-body" style="height:420px; overflow:auto; font-size:15px;">
+                         <div class="text-muted">Xin chào! Tôi có thể giúp gì?</div>
+                    </div>
+                    <div class="card-footer">
+                         <form id="ai-form" class="d-flex gap-2">
+                              <input id="ai-input" class="form-control" placeholder="Nhập câu hỏi..." style="height:48px; flex: 1 1 auto;" />
+                              <button class="btn btn-primary" type="submit" style="height:48px; min-width:80px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:inline-flex; align-items:center; justify-content:center;">Gửi</button>
+                         </form>
+                    </div>
+               </div>
+          </div>
+
+          <script>
+               (function () {
+                    const openBtn = document.getElementById('ai-open');
+                    const closeBtn = document.getElementById('ai-close');
+                    const panel = document.getElementById('ai-panel');
+                    const form = document.getElementById('ai-form');
+                    const input = document.getElementById('ai-input');
+                    const messages = document.getElementById('ai-messages');
+
+                    openBtn.addEventListener('click', () => { panel.style.display = 'block'; openBtn.style.display = 'none'; });
+                    closeBtn.addEventListener('click', () => { panel.style.display = 'none'; openBtn.style.display = 'inline-flex'; });
+
+                    function addMsg(text, role) {
+                         const div = document.createElement('div');
+                         div.className = role === 'user' ? 'text-end mb-2' : 'mb-2';
+                         const span = document.createElement('span');
+                         span.className = role === 'user' ? 'bubble user' : 'bubble ai';
+                         span.textContent = text;
+                         div.appendChild(span);
+                         messages.appendChild(div);
+                         messages.scrollTop = messages.scrollHeight;
+                    }
+
+                    function getCsrfToken() {
+                         const match = document.cookie.match(/(?:^|; )XSRF-TOKEN=([^;]+)/);
+                         return match ? decodeURIComponent(match[1]) : null;
+                    }
+
+                    form.addEventListener('submit', async (e) => {
+                         e.preventDefault();
+                         const text = input.value.trim();
+                         if (!text) return;
+                         addMsg(text, 'user');
+                         input.value = '';
+
+                         addMsg('Đang phản hồi...', 'ai');
+                         try {
+                              const csrf = getCsrfToken();
+                              const res = await fetch('/api/ai-chat', {
+                                   method: 'POST',
+                                   headers: Object.assign({ 'Content-Type': 'application/json' }, csrf ? { 'X-XSRF-TOKEN': csrf } : {}),
+                                   body: JSON.stringify({ message: text })
+                              });
+                              if (!res.ok) {
+                                   messages.lastChild.querySelector('span').textContent = 'Lỗi (' + res.status + '). Vui lòng thử lại.';
+                                   return;
+                              }
+                              let data;
+                              try {
+                                   data = await res.json();
+                              } catch (e) {
+                                   messages.lastChild.querySelector('span').textContent = 'Phản hồi không hợp lệ.';
+                                   return;
+                              }
+                              const reply = (data && typeof data.reply === 'string') ? data.reply.trim() : '';
+                              messages.lastChild.querySelector('span').textContent = reply && reply.length > 0
+                                   ? reply
+                                   : 'Gợi ý: Bạn có thể nói "mua vợt tầm 700k" hoặc "phụ kiện dưới 50k" để mình tư vấn.';
+                         } catch (err) {
+                              messages.lastChild.querySelector('span').textContent = 'Lỗi kết nối. Vui lòng thử lại.';
+                         }
+                    });
+               })();
+          </script>
+
+          <style>
+               #ai-messages .bubble {
+                    display: inline-block;
+                    max-width: 100%;
+                    padding: 8px 12px;
+                    border-radius: 12px;
+                    white-space: pre-wrap; /* keep line breaks */
+                    word-break: break-word; /* wrap long words/urls */
+               }
+               #ai-messages .bubble.user { background: var(--bs-primary); color: #fff; }
+               #ai-messages .bubble.ai { background: #f1f3f5; color: #212529; }
+
+               /* Mobile adjustments */
+               @media (max-width: 576px) {
+                    #ai-panel { width: 95vw !important; }
+                    #ai-messages { height: 60vh !important; }
+                    #ai-form button { min-width: 72px !important; }
+               }
+          </style>
+
           </footer>
 
           <!-- Bootstrap JS -->
