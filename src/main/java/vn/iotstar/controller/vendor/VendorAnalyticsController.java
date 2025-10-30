@@ -90,23 +90,23 @@ public class VendorAnalyticsController {
         LocalDateTime startOfWeek = now.minusDays(now.getDayOfWeek().getValue() - 1).toLocalDate().atStartOfDay();
         LocalDateTime startOfMonth = now.withDayOfMonth(1).toLocalDate().atStartOfDay();
         
-        BigDecimal today = orders.stream()
-                .filter(o -> o.getCreatedAt().isAfter(startOfDay))
-                .map(Order::getAmountToStore)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        BigDecimal thisWeek = orders.stream()
-                .filter(o -> o.getCreatedAt().isAfter(startOfWeek))
-                .map(Order::getAmountToStore)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
-        
-        BigDecimal thisMonth = orders.stream()
-                .filter(o -> o.getCreatedAt().isAfter(startOfMonth))
-                .map(Order::getAmountToStore)
-                .filter(Objects::nonNull)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+    BigDecimal today = orders.stream()
+        .filter(o -> o.getCreatedAt() != null && o.getCreatedAt().isAfter(startOfDay))
+        .map(Order::getAmountToStore)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    BigDecimal thisWeek = orders.stream()
+        .filter(o -> o.getCreatedAt() != null && o.getCreatedAt().isAfter(startOfWeek))
+        .map(Order::getAmountToStore)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+    BigDecimal thisMonth = orders.stream()
+        .filter(o -> o.getCreatedAt() != null && o.getCreatedAt().isAfter(startOfMonth))
+        .map(Order::getAmountToStore)
+        .filter(Objects::nonNull)
+        .reduce(BigDecimal.ZERO, BigDecimal::add);
         
         BigDecimal total = orders.stream()
                 .map(Order::getAmountToStore)

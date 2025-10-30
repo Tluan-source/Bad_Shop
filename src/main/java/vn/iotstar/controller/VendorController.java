@@ -302,7 +302,7 @@ public class VendorController {
     
     @GetMapping("/products")
     public String productList(@RequestParam(defaultValue = "0") int page,
-                             @RequestParam(defaultValue = "20") int size,
+                             @RequestParam(defaultValue = "10") int size,
                              @RequestParam(required = false) String search,
                              @RequestParam(required = false) String keyword,
                              @RequestParam(required = false) Boolean isSelling,
