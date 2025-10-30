@@ -225,19 +225,14 @@ public class CheckoutController {
             // Clear checkout items
             checkoutService.clearCheckoutItems();
 
-            // Handle payment method for the first order (example)
+           // Handle payment method for the first order (example)
             Order firstOrder = orders.get(0);
             String paymentMethod = request.getPaymentMethod();
 
             if ("VNPAY".equalsIgnoreCase(paymentMethod)) {
                 System.out.println("=== VNPAY PAYMENT PROCESSING ===");
-                System.out.println("Order ID: " + firstOrder.getId());
-                System.out.println("Amount: " + firstOrder.getAmountFromUser());
 
-                // Generate VNPay payment URL
                 String orderInfo = "Thanh toan don hang " + firstOrder.getId();
-                System.out.println("Order Info: " + orderInfo);
-
                 String paymentUrl = vnPayService.createPaymentUrl(
                     firstOrder.getAmountFromUser(),
                     orderInfo,
@@ -245,21 +240,36 @@ public class CheckoutController {
                     httpRequest
                 );
 
-                System.out.println("Generated VNPay URL: " + paymentUrl);
-
                 if (paymentUrl != null && !paymentUrl.isEmpty()) {
                     response.put("success", true);
                     response.put("paymentMethod", "VNPAY");
                     response.put("paymentUrl", paymentUrl);
                     response.put("orderId", firstOrder.getId());
-                    System.out.println("VNPay payment URL created successfully");
                 } else {
-                    System.out.println("ERROR: VNPay URL is null or empty");
                     response.put("success", false);
                     response.put("message", "Không thể tạo liên kết thanh toán VNPay");
                 }
-            } else {
-                // COD or other payment methods
+
+            } else if ("BANK_QR".equalsIgnoreCase(paymentMethod)) {
+                System.out.println("=== BANK QR PAYMENT ===");
+
+                String bankCode = "VCB"; // Ví dụ
+                String bankAccount = "1031421223";
+                String accountName = "NGUYEN THANH LUAN";
+
+                String description = "PAY-" + firstOrder.getId();
+                String qrUrl = "https://img.vietqr.io/image/" + bankCode + "-" + bankAccount + "-compact.png"
+                        + "?amount=" + firstOrder.getAmountFromUser()
+                        + "&addInfo=" + description
+                        + "&accountName=" + accountName;
+
+                response.put("success", true);
+                response.put("paymentMethod", "BANK_QR");
+                response.put("orderId", firstOrder.getId());
+                response.put("amount", firstOrder.getAmountFromUser());
+                response.put("qrImage", qrUrl);
+                response.put("description", description);
+            } else { // COD
                 response.put("success", true);
                 response.put("message", "Đặt hàng thành công");
                 response.put("orderId", firstOrder.getId());

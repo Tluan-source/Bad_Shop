@@ -118,13 +118,23 @@ public class OrderService {
             payment.setOrder(order);
             payment.setAmount(total);
             payment.setStatus(Payment.PaymentStatus.PENDING);
-            payment.setPaymentMethod("VNPAY".equalsIgnoreCase(request.getPaymentMethod()) ? Payment.PaymentMethod.VNPAY : Payment.PaymentMethod.COD);
+
+            String method = request.getPaymentMethod().toUpperCase();
+
+            switch (method) {
+                case "VNPAY":
+                    payment.setPaymentMethod(Payment.PaymentMethod.VNPAY);
+                    break;
+                case "BANK_QR":
+                    payment.setPaymentMethod(Payment.PaymentMethod.BANK_QR);
+                    break;
+                default:
+                    payment.setPaymentMethod(Payment.PaymentMethod.COD);
+            }
 
             order.setPayment(payment);
-
             orders.add(orderRepository.save(order));
         }
-
         return orders;
     }
     

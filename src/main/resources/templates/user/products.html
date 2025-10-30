@@ -6,6 +6,7 @@
 >
      <head th:replace="~{fragments/head :: head}">
           <title>Sản phẩm - Badminton Marketplace</title>
+          <link rel="stylesheet" href="/css/style.css" />
      </head>
      <body>
           <th:block th:replace="~{fragments/header :: header}"></th:block>
@@ -35,55 +36,35 @@
                                              <i class="fas fa-list me-2"></i>Danh mục
                                         </h5>
                                         <div class="filter-content">
-                                             <div class="form-check mb-2">
-                                                  <a
-                                                       th:href="@{/products(minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand})}"
-                                                       class="text-decoration-none"
-                                                       th:classappend="${selectedCategory == null ? 'fw-bold text-primary' : 'text-dark'}"
+                                             <div class="filter-content">
+                                                  <div class="form-check mb-2">
+                                                       <a
+                                                            th:href="@{/products(minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand})}"
+                                                            class="text-decoration-none"
+                                                            th:classappend="${selectedCategory == null ? 'fw-bold text-primary' : 'text-dark'}"
+                                                       >
+                                                            <i
+                                                                 class="fas fa-chevron-right me-2"
+                                                            ></i>
+                                                            Tất cả sản phẩm
+                                                       </a>
+                                                  </div>
+
+                                                  <div
+                                                       th:each="c : ${categories}"
+                                                       class="form-check mb-2"
                                                   >
-                                                       <i class="fas fa-chevron-right me-2"></i>Tất
-                                                       cả sản phẩm
-                                                  </a>
-                                             </div>
-                                             <div class="form-check mb-2">
-                                                  <a
-                                                       th:href="@{/products(category='C1', minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand})}"
-                                                       class="text-decoration-none"
-                                                       th:classappend="${selectedCategory == 'C1' ? 'fw-bold text-primary' : 'text-dark'}"
-                                                  >
-                                                       <i class="fas fa-chevron-right me-2"></i>Vợt
-                                                       cầu lông
-                                                  </a>
-                                             </div>
-                                             <div class="form-check mb-2">
-                                                  <a
-                                                       th:href="@{/products(category='C3', minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand})}"
-                                                       class="text-decoration-none"
-                                                       th:classappend="${selectedCategory == 'C3' ? 'fw-bold text-primary' : 'text-dark'}"
-                                                  >
-                                                       <i class="fas fa-chevron-right me-2"></i>Giày
-                                                       cầu lông
-                                                  </a>
-                                             </div>
-                                             <div class="form-check mb-2">
-                                                  <a
-                                                       th:href="@{/products(category='C2', minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand})}"
-                                                       class="text-decoration-none"
-                                                       th:classappend="${selectedCategory == 'C2' ? 'fw-bold text-primary' : 'text-dark'}"
-                                                  >
-                                                       <i class="fas fa-chevron-right me-2"></i>Quả
-                                                       cầu
-                                                  </a>
-                                             </div>
-                                             <div class="form-check mb-2">
-                                                  <a
-                                                       th:href="@{/products(category='C4', minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand})}"
-                                                       class="text-decoration-none"
-                                                       th:classappend="${selectedCategory == 'C4' ? 'fw-bold text-primary' : 'text-dark'}"
-                                                  >
-                                                       <i class="fas fa-chevron-right me-2"></i>Phụ
-                                                       kiện
-                                                  </a>
+                                                       <a
+                                                            th:href="@{/products(category=${c.id}, minPrice=${selectedMinPrice}, maxPrice=${selectedMaxPrice}, brand=${selectedBrand})}"
+                                                            class="text-decoration-none"
+                                                            th:classappend="${selectedCategory == c.id ? 'fw-bold text-primary' : 'text-dark'}"
+                                                       >
+                                                            <i
+                                                                 class="fas fa-chevron-right me-2"
+                                                            ></i>
+                                                            <span th:text="${c.name}"></span>
+                                                       </a>
+                                                  </div>
                                              </div>
                                         </div>
                                    </div>
@@ -272,6 +253,65 @@
                                              </div>
                                         </div>
                                         <div class="toolbar-right d-flex gap-2">
+                                             <!-- 🔍 Search realtime -->
+                                             <div class="position-relative me-2 d-flex">
+                                                  <input
+                                                       id="searchInput"
+                                                       class="form-control form-control-sm"
+                                                       style="width: 300px"
+                                                       type="text"
+                                                       name="keyword"
+                                                       placeholder="Tìm sản phẩm..."
+                                                       autocomplete="off"
+                                                       th:value="${keyword}"
+                                                  />
+
+                                                  <button
+                                                       class="btn btn-sm btn-primary ms-2"
+                                                       onclick="searchSubmit()"
+                                                  >
+                                                       <i class="fas fa-search"></i>
+                                                  </button>
+
+                                                  <!-- Giữ filter khi submit bằng nút search -->
+                                                  <input
+                                                       type="hidden"
+                                                       id="cateHold"
+                                                       th:value="${selectedCategory}"
+                                                  />
+                                                  <input
+                                                       type="hidden"
+                                                       id="minHold"
+                                                       th:value="${selectedMinPrice}"
+                                                  />
+                                                  <input
+                                                       type="hidden"
+                                                       id="maxHold"
+                                                       th:value="${selectedMaxPrice}"
+                                                  />
+                                                  <input
+                                                       type="hidden"
+                                                       id="brandHold"
+                                                       th:value="${selectedBrand}"
+                                                  />
+                                                  <input
+                                                       type="hidden"
+                                                       id="sortHold"
+                                                       th:value="${selectedSort}"
+                                                  />
+
+                                                  <!-- Suggest dropdown -->
+                                                  <div
+                                                       id="suggestBox"
+                                                       class="list-group position-absolute w-100 shadow-sm"
+                                                       style="
+                                                            z-index: 999;
+                                                            display: none;
+                                                            top: 37px;
+                                                       "
+                                                  ></div>
+                                             </div>
+
                                              <select
                                                   class="form-select form-select-sm"
                                                   style="width: auto"
@@ -520,39 +560,7 @@
 
           <th:block th:replace="~{fragments/footer :: footer}"></th:block>
 
-          <script>
-               function switchView(view) {
-                    const container = document.getElementById("productsContainer");
-                    const items = document.querySelectorAll(".product-item");
-                    const gridBtn = document.getElementById("gridViewBtn");
-                    const listBtn = document.getElementById("listViewBtn");
-
-                    if (view === "list") {
-                         // Chuyển sang list view
-                         container.classList.remove("row", "g-4");
-                         container.classList.add("list-view");
-                         items.forEach((item) => {
-                              item.classList.remove("col-lg-4", "col-md-6");
-                              item.classList.add("col-12");
-                         });
-
-                         // Toggle active button
-                         gridBtn.classList.remove("active");
-                         listBtn.classList.add("active");
-                    } else {
-                         // Chuyển về grid view
-                         container.classList.remove("list-view");
-                         container.classList.add("row", "g-4");
-                         items.forEach((item) => {
-                              item.classList.remove("col-12");
-                              item.classList.add("col-lg-4", "col-md-6");
-                         });
-
-                         // Toggle active button
-                         listBtn.classList.remove("active");
-                         gridBtn.classList.add("active");
-                    }
-               }
-          </script>
+          <script src="/js/products.js"></script>
+          <!-- <script src="/js/product-search.js"></script> -->
      </body>
 </html>
