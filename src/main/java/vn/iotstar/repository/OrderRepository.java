@@ -76,6 +76,17 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     // Find order with items
     @Query("SELECT o FROM Order o LEFT JOIN FETCH o.orderItems WHERE o.id = :orderId")
     Order findByIdWithItems(@Param("orderId") String orderId);
+    
+    // Find order with full details (items, shipment, shipping provider)
+    @Query("SELECT DISTINCT o FROM Order o " +
+           "LEFT JOIN FETCH o.orderItems oi " +
+           "LEFT JOIN FETCH oi.product p " +
+           "LEFT JOIN FETCH p.store " +
+           "LEFT JOIN FETCH o.shippingProvider " +
+           "LEFT JOIN FETCH o.shipment s " +
+           "LEFT JOIN FETCH s.shippingProvider " +
+           "WHERE o.id = :orderId")
+    Order findByIdWithFullDetails(@Param("orderId") String orderId);
 
        // Find orders that have an associated shipment (assigned to shipper)
        List<Order> findByStoreIdAndShipmentIsNotNullOrderByCreatedAtDesc(String storeId);
@@ -91,6 +102,30 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     
     long countByStatus(Order.OrderStatus status);
     
+    // 🚚 Query cho Shipper - Lọc theo shipping_provider_id
+    Page<Order> findByStatusAndShippingProviderId(Order.OrderStatus status, String shippingProviderId, Pageable pageable);
+    
+    long countByStatusAndShippingProviderId(Order.OrderStatus status, String shippingProviderId);
+    
+    @Query("SELECT o FROM Order o WHERE o.status = :status AND o.shippingProvider.id = :shippingProviderId " +
+           "AND o.createdAt BETWEEN :start AND :end")
+    Page<Order> findByStatusAndShippingProviderIdAndCreatedAtBetween(
+            @Param("status") Order.OrderStatus status,
+            @Param("shippingProviderId") String shippingProviderId,
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
+            Pageable pageable);
+    
+    @Query("SELECT o FROM Order o WHERE o.status = :status AND o.shippingProvider.id = :shippingProviderId " +
+           "AND (LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(o.address) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "OR LOWER(o.id) LIKE LOWER(CONCAT('%', :keyword, '%')))")
+    Page<Order> searchByStatusAndShippingProviderIdAndKeyword(
+            @Param("status") Order.OrderStatus status,
+            @Param("shippingProviderId") String shippingProviderId,
+            @Param("keyword") String keyword,
+            Pageable pageable);
+    
     @Query("SELECT o FROM Order o WHERE o.status = :status " +
            "AND o.createdAt BETWEEN :start AND :end")
     Page<Order> findByStatusAndCreatedAtBetween(
@@ -98,37 +133,4 @@ public interface OrderRepository extends JpaRepository<Order, String> {
             @Param("start") LocalDateTime start,
             @Param("end") LocalDateTime end,
             Pageable pageable);
-    
-    @Query("SELECT o FROM Order o WHERE o.status = :status " +
-           "AND (LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(o.address) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(o.id) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    Page<Order> searchByStatusAndKeyword(
-            @Param("status") Order.OrderStatus status,
-            @Param("keyword") String keyword,
-            Pageable pageable);
-    
-    // 🚚 Shipper queries - Orders chờ nhận (PROCESSING và chưa có shipment) - LEGACY
-    Page<Order> findByStatusAndShipmentIsNull(Order.OrderStatus status, Pageable pageable);
-    
-    long countByStatusAndShipmentIsNull(Order.OrderStatus status);
-    
-    @Query("SELECT o FROM Order o WHERE o.status = :status AND o.shipment IS NULL " +
-           "AND o.createdAt BETWEEN :start AND :end")
-    Page<Order> findByStatusAndShipmentIsNullAndCreatedAtBetween(
-            @Param("status") Order.OrderStatus status,
-            @Param("start") LocalDateTime start,
-            @Param("end") LocalDateTime end,
-            Pageable pageable);
-    
-    @Query("SELECT o FROM Order o WHERE o.status = :status AND o.shipment IS NULL " +
-           "AND (LOWER(o.user.fullName) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(o.address) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
-           "OR LOWER(o.id) LIKE LOWER(CONCAT('%', :keyword, '%')))")
-    Page<Order> searchByStatusAndShipmentIsNullAndKeyword(
-            @Param("status") Order.OrderStatus status,
-            @Param("keyword") String keyword,
-            Pageable pageable);
-    
-
 }

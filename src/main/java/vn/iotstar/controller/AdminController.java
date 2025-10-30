@@ -83,6 +83,9 @@ public class AdminController {
     @Autowired
     private MailService mailService;
     
+    @Autowired
+    private vn.iotstar.repository.ShippingProviderRepository shippingProviderRepository;
+    
     @GetMapping("/dashboard")
     public String dashboard(Model model, Authentication authentication) {
         model.addAttribute("username", authentication.getName());
@@ -123,6 +126,10 @@ public class AdminController {
             
             model.addAttribute("users", users);
             
+            // Get all shipping providers for dropdown
+            List<vn.iotstar.entity.ShippingProvider> shippingProviders = shippingProviderRepository.findAll();
+            model.addAttribute("shippingProviders", shippingProviders);
+            
             // Count by role - with null safety
             long adminCount = users.stream()
                 .filter(u -> u != null && u.getRole() != null && u.getRole() == User.UserRole.ADMIN)
@@ -144,6 +151,7 @@ public class AdminController {
             e.printStackTrace();
             model.addAttribute("error", "Có lỗi xảy ra khi tải danh sách người dùng: " + e.getMessage());
             model.addAttribute("users", new java.util.ArrayList<>());
+            model.addAttribute("shippingProviders", new java.util.ArrayList<>());
             model.addAttribute("totalUsers", 0);
             model.addAttribute("adminCount", 0);
             model.addAttribute("vendorCount", 0);
@@ -158,6 +166,7 @@ public class AdminController {
                             @RequestParam String phone,
                             @RequestParam String password,
                             @RequestParam String role,
+                            @RequestParam(required = false) String shippingProviderId,
                             RedirectAttributes redirectAttributes) {
         try {
             // Check if email already exists
@@ -166,6 +175,15 @@ public class AdminController {
                 redirectAttributes.addFlashAttribute("messageType", "danger");
                 redirectAttributes.addFlashAttribute("message", "Email đã tồn tại trong hệ thống!");
                 return "redirect:/admin/users";
+            }
+            
+            // Check if phone already exists
+            if (phone != null && !phone.trim().isEmpty()) {
+                if (userRepository.existsByPhone(phone)) {
+                    redirectAttributes.addFlashAttribute("messageType", "danger");
+                    redirectAttributes.addFlashAttribute("message", "Số điện thoại đã tồn tại trong hệ thống!");
+                    return "redirect:/admin/users";
+                }
             }
             
             // Create new user
@@ -179,10 +197,22 @@ public class AdminController {
             newUser.setHashedPassword(passwordService.hashPassword(password));
             
             // Set role
-            newUser.setRole(User.UserRole.valueOf(role));
+            User.UserRole userRole = User.UserRole.valueOf(role);
+            newUser.setRole(userRole);
             newUser.setStatus(User.UserStatus.ACTIVE);
             newUser.setPoint(0);
             newUser.setEWallet(BigDecimal.ZERO);
+            
+            // If role is SHIPPER and shippingProviderId is provided, set shipping provider
+            if (userRole == User.UserRole.SHIPPER && shippingProviderId != null && !shippingProviderId.isEmpty()) {
+                Optional<vn.iotstar.entity.ShippingProvider> providerOpt = shippingProviderRepository.findById(shippingProviderId);
+                if (providerOpt.isPresent()) {
+                    newUser.setShippingProvider(providerOpt.get());
+                } else {
+                    redirectAttributes.addFlashAttribute("messageType", "warning");
+                    redirectAttributes.addFlashAttribute("message", "Không tìm thấy nhà vận chuyển, shipper được tạo nhưng chưa có nhà vận chuyển!");
+                }
+            }
             
             // Save user
             userRepository.save(newUser);

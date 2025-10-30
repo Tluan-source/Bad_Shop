@@ -49,6 +49,7 @@ public class CheckoutController {
     private final PromotionRepository promotionRepository;
     private final ObjectMapper objectMapper;
     private final VNPayService vnPayService;
+    private final vn.iotstar.repository.ShippingProviderRepository shippingProviderRepository;
     
     @PostMapping("/buy-now")
     public String buyNow(@RequestBody BuyNowRequest request, 
@@ -207,6 +208,12 @@ public class CheckoutController {
         List<UserAddress> addresses = checkoutService.getUserAddresses();
         UserAddress defaultAddress = checkoutService.getDefaultAddress();
         
+        // Get all active shipping providers
+        List<vn.iotstar.entity.ShippingProvider> shippingProviders = shippingProviderRepository.findAll()
+            .stream()
+            .filter(vn.iotstar.entity.ShippingProvider::getIsActive)
+            .toList();
+        
         model.addAttribute("items", items);
         model.addAttribute("itemsByStore", itemsByStore);
         model.addAttribute("totalsByStore", totalsByStore);
@@ -214,6 +221,7 @@ public class CheckoutController {
         model.addAttribute("user", user);
         model.addAttribute("addresses", addresses);
         model.addAttribute("defaultAddress", defaultAddress);
+        model.addAttribute("shippingProviders", shippingProviders);
         model.addAttribute("availableVouchers", availableVouchers);
         model.addAttribute("promotionsByStore", promotionsByStore);
         
@@ -397,6 +405,7 @@ public class CheckoutController {
         
         return String.join(", ", styleValues);
     }
+}
     private List<String> parseStyleIds(String json) {
         try {
             if (json == null || json.isBlank() || json.equals("[]")) return new ArrayList<>();

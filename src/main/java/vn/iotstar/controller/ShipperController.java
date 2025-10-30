@@ -47,6 +47,22 @@ public class ShipperController {
         User currentUser = userRepository.findByEmail(email).orElseThrow();
         String shipperId = currentUser.getId();
         
+        // Kiểm tra xem shipper có thuộc nhà vận chuyển nào không
+        if (currentUser.getShippingProvider() == null) {
+            model.addAttribute("error", "Bạn chưa được gán vào nhà vận chuyển nào. Vui lòng liên hệ admin.");
+            return "shipper/dashboard";
+        }
+        
+        String shippingProviderId = currentUser.getShippingProvider().getId();
+        String shippingProviderName = currentUser.getShippingProvider().getName();
+        
+        // Debug logging
+        System.out.println("=== SHIPPER DEBUG ===");
+        System.out.println("Shipper ID: " + shipperId);
+        System.out.println("Shipper Email: " + email);
+        System.out.println("Shipping Provider ID: " + shippingProviderId);
+        System.out.println("Shipping Provider Name: " + shippingProviderName);
+        
         Pageable pageable = PageRequest.of(page, 10, Sort.by("createdAt").descending());
         
         // 🔄 Xử lý status cũ (backward compatibility)
@@ -55,8 +71,9 @@ public class ShipperController {
         }
         
         // 📊 Tính tổng số cho các trạng thái
-        // Chờ nhận = Tất cả Orders có status PROCESSING
-        long totalPending = orderRepository.countByStatus(Order.OrderStatus.PROCESSING);
+        // Chờ nhận = Orders có status PROCESSING VÀ shipping_provider_id trùng với shipper
+        long totalPending = orderRepository.countByStatusAndShippingProviderId(
+                Order.OrderStatus.PROCESSING, shippingProviderId);
         long totalDelivering = shipmentRepository.countByShipper_IdAndStatus(shipperId, ShipmentStatus.DELIVERING);
         long totalDelivered = shipmentRepository.countByShipper_IdAndStatus(shipperId, ShipmentStatus.DELIVERED);
         long totalFailed = shipmentRepository.countByShipper_IdAndStatus(shipperId, ShipmentStatus.FAILED);
@@ -71,8 +88,8 @@ public class ShipperController {
         if (status != null && !status.isEmpty()) {
             switch (status) {
                 case "PROCESSING" -> {
-                    // Load Orders có status PROCESSING (chờ shipper nhận)
-                    pendingOrders = getFilteredPendingOrders(keyword, fromDate, toDate, pageable);
+                    // Load Orders có status PROCESSING và shipping_provider_id trùng
+                    pendingOrders = getFilteredPendingOrders(shippingProviderId, keyword, fromDate, toDate, pageable);
                     totalPages = pendingOrders.getTotalPages();
                 }
                 case "DELIVERING" -> {
@@ -91,7 +108,7 @@ public class ShipperController {
         }
         // ✅ Không chọn trạng thái → mặc định hiển thị tab "Chờ nhận"
         else {
-            pendingOrders = getFilteredPendingOrders(keyword, fromDate, toDate, pageable);
+            pendingOrders = getFilteredPendingOrders(shippingProviderId, keyword, fromDate, toDate, pageable);
             totalPages = pendingOrders.getTotalPages();
             status = "PROCESSING"; // Set default active tab
         }
@@ -111,36 +128,63 @@ public class ShipperController {
         model.addAttribute("fromDate", fromDate);
         model.addAttribute("toDate", toDate);
         model.addAttribute("username", shipperId);
+        model.addAttribute("shippingProviderName", shippingProviderName);
+        model.addAttribute("currentUser", currentUser);
 
         return "shipper/dashboard";
     }
     
-    /** 📦 Hàm lọc Orders chờ nhận (status = PROCESSING) */
+    /** 📦 Hàm lọc Orders chờ nhận (status = PROCESSING) - CHỈ LẤY ĐƠN THUỘC NHÀ VẬN CHUYỂN CỦA SHIPPER */
     private Page<Order> getFilteredPendingOrders(
+            String shippingProviderId,
             String keyword,
             LocalDate fromDate,
             LocalDate toDate,
             Pageable pageable
     ) {
+        System.out.println("=== getFilteredPendingOrders DEBUG ===");
+        System.out.println("Shipping Provider ID: " + shippingProviderId);
+        System.out.println("Keyword: " + keyword);
+        System.out.println("From Date: " + fromDate);
+        System.out.println("To Date: " + toDate);
+        
+        Page<Order> result;
+        
         // 🔍 Lọc theo thời gian
         if (fromDate != null && toDate != null) {
-            return orderRepository.findByStatusAndCreatedAtBetween(
-                    Order.OrderStatus.PROCESSING, 
+            System.out.println("Query: findByStatusAndShippingProviderIdAndCreatedAtBetween");
+            result = orderRepository.findByStatusAndShippingProviderIdAndCreatedAtBetween(
+                    Order.OrderStatus.PROCESSING,
+                    shippingProviderId,
                     fromDate.atStartOfDay(), 
                     toDate.atTime(23, 59, 59), 
                     pageable);
         }
         // 🔍 Lọc theo keyword
         else if (!keyword.isEmpty()) {
-            return orderRepository.searchByStatusAndKeyword(
-                    Order.OrderStatus.PROCESSING, 
+            System.out.println("Query: searchByStatusAndShippingProviderIdAndKeyword");
+            result = orderRepository.searchByStatusAndShippingProviderIdAndKeyword(
+                    Order.OrderStatus.PROCESSING,
+                    shippingProviderId,
                     keyword, 
                     pageable);
         }
-        // Mặc định không có điều kiện đặc biệt
+        // Mặc định lọc theo shipping_provider_id
         else {
-            return orderRepository.findByStatus(Order.OrderStatus.PROCESSING, pageable);
+            System.out.println("Query: findByStatusAndShippingProviderId");
+            result = orderRepository.findByStatusAndShippingProviderId(
+                    Order.OrderStatus.PROCESSING,
+                    shippingProviderId,
+                    pageable);
         }
+        
+        System.out.println("Found " + result.getTotalElements() + " orders");
+        result.getContent().forEach(order -> {
+            System.out.println("  - Order ID: " + order.getId() + 
+                             ", Shipping Provider: " + (order.getShippingProvider() != null ? order.getShippingProvider().getName() : "NULL"));
+        });
+        
+        return result;
     }
 
     /** 📦 Hàm lọc / tìm kiếm / phân trang */

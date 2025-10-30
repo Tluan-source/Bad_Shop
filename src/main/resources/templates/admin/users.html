@@ -204,13 +204,25 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label"><i class="fas fa-user-tag me-1"></i>Vai trò *</label>
-                            <select name="role" class="form-select" required>
+                            <select name="role" id="roleSelect" class="form-select" required>
                                 <option value="">-- Chọn vai trò --</option>
                                 <option value="USER">Customer (Khách hàng)</option>
                                 <option value="VENDOR">Vendor (Người bán)</option>
                                 <option value="SHIPPER">Shipper (Người giao hàng)</option>
                                 <option value="ADMIN">Admin (Quản trị viên)</option>
                             </select>
+                        </div>
+                        <div class="mb-3" id="shippingProviderGroup" style="display: none;">
+                            <label class="form-label"><i class="fas fa-truck me-1"></i>Nhà vận chuyển</label>
+                            <select name="shippingProviderId" id="shippingProviderSelect" class="form-select">
+                                <option value="">-- Chọn nhà vận chuyển --</option>
+                                <option th:each="provider : ${shippingProviders}" 
+                                        th:value="${provider.id}" 
+                                        th:text="${provider.name}">
+                                    Nhà vận chuyển
+                                </option>
+                            </select>
+                            <small class="text-muted">Chỉ hiển thị khi vai trò là Shipper</small>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -230,6 +242,19 @@
     <link rel="stylesheet" th:href="@{/css/admin-style.css}">
     
     <script>
+        // Role change handler - show/hide shipping provider field
+        document.getElementById('roleSelect').addEventListener('change', function() {
+            const shippingProviderGroup = document.getElementById('shippingProviderGroup');
+            const shippingProviderSelect = document.getElementById('shippingProviderSelect');
+            
+            if (this.value === 'SHIPPER') {
+                shippingProviderGroup.style.display = 'block';
+            } else {
+                shippingProviderGroup.style.display = 'none';
+                shippingProviderSelect.value = ''; // Reset selection
+            }
+        });
+        
         // Search functionality
         document.getElementById('searchUser').addEventListener('keyup', function() {
             const searchValue = this.value.toLowerCase();

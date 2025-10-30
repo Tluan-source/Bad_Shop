@@ -1,3 +1,4 @@
+// Checkout page functionality
 // Checkout page functionality with Discount Support - FIXED VERSION
 
 // Global variables for discount calculation
@@ -50,13 +51,16 @@ function fillAddress() {
           document.getElementById("fullName").value =
                selectedOption.getAttribute("data-fullname") || "";
           document.getElementById("phone").value = selectedOption.getAttribute("data-phone") || "";
-          document.getElementById("address").value =
-               selectedOption.getAttribute("data-address") || "";
-          document.getElementById("province").value =
-               selectedOption.getAttribute("data-province") || "";
-          document.getElementById("district").value =
-               selectedOption.getAttribute("data-district") || "";
-          document.getElementById("ward").value = selectedOption.getAttribute("data-ward") || "";
+          
+          // Build full address from saved data
+          const address = selectedOption.getAttribute("data-address") || "";
+          const ward = selectedOption.getAttribute("data-ward") || "";
+          const district = selectedOption.getAttribute("data-district") || "";
+          const province = selectedOption.getAttribute("data-province") || "";
+          
+          // Combine all address parts
+          const fullAddress = [address, ward, district, province].filter(part => part).join(", ");
+          document.getElementById("address").value = fullAddress;
      }
 }
 
@@ -381,6 +385,24 @@ function placeOrder(event) {
           return;
      }
 
+     // Validate shipping provider selection
+     const selectedProvider = document.querySelector('input[name="shippingProvider"]:checked');
+     if (!selectedProvider) {
+          showToast("Vui lòng chọn đơn vị vận chuyển", "error");
+          return;
+     }
+
+     // Get form data
+     const formData = {
+          fullName: document.getElementById("fullName").value,
+          phone: document.getElementById("phone").value,
+          address: document.getElementById("address").value,
+          province: "", // Not needed anymore with simplified address
+          district: "",
+          ward: "",
+          note: document.getElementById("note").value,
+          paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
+          shippingProviderId: selectedProvider.value,
      // Get promotions by store
      const promotionsByStore = {};
      Object.keys(selectedPromotions).forEach((storeId) => {
