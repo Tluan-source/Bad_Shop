@@ -35,7 +35,6 @@ import vn.iotstar.repository.StoreRepository;
 import vn.iotstar.repository.StyleValueRepository;
 import vn.iotstar.repository.UserRepository;
 import vn.iotstar.repository.VoucherRepository;
-import vn.iotstar.service.DiscountService.DiscountResult;
 
 @Service
 @RequiredArgsConstructor
@@ -53,7 +52,6 @@ public class OrderService {
     private final ObjectMapper objectMapper;
     private final ShippingProviderRepository shippingProviderRepository;
     
-
     
     @Transactional
     public List<Order> createMultiStoreOrders(List<CheckoutItemDTO> items, CheckoutRequest request, 
@@ -133,16 +131,16 @@ public class OrderService {
             // Create order
             Order order = new Order();
 
-            // Set shipping provider object vào Order
-            if (request.getShippingProviderId() != null && !request.getShippingProviderId().isEmpty()) {
-                ShippingProvider provider = shippingProviderRepository.findById(request.getShippingProviderId())
-                    .orElse(null);
+            // // Set shipping provider object vào Order
+            // if (request.getShippingProviderId() != null && !request.getShippingProviderId().isEmpty()) {
+            //     ShippingProvider provider = shippingProviderRepository.findById(request.getShippingProviderId())
+            //         .orElse(null);
 
-                if (provider != null) {
-                    order.setShippingProvider(provider);
-                    order.setShippingFee(provider.getShippingFee()); // nếu bạn muốn lưu phí ship
-                }
-            }
+            //     if (provider != null) {
+            //         order.setShippingProvider(provider);
+            //         order.setShippingFee(provider.getShippingFee()); // nếu bạn muốn lưu phí ship
+            //     }
+            // }
 
 
 
@@ -235,6 +233,18 @@ public class OrderService {
             
             order.setPayment(payment);
             
+            
+             // Set shipping provider object vào Order
+            if (request.getShippingProviderId() != null && !request.getShippingProviderId().isEmpty()) {
+                ShippingProvider provider = shippingProviderRepository.findById(request.getShippingProviderId())
+                    .orElse(null);
+
+                if (provider != null) {
+                    order.setShippingProvider(provider);
+                    order.setShippingFee(provider.getShippingFee()); // nếu bạn muốn lưu phí ship
+                }
+            }
+            
             createdOrders.add(orderRepository.save(order));
         }
         
@@ -267,16 +277,16 @@ public List<Order> createOrders(List<CheckoutItemDTO> items, CheckoutRequest req
 
         Order order = new Order();
         
-         // Set shipping provider object vào Order
-        if (request.getShippingProviderId() != null && !request.getShippingProviderId().isEmpty()) {
-            ShippingProvider provider = shippingProviderRepository.findById(request.getShippingProviderId())
-                .orElse(null);
+        //  // Set shipping provider object vào Order
+        // if (request.getShippingProviderId() != null && !request.getShippingProviderId().isEmpty()) {
+        //     ShippingProvider provider = shippingProviderRepository.findById(request.getShippingProviderId())
+        //         .orElse(null);
 
-            if (provider != null) {
-                order.setShippingProvider(provider);
-                order.setShippingFee(provider.getShippingFee()); // nếu bạn muốn lưu phí ship
-            }
-        }
+        //     if (provider != null) {
+        //         order.setShippingProvider(provider);
+        //         order.setShippingFee(provider.getShippingFee()); // nếu bạn muốn lưu phí ship
+        //     }
+        // }
 
 
 
@@ -345,6 +355,19 @@ public List<Order> createOrders(List<CheckoutItemDTO> items, CheckoutRequest req
         }
 
         order.setPayment(payment);
+
+ // Set shipping provider object vào Order
+        if (request.getShippingProviderId() != null && !request.getShippingProviderId().isEmpty()) {
+            ShippingProvider provider = shippingProviderRepository.findById(request.getShippingProviderId())
+                .orElse(null);
+
+            if (provider != null) {
+                order.setShippingProvider(provider);
+                order.setShippingFee(provider.getShippingFee()); // nếu bạn muốn lưu phí ship
+            }
+        }
+
+        
         orders.add(orderRepository.save(order));
     }
 

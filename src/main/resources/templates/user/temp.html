@@ -1,0 +1,63 @@
+﻿<!-- Order summary -->
+<div class="order-detail-card">
+     <div class="card-header-custom">Tổng quan đơn hàng</div>
+     <div class="card-body-custom">
+          <div class="info-row">
+               <div class="info-label">Tạm tính:</div>
+               <div
+                    class="info-value text-end"
+                    th:text="${#numbers.formatDecimal(order.amountFromUser + (order.promotionDiscount != null ? order.promotionDiscount : 0) + (order.voucherDiscount != null ? order.voucherDiscount : 0), 0, 'COMMA', 0, 'POINT') + ' đ'}"
+               ></div>
+          </div>
+
+          <!-- Promotion Discount (Shop) -->
+          <div
+               class="info-row"
+               th:if="${order.promotion != null && order.promotionDiscount != null && order.promotionDiscount > 0}"
+          >
+               <div class="info-label text-success">
+                    <i class="fas fa-gift me-1"></i>Khuyến mãi shop:
+               </div>
+               <div class="info-value text-end text-success">
+                    <span
+                         th:text="'-' + ${#numbers.formatDecimal(order.promotionDiscount, 0, 'COMMA', 0, 'POINT') + ' đ'}"
+                    ></span>
+                    <br />
+                    <small class="text-muted" th:text="${order.promotion.name}"></small>
+               </div>
+          </div>
+
+          <!-- Voucher Discount (Platform) -->
+          <div
+               class="info-row"
+               th:if="${order.voucher != null && order.voucherDiscount != null && order.voucherDiscount > 0}"
+          >
+               <div class="info-label text-danger">
+                    <i class="fas fa-ticket-alt me-1"></i>Voucher toàn sàn:
+               </div>
+               <div class="info-value text-end text-danger">
+                    <span
+                         th:text="'-' + ${#numbers.formatDecimal(order.voucherDiscount, 0, 'COMMA', 0, 'POINT') + ' đ'}"
+                    ></span>
+                    <br />
+                    <small class="text-muted" th:text="'Mã: ' + ${order.voucher.code}"></small>
+               </div>
+          </div>
+
+          <div class="info-row">
+               <div class="info-label">Phí vận chuyển:</div>
+               <div class="info-value text-end">0 đ</div>
+          </div>
+          <div class="info-row border-top pt-3 mt-2">
+               <div class="info-label">
+                    <strong>Tổng cộng:</strong>
+               </div>
+               <div class="info-value text-end">
+                    <strong
+                         class="text-danger fs-5"
+                         th:text="${#numbers.formatDecimal(order.amountFromUser, 0, 'COMMA', 0, 'POINT') + ' đ'}"
+                    ></strong>
+               </div>
+          </div>
+     </div>
+</div>

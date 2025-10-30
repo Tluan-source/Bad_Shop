@@ -167,16 +167,17 @@
                                    <div class="info-row">
                                         <div class="info-label">Cửa hàng:</div>
                                         <div class="info-value">
-                                             <a 
-                                                  th:href="@{/stores/{id}(id=${order.store.id})}" 
+                                             <a
+                                                  th:href="@{/stores/{id}(id=${order.store.id})}"
                                                   class="text-decoration-none fw-bold text-primary"
                                                   th:text="${order.store.name}"
                                              ></a>
-                                             <a 
-                                                  th:href="@{/stores/{id}(id=${order.store.id})}" 
+                                             <a
+                                                  th:href="@{/stores/{id}(id=${order.store.id})}"
                                                   class="btn btn-sm btn-outline-primary ms-2"
                                              >
-                                                  <i class="fas fa-external-link-alt me-1"></i>Xem Cửa hàng
+                                                  <i class="fas fa-external-link-alt me-1"></i>Xem
+                                                  Cửa hàng
                                              </a>
                                         </div>
                                    </div>
@@ -198,8 +199,8 @@
                                              <p class="mb-1">
                                                   <small class="text-muted">
                                                        <i class="fas fa-store me-1"></i>
-                                                       <a 
-                                                            th:href="@{/stores/{id}(id=${item.product.store.id})}" 
+                                                       <a
+                                                            th:href="@{/stores/{id}(id=${item.product.store.id})}"
                                                             class="text-decoration-none fw-semibold"
                                                             th:text="${item.product.store.name}"
                                                        ></a>
@@ -231,7 +232,10 @@
                               <div class="card-body-custom">
                                    <div class="info-row">
                                         <div class="info-label">Người nhận:</div>
-                                        <div class="info-value" th:text="${order.user.fullName}"></div>
+                                        <div
+                                             class="info-value"
+                                             th:text="${order.user.fullName}"
+                                        ></div>
                                    </div>
                                    <div class="info-row">
                                         <div class="info-label">Số điện thoại:</div>
@@ -251,72 +255,95 @@
                          <div class="order-detail-card">
                               <div class="card-header-custom">Tổng quan đơn hàng</div>
                               <div class="card-body-custom">
+                                   <!-- Tạm tính -->
                                    <div class="info-row">
-                                        <div class="info-label">Tổng tiền sản phẩm:</div>
+                                        <div class="info-label">Tạm tính:</div>
                                         <div
                                              class="info-value text-end"
-                                             th:text="${#numbers.formatDecimal(subtotal, 0, 'COMMA', 0, 'POINT') + ' đ'}"
+                                             th:text="${#numbers.formatDecimal(
+                         (order.amountFromUser ?: 0)
+                         + (order.promotionDiscount ?: 0)
+                         + (order.voucherDiscount ?: 0),
+                         0, 'COMMA', 0, 'POINT'
+                    ) + ' đ'}"
                                         ></div>
                                    </div>
-                                   <div class="info-row" th:if="${order.discountAmount != null && order.discountAmount > 0}">
+
+                                   <!-- Giảm giá (tổng khuyến mãi shop + voucher) -->
+                                   <div
+                                        class="info-row"
+                                        th:if="${order.discountAmount != null && order.discountAmount > 0}"
+                                   >
                                         <div class="info-label">Giảm giá:</div>
                                         <div
                                              class="info-value text-end text-success"
-                                             th:text="'-' + ${#numbers.formatDecimal(order.discountAmount, 0, 'COMMA', 0, 'POINT') + ' đ'}"
+                                             th:text="'-' + ${#numbers.formatDecimal(order.discountAmount, 0, 'COMMA', 0, 'POINT')} + ' đ'"
                                         ></div>
                                    </div>
-                                   <div class="info-row" th:if="${order.shippingProvider != null}">
-                                        <div class="info-label">Nhà vận chuyển:</div>
-                                        <div class="info-value text-end">
-                                             <span th:text="${order.shippingProvider.name}"></span>
-                                        </div>
-                                   </div>
-                                             th:text="${#numbers.formatDecimal(order.amountFromUser + (order.promotionDiscount != null ? order.promotionDiscount : 0) + (order.voucherDiscount != null ? order.voucherDiscount : 0), 0, 'COMMA', 0, 'POINT') + ' đ'}"
-                                        ></div>
-                                   </div>
-                                   
-                                   <!-- Promotion Discount (Shop) -->
-                                   <div class="info-row" th:if="${order.promotion != null && order.promotionDiscount != null && order.promotionDiscount > 0}">
+
+                                   <!-- Khuyến mãi shop -->
+                                   <div
+                                        class="info-row"
+                                        th:if="${order.promotion != null && order.promotionDiscount != null && order.promotionDiscount > 0}"
+                                   >
                                         <div class="info-label text-success">
                                              <i class="fas fa-gift me-1"></i>Khuyến mãi shop:
                                         </div>
                                         <div class="info-value text-end text-success">
-                                             <span th:text="'-' + ${#numbers.formatDecimal(order.promotionDiscount, 0, 'COMMA', 0, 'POINT') + ' đ'}"></span>
-                                             <br>
-                                             <small class="text-muted" th:text="${order.promotion.name}"></small>
+                                             <span
+                                                  th:text="'-' + ${#numbers.formatDecimal(order.promotionDiscount, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                                             ></span
+                                             ><br />
+                                             <small
+                                                  class="text-muted"
+                                                  th:text="${order.promotion.name}"
+                                             ></small>
                                         </div>
                                    </div>
-                                   
-                                   <!-- Voucher Discount (Platform) -->
-                                   <div class="info-row" th:if="${order.voucher != null && order.voucherDiscount != null && order.voucherDiscount > 0}">
+
+                                   <!-- Voucher -->
+                                   <div
+                                        class="info-row"
+                                        th:if="${order.voucher != null && order.voucherDiscount != null && order.voucherDiscount > 0}"
+                                   >
                                         <div class="info-label text-danger">
                                              <i class="fas fa-ticket-alt me-1"></i>Voucher toàn sàn:
                                         </div>
                                         <div class="info-value text-end text-danger">
-                                             <span th:text="'-' + ${#numbers.formatDecimal(order.voucherDiscount, 0, 'COMMA', 0, 'POINT') + ' đ'}"></span>
-                                             <br>
-                                             <small class="text-muted" th:text="'Mã: ' + ${order.voucher.code}"></small>
+                                             <span
+                                                  th:text="'-' + ${#numbers.formatDecimal(order.voucherDiscount, 0, 'COMMA', 0, 'POINT')} + ' đ'"
+                                             ></span
+                                             ><br />
+                                             <small
+                                                  class="text-muted"
+                                                  th:text="'Mã: ' + ${order.voucher.code}"
+                                             ></small>
                                         </div>
                                    </div>
-                                   
+
+                                   <!-- Phí vận chuyển -->
                                    <div class="info-row">
                                         <div class="info-label">Phí vận chuyển:</div>
-                                        <div 
+                                        <div
                                              class="info-value text-end"
                                              th:text="${order.shippingProvider != null ? 
-                                                       #numbers.formatDecimal(order.shippingProvider.shippingFee, 0, 'COMMA', 0, 'POINT') + ' đ' : 
-                                                       (order.shippingFee != null ? #numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ')}"
+                         #numbers.formatDecimal(order.shippingProvider.shippingFee, 0, 'COMMA', 0, 'POINT') + ' đ' : 
+                         (order.shippingFee != null ? #numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ')}"
                                         ></div>
                                    </div>
+
+                                   <!-- Tổng cộng -->
                                    <div class="info-row border-top pt-3 mt-2">
-                                        <div class="info-label">
-                                             <strong>Tổng cộng:</strong>
-                                        </div>
+                                        <div class="info-label"><strong>Tổng cộng:</strong></div>
                                         <div class="info-value text-end">
                                              <strong
                                                   class="text-danger fs-5"
-                                                  th:text="${#numbers.formatDecimal(subtotal + actualShippingFee, 0, 'COMMA', 0, 'POINT') + ' đ'}"
-                                             ></strong>
+                                                  th:text="${#numbers.formatDecimal(
+                                                            (order.amountFromUser ?: 0) + (order.shippingFee ?: 0),
+                                                            0, 'COMMA', 0, 'POINT'
+                                                       ) + ' đ'}"
+                                             >
+                                             </strong>
                                         </div>
                                    </div>
                               </div>
@@ -327,22 +354,34 @@
                               <div class="card-header-custom">Phương thức thanh toán</div>
                               <div class="card-body-custom">
                                    <!-- VNPAY Payment -->
-                                   <p class="mb-0" th:if="${payment != null && payment.paymentMethod.name() == 'VNPAY'}">
+                                   <p
+                                        class="mb-0"
+                                        th:if="${payment != null && payment.paymentMethod.name() == 'VNPAY'}"
+                                   >
                                         <i class="fas fa-credit-card me-2 text-primary"></i>
                                         Thanh toán online (VNPay)
                                    </p>
                                    <!-- COD Payment -->
-                                   <p class="mb-0" th:if="${payment == null || payment.paymentMethod.name() == 'COD'}">
+                                   <p
+                                        class="mb-0"
+                                        th:if="${payment == null || payment.paymentMethod.name() == 'COD'}"
+                                   >
                                         <i class="fas fa-money-bill-wave me-2 text-success"></i>
                                         Thanh toán khi nhận hàng (COD)
                                    </p>
                                    <!-- MOMO Payment -->
-                                   <p class="mb-0" th:if="${payment != null && payment.paymentMethod.name() == 'MOMO'}">
+                                   <p
+                                        class="mb-0"
+                                        th:if="${payment != null && payment.paymentMethod.name() == 'MOMO'}"
+                                   >
                                         <i class="fas fa-mobile-alt me-2 text-danger"></i>
                                         Thanh toán online (MoMo)
                                    </p>
                                    <!-- WALLET Payment -->
-                                   <p class="mb-0" th:if="${payment != null && payment.paymentMethod.name() == 'WALLET'}">
+                                   <p
+                                        class="mb-0"
+                                        th:if="${payment != null && payment.paymentMethod.name() == 'WALLET'}"
+                                   >
                                         <i class="fas fa-wallet me-2 text-warning"></i>
                                         Thanh toán bằng ví điện tử
                                    </p>
@@ -352,7 +391,10 @@
                </div>
 
                <!-- Related Products Section -->
-               <div class="row mt-4" th:if="${relatedProducts != null && !relatedProducts.isEmpty()}">
+               <div
+                    class="row mt-4"
+                    th:if="${relatedProducts != null && !relatedProducts.isEmpty()}"
+               >
                     <div class="col-12">
                          <div class="order-detail-card">
                               <div class="card-header-custom">
@@ -365,28 +407,37 @@
                                              th:each="product : ${relatedProducts}"
                                              class="col-lg-3 col-md-4 col-sm-6"
                                         >
-                                             <div class="card h-100 border-0 shadow-sm" style="transition: transform 0.2s;">
-                                                  <div style="position: relative; overflow: hidden;">
-                                                       <a th:href="@{/products/{id}(id=${product.id})}">
+                                             <div
+                                                  class="card h-100 border-0 shadow-sm"
+                                                  style="transition: transform 0.2s"
+                                             >
+                                                  <div style="position: relative; overflow: hidden">
+                                                       <a
+                                                            th:href="@{/products/{id}(id=${product.id})}"
+                                                       >
                                                             <img
                                                                  th:src="${product.firstImage}"
                                                                  class="card-img-top"
                                                                  th:alt="${product.name}"
-                                                                 style="height: 180px; object-fit: cover; transition: transform 0.3s;"
+                                                                 style="
+                                                                      height: 180px;
+                                                                      object-fit: cover;
+                                                                      transition: transform 0.3s;
+                                                                 "
                                                                  onmouseover="this.style.transform='scale(1.1)'"
                                                                  onmouseout="this.style.transform='scale(1)'"
                                                             />
                                                        </a>
                                                   </div>
                                                   <div class="card-body">
-                                                       <a 
-                                                            th:href="@{/products/{id}(id=${product.id})}" 
+                                                       <a
+                                                            th:href="@{/products/{id}(id=${product.id})}"
                                                             class="text-decoration-none"
                                                        >
                                                             <h6
                                                                  class="card-title mb-2 text-dark"
                                                                  style="
-                                                                      height: 40px; 
+                                                                      height: 40px;
                                                                       overflow: hidden;
                                                                       display: -webkit-box;
                                                                       -webkit-line-clamp: 2;
@@ -400,30 +451,48 @@
                                                        <div class="mb-2">
                                                             <small class="text-muted">
                                                                  <i class="fas fa-store me-1"></i>
-                                                                 <a 
-                                                                      th:href="@{/stores/{id}(id=${product.store.id})}" 
+                                                                 <a
+                                                                      th:href="@{/stores/{id}(id=${product.store.id})}"
                                                                       class="text-decoration-none"
                                                                       th:text="${product.store.name}"
                                                                  ></a>
                                                             </small>
                                                        </div>
-                                                       <div class="d-flex align-items-center mb-2" style="font-size: 0.875rem;">
-                                                            <span style="color: #0d6efd;" th:text="${product.rating}">4.5</span>
-                                                            <i class="fas fa-star ms-1" style="color: #0d6efd; font-size: 0.75rem;"></i>
+                                                       <div
+                                                            class="d-flex align-items-center mb-2"
+                                                            style="font-size: 0.875rem"
+                                                       >
+                                                            <span
+                                                                 style="color: #0d6efd"
+                                                                 th:text="${product.rating}"
+                                                                 >4.5</span
+                                                            >
+                                                            <i
+                                                                 class="fas fa-star ms-1"
+                                                                 style="
+                                                                      color: #0d6efd;
+                                                                      font-size: 0.75rem;
+                                                                 "
+                                                            ></i>
                                                             <span class="text-muted ms-2">
-                                                                 | Đã bán: <span th:text="${product.sold}">0</span>
+                                                                 | Đã bán:
+                                                                 <span th:text="${product.sold}"
+                                                                      >0</span
+                                                                 >
                                                             </span>
                                                        </div>
-                                                       <div class="d-flex justify-content-between align-items-center">
+                                                       <div
+                                                            class="d-flex justify-content-between align-items-center"
+                                                       >
                                                             <span
                                                                  class="fw-bold text-danger"
-                                                                 style="font-size: 1.1rem;"
+                                                                 style="font-size: 1.1rem"
                                                                  th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT') + ' đ'}"
                                                             >
                                                                  500,000₫
                                                             </span>
-                                                            <a 
-                                                                 th:href="@{/products/{id}(id=${product.id})}" 
+                                                            <a
+                                                                 th:href="@{/products/{id}(id=${product.id})}"
                                                                  class="btn btn-sm btn-outline-primary"
                                                             >
                                                                  <i class="fas fa-eye"></i>

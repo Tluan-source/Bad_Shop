@@ -266,6 +266,7 @@ public class CheckoutController {
             request.setNote((String) requestData.get("note"));
             request.setPaymentMethod((String) requestData.get("paymentMethod"));
             request.setVoucherCode((String) requestData.get("voucherCode"));
+            request.setShippingProviderId((String) requestData.get("shippingProviderId"));
             
             // Parse promotions by store
             @SuppressWarnings("unchecked")

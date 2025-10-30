@@ -558,45 +558,46 @@ document.addEventListener("DOMContentLoaded", () => {
      if (savedAddressSelect && savedAddressSelect.value) fillAddress();
 });
 
-function submitCheckout() {
-     const payload = {};
+// function submitCheckout() {
+//      const payload = {};
 
-     // Collect shipping provider ID
-     const shippingProviderSelect = document.getElementById("shippingProviderSelect");
-     if (shippingProviderSelect) {
-          payload.shippingProviderId = shippingProviderSelect.value;
-     }
+//      // Collect shipping provider ID
+//      const shippingProviderSelect = document.getElementById("shippingProviderSelect");
+//      if (shippingProviderSelect) {
+//           payload.shippingProviderId = shippingProviderSelect.value;
+//      }
 
-     // Collect other checkout data
-     payload.fullName = document.getElementById("fullName").value;
-     payload.phone = document.getElementById("phone").value;
-     payload.address = document.getElementById("address").value;
-     payload.voucherCode = document.getElementById("voucherCode").value;
+//      // Collect other checkout data
+//      payload.fullName = document.getElementById("fullName").value;
+//      payload.phone = document.getElementById("phone").value;
+//      payload.address = document.getElementById("address").value;
+//      payload.voucherCode = document.getElementById("voucherCode").value;
 
-     // Send the payload to the backend
-     fetch("/api/checkout", {
-          method: "POST",
-          headers: {
-               "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-     })
-          .then((response) => {
-               if (response.ok) {
-                    return response.json();
-               } else {
-                    throw new Error("Checkout failed");
-               }
-          })
-          .then((data) => {
-               console.log("Checkout successful", data);
-               window.location.href = "/checkout/success";
-          })
-          .catch((error) => {
-               console.error("Error during checkout:", error);
-               alert("Checkout failed. Please try again.");
-          });
-}
+//      // Send the payload to the backend
+//      fetch("/api/checkout", {
+//           method: "POST",
+//           headers: {
+//                "Content-Type": "application/json",
+//           },
+//           body: JSON.stringify(payload),
+//      })
+//           .then((response) => {
+//                if (response.ok) {
+//                     return response.json();
+//                } else {
+//                     throw new Error("Checkout failed");
+//                }
+//           })
+//           .then((data) => {
+//                console.log("Checkout successful", data);
+//                window.location.href = "/checkout/success";
+//           })
+//           .catch((error) => {
+//                console.error("Error during checkout:", error);
+//                alert("Checkout failed. Please try again.");
+//           });
+// }
 
-// Attach event listener to the checkout button
-document.getElementById("checkoutButton").addEventListener("click", submitCheckout);
+// // Attach event listener to the checkout button
+// document.getElementById("checkoutButton").addEventListener("click", submitCheckout);
+document.getElementById("checkoutButton").addEventListener("click", placeOrder);
