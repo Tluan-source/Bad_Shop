@@ -22,20 +22,18 @@ import vn.iotstar.entity.OrderItem;
 import vn.iotstar.entity.Payment;
 import vn.iotstar.entity.Product;
 import vn.iotstar.entity.Promotion;
+import vn.iotstar.entity.ShippingProvider;
 import vn.iotstar.entity.Store;
 import vn.iotstar.entity.User;
-import vn.iotstar.entity.ShippingProvider;
-import vn.iotstar.entity.Shipment;
 import vn.iotstar.entity.Voucher;
 import vn.iotstar.repository.OrderItemRepository;
 import vn.iotstar.repository.OrderRepository;
 import vn.iotstar.repository.ProductRepository;
 import vn.iotstar.repository.PromotionRepository;
+import vn.iotstar.repository.ShippingProviderRepository;
 import vn.iotstar.repository.StoreRepository;
 import vn.iotstar.repository.StyleValueRepository;
 import vn.iotstar.repository.UserRepository;
-import vn.iotstar.repository.ShippingProviderRepository;
-import vn.iotstar.repository.ShipmentRepository;
 import vn.iotstar.repository.VoucherRepository;
 import vn.iotstar.service.DiscountService.DiscountResult;
 
@@ -54,7 +52,8 @@ public class OrderService {
     private final DiscountService discountService;
     private final ObjectMapper objectMapper;
     private final ShippingProviderRepository shippingProviderRepository;
-    private final ShipmentRepository shipmentRepository;
+    
+
     
     @Transactional
     public List<Order> createMultiStoreOrders(List<CheckoutItemDTO> items, CheckoutRequest request, 
@@ -66,20 +65,6 @@ public class OrderService {
         }
         
         User user = userRepository.findById(userId).orElseThrow();
-        
-        // Get shipping fee and provider from selected shipping provider
-        BigDecimal shippingFee = BigDecimal.ZERO;
-        ShippingProvider shippingProvider = null;
-        if (request.getShippingProviderId() != null && !request.getShippingProviderId().isEmpty()) {
-            Optional<ShippingProvider> providerOpt = shippingProviderRepository.findById(request.getShippingProviderId());
-            if (providerOpt.isPresent()) {
-                shippingProvider = providerOpt.get();
-                shippingFee = shippingProvider.getShippingFee();
-            }
-        }
-        
-        List<Order> orders = new ArrayList<>();
-
         List<Order> createdOrders = new ArrayList<>();
         
         // === LOGIC MỚI: Tính TỔNG TẤT CẢ SHOP để validate voucher ===
@@ -147,6 +132,20 @@ public class OrderService {
             
             // Create order
             Order order = new Order();
+
+            // Set shipping provider object vào Order
+            if (request.getShippingProviderId() != null && !request.getShippingProviderId().isEmpty()) {
+                ShippingProvider provider = shippingProviderRepository.findById(request.getShippingProviderId())
+                    .orElse(null);
+
+                if (provider != null) {
+                    order.setShippingProvider(provider);
+                    order.setShippingFee(provider.getShippingFee()); // nếu bạn muốn lưu phí ship
+                }
+            }
+
+
+
             order.setId(UUID.randomUUID().toString());
             order.setUser(user);
             order.setStore(store);
@@ -158,9 +157,6 @@ public class OrderService {
             LocalDateTime now = LocalDateTime.now();
             order.setCreatedAt(now);
             order.setUpdatedAt(now);
-
-            // Calculate totals
-            BigDecimal productTotal = BigDecimal.ZERO;
             
             // Calculate subtotal for this store
             BigDecimal subtotal = BigDecimal.ZERO;
@@ -187,28 +183,6 @@ public class OrderService {
                 }
                 
                 orderItems.add(orderItem);
-                productTotal = productTotal.add(item.getTotal());
-
-                // REMOVED: Don't update product quantity here
-                // Product quantity will be deducted when vendor confirms the order
-                // This prevents double deduction bug
-            }
-
-            // Calculate total with shipping fee
-            BigDecimal totalWithShipping = productTotal.add(shippingFee);
-
-            order.setShippingFee(shippingFee); // Set shipping fee vào order
-            order.setShippingProvider(shippingProvider); // Set shipping provider vào order
-            order.setAmountFromUser(totalWithShipping);
-            order.setAmountFromStore(totalWithShipping);
-            order.setAmountToStore(totalWithShipping);
-            order.setOrderItems(orderItems);
-
-            // Create payment record with total including shipping fee
-            Payment payment = new Payment();
-            payment.setId(UUID.randomUUID().toString());
-            payment.setOrder(order);
-            payment.setAmount(totalWithShipping);
                 subtotal = subtotal.add(item.getTotal());
             }
             
@@ -292,6 +266,20 @@ public List<Order> createOrders(List<CheckoutItemDTO> items, CheckoutRequest req
         Store store = storeRepository.findById(storeId).orElseThrow();
 
         Order order = new Order();
+        
+         // Set shipping provider object vào Order
+        if (request.getShippingProviderId() != null && !request.getShippingProviderId().isEmpty()) {
+            ShippingProvider provider = shippingProviderRepository.findById(request.getShippingProviderId())
+                .orElse(null);
+
+            if (provider != null) {
+                order.setShippingProvider(provider);
+                order.setShippingFee(provider.getShippingFee()); // nếu bạn muốn lưu phí ship
+            }
+        }
+
+
+
         order.setId(UUID.randomUUID().toString());
         order.setUser(user);
         order.setStore(store);
@@ -318,8 +306,6 @@ public List<Order> createOrders(List<CheckoutItemDTO> items, CheckoutRequest req
             orderItem.setPrice(item.getPrice());
             orderItem.setTotal(item.getTotal());
 
-            // Save order (KHÔNG tạo Shipment ở đây - sẽ tạo khi shipper nhận đơn)
-            orders.add(orderRepository.save(order));
             if (item.getStyleValueIds() != null && !item.getStyleValueIds().isEmpty()) {
                 try {
                     orderItem.setStyleValueIds(objectMapper.writeValueAsString(item.getStyleValueIds()));
@@ -440,7 +426,6 @@ public List<Order> createOrders(List<CheckoutItemDTO> items, CheckoutRequest req
     }
     
     public Optional<Order> getOrderById(String orderId) {
-        Order order = orderRepository.findByIdWithFullDetails(orderId);
-        return Optional.ofNullable(order);
+        return orderRepository.findById(orderId);
     }
 }

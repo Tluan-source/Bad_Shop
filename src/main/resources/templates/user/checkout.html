@@ -172,7 +172,7 @@
                                                        th:value="${provider.id}"
                                                        th:data-fee="${provider.shippingFee}"
                                                        th:data-name="${provider.name}"
-                                                       onchange="updateShippingFee()"
+                                                       onchange="calculateTotal()"
                                                        required
                                                   />
                                                   <label class="form-check-label w-100" th:for="'provider_' + ${provider.id}">

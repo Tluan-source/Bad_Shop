@@ -51,15 +51,15 @@ function fillAddress() {
           document.getElementById("fullName").value =
                selectedOption.getAttribute("data-fullname") || "";
           document.getElementById("phone").value = selectedOption.getAttribute("data-phone") || "";
-          
+
           // Build full address from saved data
           const address = selectedOption.getAttribute("data-address") || "";
           const ward = selectedOption.getAttribute("data-ward") || "";
           const district = selectedOption.getAttribute("data-district") || "";
           const province = selectedOption.getAttribute("data-province") || "";
-          
+
           // Combine all address parts
-          const fullAddress = [address, ward, district, province].filter(part => part).join(", ");
+          const fullAddress = [address, ward, district, province].filter((part) => part).join(", ");
           document.getElementById("address").value = fullAddress;
      }
 }
@@ -320,7 +320,28 @@ function calculateTotal() {
      }
 
      // Final amount
-     const finalAmount = afterPromotion - totalVoucherDiscount;
+     const selectedProvider = document.querySelector('input[name="shippingProvider"]:checked');
+     shippingFee = selectedProvider ? parseFloat(selectedProvider.dataset.fee) : 0;
+
+     const shipEl = document.getElementById("shippingFeeDisplay");
+     if (shipEl) {
+          if (selectedProvider) {
+               shipEl.textContent = formatCurrency(shippingFee);
+               shipEl.classList.remove("text-muted");
+          } else {
+               shipEl.textContent = "Chọn đơn vị vận chuyển";
+               shipEl.classList.add("text-muted");
+          }
+     }
+
+     // ✅ Hiển thị phí ship ra UI nếu có element
+     const shippingFeeElement = document.getElementById("shippingFeeAmount");
+     if (shippingFeeElement) {
+          shippingFeeElement.textContent = formatCurrency(shippingFee);
+     }
+
+     // Tổng cuối cùng
+     const finalAmount = afterPromotion - totalVoucherDiscount + shippingFee;
 
      // Update UI - Total promotion row
      const totalPromotionRow = document.getElementById("totalPromotionDiscountRow");
@@ -375,7 +396,6 @@ function calculateTotal() {
 // PLACE ORDER
 // ============================================
 
-/* ===================== PLACE ORDER ===================== */
 function placeOrder(event) {
      if (event) event.preventDefault();
      const form = document.getElementById("checkoutForm");
@@ -392,18 +412,7 @@ function placeOrder(event) {
           return;
      }
 
-     // Get form data
-     const formData = {
-          fullName: document.getElementById("fullName").value,
-          phone: document.getElementById("phone").value,
-          address: document.getElementById("address").value,
-          province: "", // Not needed anymore with simplified address
-          district: "",
-          ward: "",
-          note: document.getElementById("note").value,
-          paymentMethod: document.querySelector('input[name="paymentMethod"]:checked').value,
-          shippingProviderId: selectedProvider.value,
-     // Get promotions by store
+     // Build promotions by store
      const promotionsByStore = {};
      Object.keys(selectedPromotions).forEach((storeId) => {
           promotionsByStore[storeId] = selectedPromotions[storeId].id;
@@ -418,10 +427,12 @@ function placeOrder(event) {
           longitude: document.getElementById("longitude").value,
           note: document.getElementById("note").value.trim(),
           paymentMethod: document.querySelector('input[name="paymentMethod"]:checked')?.value,
+          shippingProviderId: selectedProvider.value,
           voucherCode: selectedVoucher ? selectedVoucher.code : null,
           promotionsByStore,
      };
 
+     // Validate map pick
      if (!data.latitude || !data.longitude)
           return showToast("Vui lòng chọn vị trí giao hàng trên bản đồ!", "warning");
 
@@ -546,3 +557,46 @@ document.addEventListener("DOMContentLoaded", () => {
      const savedAddressSelect = document.getElementById("savedAddress");
      if (savedAddressSelect && savedAddressSelect.value) fillAddress();
 });
+
+function submitCheckout() {
+     const payload = {};
+
+     // Collect shipping provider ID
+     const shippingProviderSelect = document.getElementById("shippingProviderSelect");
+     if (shippingProviderSelect) {
+          payload.shippingProviderId = shippingProviderSelect.value;
+     }
+
+     // Collect other checkout data
+     payload.fullName = document.getElementById("fullName").value;
+     payload.phone = document.getElementById("phone").value;
+     payload.address = document.getElementById("address").value;
+     payload.voucherCode = document.getElementById("voucherCode").value;
+
+     // Send the payload to the backend
+     fetch("/api/checkout", {
+          method: "POST",
+          headers: {
+               "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+     })
+          .then((response) => {
+               if (response.ok) {
+                    return response.json();
+               } else {
+                    throw new Error("Checkout failed");
+               }
+          })
+          .then((data) => {
+               console.log("Checkout successful", data);
+               window.location.href = "/checkout/success";
+          })
+          .catch((error) => {
+               console.error("Error during checkout:", error);
+               alert("Checkout failed. Please try again.");
+          });
+}
+
+// Attach event listener to the checkout button
+document.getElementById("checkoutButton").addEventListener("click", submitCheckout);

@@ -405,7 +405,7 @@ public class CheckoutController {
         
         return String.join(", ", styleValues);
     }
-}
+
     private List<String> parseStyleIds(String json) {
         try {
             if (json == null || json.isBlank() || json.equals("[]")) return new ArrayList<>();
