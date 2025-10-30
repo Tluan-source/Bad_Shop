@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+
 /**
  * Controller for Vendor Revenue Management
  */
@@ -53,11 +54,13 @@ public class VendorRevenueController {
      */
     @GetMapping
     public String revenuePage(
-            Authentication auth,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
-            @RequestParam(required = false) String status,
-            Model model) {
+        Authentication auth,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+        @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+        @RequestParam(required = false) String status,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size,
+        Model model) {
         
         Store store = getCurrentStore(auth);
         
@@ -71,10 +74,27 @@ public class VendorRevenueController {
         BigDecimal totalRevenue = calculateTotalRevenue(allOrders);
         BigDecimal pendingRevenue = calculatePendingRevenue(allOrders);
         BigDecimal paidRevenue = calculatePaidRevenue(allOrders);
+    // Calculate revenue for the filtered range/status as requested by the user
+    BigDecimal filteredTotalRevenue = calculateTotalRevenue(filteredOrders);
+    BigDecimal filteredPendingRevenue = calculatePendingRevenue(filteredOrders);
+    BigDecimal filteredPaidRevenue = calculatePaidRevenue(filteredOrders);
         BigDecimal walletBalance = store.getEWallet() != null ? store.getEWallet() : BigDecimal.ZERO;
         
-        // Create transaction list from orders
-        List<Map<String, Object>> transactions = createTransactionsList(filteredOrders);
+        // Pagination: slice filteredOrders into pages (simple server-side pagination)
+        if (size <= 0) size = 10;
+        if (page < 0) page = 0;
+        int totalItems = filteredOrders.size();
+        int fromIndex = page * size;
+        if (fromIndex > totalItems) {
+            page = 0;
+            fromIndex = 0;
+        }
+        int toIndex = Math.min(fromIndex + size, totalItems);
+        List<Order> pageOrders = filteredOrders.subList(fromIndex, toIndex);
+
+        // Create transaction list from the current page orders
+        List<Map<String, Object>> transactions = createTransactionsList(pageOrders);
+        int totalPages = (int) Math.ceil((double) totalItems / size);
         
         // Calculate totals for the table footer (from filtered transactions)
         // Recalculate total amount correctly: amountToStore * 100 / 90
@@ -107,8 +127,15 @@ public class VendorRevenueController {
         model.addAttribute("totalRevenue", totalRevenue);
         model.addAttribute("pendingRevenue", pendingRevenue);
         model.addAttribute("paidRevenue", paidRevenue);
+    model.addAttribute("filteredTotalRevenue", filteredTotalRevenue);
+    model.addAttribute("filteredPendingRevenue", filteredPendingRevenue);
+    model.addAttribute("filteredPaidRevenue", filteredPaidRevenue);
         model.addAttribute("walletBalance", walletBalance);
         model.addAttribute("transactions", transactions);
+    model.addAttribute("currentPage", page);
+    model.addAttribute("pageSize", size);
+    model.addAttribute("totalPages", totalPages);
+    model.addAttribute("totalItems", totalItems);
         model.addAttribute("totalAmount", totalAmount);
         model.addAttribute("totalFee", totalFee);
         model.addAttribute("totalNet", totalNet);
@@ -248,4 +275,6 @@ public class VendorRevenueController {
             return "PENDING";
         }
     }
+
+
 }
