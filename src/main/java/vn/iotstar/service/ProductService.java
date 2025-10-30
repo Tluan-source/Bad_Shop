@@ -80,4 +80,13 @@ public class ProductService {
                 .limit(pageable.getPageSize())
                 .collect(Collectors.toList());
     }
+    public List<Product> searchProductsByName(String keyword) {
+        return productRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(keyword);
+    }
+    public List<Product> searchByKeyword(String keyword) {
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return List.of();
+        }
+        return productRepository.findByNameContainingIgnoreCase(keyword);
+    }
 }
