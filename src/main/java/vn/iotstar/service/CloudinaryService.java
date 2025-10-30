@@ -55,4 +55,15 @@ public class CloudinaryService {
         }
         return urls;
     }
+    public String uploadImage(MultipartFile file, String folder) throws IOException {
+        if (file == null || file.isEmpty()) return null;
+        Map<?, ?> res = cloudinary.uploader().upload(
+                file.getBytes(),
+                ObjectUtils.asMap(
+                        "resource_type", "auto",
+                        "folder", folder
+                )
+        );
+        return res.get("secure_url").toString();
+    }
 }

@@ -1,6 +1,8 @@
 package vn.iotstar.repository;
 
-import vn.iotstar.entity.Product;
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,8 +10,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
+import vn.iotstar.entity.Product;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, String> {
@@ -66,4 +67,9 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     
     // Count products by category
     Long countByCategory_Id(String categoryId);
+
+    List<Product> findByNameContainingIgnoreCaseAndIsActiveTrue(String keyword);
+
+    List<Product> findByNameContainingIgnoreCase(String keyword);
+
 }

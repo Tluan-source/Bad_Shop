@@ -140,8 +140,11 @@ public class CheckoutController {
                     ? product.getPromotionalPrice() 
                     : product.getPrice());
                 item.setQuantity(cartItem.getQuantity());
-                item.setStyleValueIds(null); // Cart items don't have style values for now
-                item.setStyleValues("");
+                // 🔹 Parse styleValueIds từ JSON trong CartItem (nếu có)
+                item.setStyleValueIds(parseStyleIds(cartItem.getStyleValueIds()));
+
+                // 🔹 Hiển thị dạng "Màu: Xanh, Size: 39"
+                item.setStyleValues(getStyleValuesDisplay(item.getStyleValueIds()));
                 item.setTotal(cartItem.getPrice());
                 item.setStoreId(product.getStore().getId());
                 item.setStoreName(product.getStore().getName());
@@ -268,12 +271,17 @@ public class CheckoutController {
             List<Order> orders = orderService.createMultiStoreOrders(items, request, promotionsByStore, user.getId());
             System.out.println("Created " + orders.size() + " orders");
             
+            // Create orders for multiple stores
+            List<Order> orders = orderService.createOrders(items, request, user.getId());
+            System.out.println("Orders created: " + orders.size());
+
             // Clear checkout items
             checkoutService.clearCheckoutItems();
-            
-            // Handle payment method
+
+           // Handle payment method for the first order (example)
+            Order firstOrder = orders.get(0);
             String paymentMethod = request.getPaymentMethod();
-            
+
             if ("VNPAY".equalsIgnoreCase(paymentMethod)) {
                 // Calculate total amount from all orders
                 BigDecimal totalAmount = orders.stream()
@@ -294,11 +302,22 @@ public class CheckoutController {
                     httpRequest
                 );
                 
+                System.out.println("=== VNPAY PAYMENT PROCESSING ===");
+
+                String orderInfo = "Thanh toan don hang " + firstOrder.getId();
+                String paymentUrl = vnPayService.createPaymentUrl(
+                    firstOrder.getAmountFromUser(),
+                    orderInfo,
+                    firstOrder.getId(),
+                    httpRequest
+                );
+
                 if (paymentUrl != null && !paymentUrl.isEmpty()) {
                     response.put("success", true);
                     response.put("paymentMethod", "VNPAY");
                     response.put("paymentUrl", paymentUrl);
                     response.put("orderIds", orderIds);
+                    response.put("orderId", firstOrder.getId());
                 } else {
                     response.put("success", false);
                     response.put("message", "Không thể tạo link thanh toán VNPay");
@@ -306,6 +325,30 @@ public class CheckoutController {
             } else {
                 // COD payment
                 response.put("success", true);
+
+            } else if ("BANK_QR".equalsIgnoreCase(paymentMethod)) {
+                System.out.println("=== BANK QR PAYMENT ===");
+
+                String bankCode = "VCB"; // Ví dụ
+                String bankAccount = "1031421223";
+                String accountName = "NGUYEN THANH LUAN";
+
+                String description = "PAY-" + firstOrder.getId();
+                String qrUrl = "https://img.vietqr.io/image/" + bankCode + "-" + bankAccount + "-compact.png"
+                        + "?amount=" + firstOrder.getAmountFromUser()
+                        + "&addInfo=" + description
+                        + "&accountName=" + accountName;
+
+                response.put("success", true);
+                response.put("paymentMethod", "BANK_QR");
+                response.put("orderId", firstOrder.getId());
+                response.put("amount", firstOrder.getAmountFromUser());
+                response.put("qrImage", qrUrl);
+                response.put("description", description);
+            } else { // COD
+                response.put("success", true);
+                response.put("message", "Đặt hàng thành công");
+                response.put("orderId", firstOrder.getId());
                 response.put("paymentMethod", "COD");
                 response.put("orderId", orders.get(0).getId());
                 response.put("message", "Đặt hàng thành công! Đã tạo " + orders.size() + " đơn hàng.");
@@ -353,5 +396,13 @@ public class CheckoutController {
         }
         
         return String.join(", ", styleValues);
+    }
+    private List<String> parseStyleIds(String json) {
+        try {
+            if (json == null || json.isBlank() || json.equals("[]")) return new ArrayList<>();
+            return objectMapper.readValue(json, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
     }
 }

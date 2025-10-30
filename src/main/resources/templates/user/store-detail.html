@@ -28,12 +28,26 @@
                                                   <span th:text="${store.rating}"></span>
                                              </span>
                                         </div>
-                                        <div class="text-muted">
+                                        <div class="text-muted mb-3">
                                              <i class="fas fa-box me-1"></i>
                                              <span
                                                   th:text="${products != null ? products.size() : 0}"
                                              ></span>
                                              sản phẩm
+                                        </div>
+                                        
+                                        <!-- Chat button for authenticated users -->
+                                        <div sec:authorize="isAuthenticated()">
+                                             <button class="btn btn-primary btn-lg" onclick="startChat()" th:data-store-id="${store.id}">
+                                                  <i class="fas fa-comment-dots me-2"></i>Nhắn tin với Shop
+                                             </button>
+                                        </div>
+                                        
+                                        <!-- Show login prompt for guests -->
+                                        <div sec:authorize="!isAuthenticated()">
+                                             <a th:href="@{/login}" class="btn btn-outline-primary btn-lg">
+                                                  <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập để nhắn tin
+                                             </a>
                                         </div>
                                    </div>
                               </div>
@@ -87,5 +101,53 @@
           </section>
 
           <th:block th:replace="~{fragments/footer-user :: footer-user}"></th:block>
+          
+          <script th:inline="javascript">
+               function startChat() {
+                    const storeId = /*[[${store.id}]]*/ '';
+                    
+                    // Get CSRF token
+                    const csrfToken = document.querySelector('meta[name="_csrf"]');
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
+                    
+                    const headers = {
+                         'Content-Type': 'application/x-www-form-urlencoded',
+                    };
+                    
+                    // Add CSRF token if exists
+                    if (csrfToken && csrfHeader) {
+                         headers[csrfHeader.content] = csrfToken.content;
+                    }
+                    
+                    console.log('Creating conversation with storeId:', storeId);
+                    
+                    // Create or get conversation
+                    fetch('/api/chat/conversation?storeId=' + storeId, {
+                         method: 'POST',
+                         headers: headers,
+                         credentials: 'same-origin'
+                    })
+                    .then(response => {
+                         console.log('Response status:', response.status);
+                         if (!response.ok) {
+                              return response.json().then(errorData => {
+                                   throw new Error(errorData.message || `HTTP ${response.status}: Có lỗi xảy ra`);
+                              }).catch(() => {
+                                   throw new Error(`HTTP ${response.status}: Có lỗi xảy ra`);
+                              });
+                         }
+                         return response.json();
+                    })
+                    .then(conversation => {
+                         console.log('Conversation created:', conversation);
+                         // Redirect to chat page with conversationId
+                         window.location.href = '/user/chat?conversationId=' + conversation.id;
+                    })
+                    .catch(error => {
+                         console.error('Error details:', error);
+                         alert(error.message || 'Có lỗi xảy ra khi tạo cuộc trò chuyện');
+                    });
+               }
+          </script>
      </body>
 </html>

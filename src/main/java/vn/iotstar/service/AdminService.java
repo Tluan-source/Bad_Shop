@@ -128,6 +128,25 @@ public class AdminService {
     }
     
     /**
+     * Get pending vendor registrations (stores with isActive = false)
+     */
+    public List<Store> getPendingVendorRegistrations() {
+        return storeRepository.findAll().stream()
+            .filter(store -> !store.getIsActive())
+            .sorted((s1, s2) -> s2.getCreatedAt().compareTo(s1.getCreatedAt()))
+            .collect(Collectors.toList());
+    }
+    
+    /**
+     * Count pending vendor registrations
+     */
+    public long countPendingVendorRegistrations() {
+        return storeRepository.findAll().stream()
+            .filter(store -> !store.getIsActive())
+            .count();
+    }
+    
+    /**
      * Get report statistics
      */
     public Map<String, Object> getReportStats() {

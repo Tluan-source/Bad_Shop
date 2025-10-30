@@ -20,4 +20,5 @@ public interface CategoryRepository extends JpaRepository<Category, String> {
     Optional<Category> findBySlug(String slug);
     
     List<Category> findByNameContainingIgnoreCaseAndIsActiveTrue(String name);
+    
 }

@@ -37,21 +37,13 @@ public class StoreRegistrationDTO {
     @NotBlank(message = "Phường/Xã không được để trống")
     private String ward;
     
-    @NotBlank(message = "Loại hình kinh doanh không được để trống")
-    private String businessType; // INDIVIDUAL, COMPANY, HOUSEHOLD
-    
-    private String taxCode;
-    
-    @NotBlank(message = "Tên ngân hàng không được để trống")
-    private String bankName;
-    
-    @NotBlank(message = "Số tài khoản không được để trống")
-    private String bankAccountNumber;
-    
-    @NotBlank(message = "Tên chủ tài khoản không được để trống")
-    private String bankAccountName;
-    
-    private String bankBranch;
+    // Optional fields - removed validation
+    private String businessType; // INDIVIDUAL, COMPANY, HOUSEHOLD (optional)
+    private String taxCode; // optional
+    private String bankName; // optional
+    private String bankAccountNumber; // optional
+    private String bankAccountName; // optional
+    private String bankBranch; // optional
     
     // File paths will be set after upload
     private String logoUrl;

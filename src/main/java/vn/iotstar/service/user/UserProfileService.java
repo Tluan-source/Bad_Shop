@@ -5,6 +5,9 @@ import org.springframework.stereotype.Service;
 import vn.iotstar.entity.User;
 import vn.iotstar.repository.UserRepository;
 import vn.iotstar.service.PasswordService;
+import org.springframework.web.multipart.MultipartFile;
+import vn.iotstar.service.CloudinaryService;
+import java.io.IOException;
 
 import java.util.Optional;
 
@@ -16,6 +19,9 @@ public class UserProfileService {
     
     @Autowired
     private PasswordService passwordService;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     public Optional<User> getUserById(String userId) {
         return userRepository.findById(userId);
@@ -62,5 +68,8 @@ public class UserProfileService {
             return true;
         }
         return false;
+    }
+    public String uploadAvatar(MultipartFile file) throws IOException {
+        return cloudinaryService.uploadImage(file, "avatars");
     }
 }

@@ -105,14 +105,18 @@
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
-                <div class="mini-stat-card">
+                <div class="mini-stat-card" th:classappend="${pendingVendors > 0 ? 'border-warning' : ''}">
                     <div class="d-flex align-items-center">
-                        <i class="fas fa-star text-white bg-warning p-3 rounded-circle me-3"></i>
+                        <i class="fas fa-clock text-white bg-warning p-3 rounded-circle me-3"></i>
                         <div>
-                            <h6 class="text-muted mb-1">Đánh giá TB</h6>
-                            <h3 class="mb-0">4.8/5</h3>
+                            <h6 class="text-muted mb-1">Vendor chờ duyệt</h6>
+                            <h3 class="mb-0" th:text="${pendingVendors}">0</h3>
                         </div>
                     </div>
+                    <a th:if="${pendingVendors > 0}" th:href="@{/admin/vendor-registrations}" 
+                       class="btn btn-sm btn-warning mt-2 w-100">
+                        <i class="fas fa-eye me-1"></i> Xem ngay
+                    </a>
                 </div>
             </div>
             <div class="col-xl-3 col-md-6">
@@ -136,6 +140,20 @@
                         </div>
                     </div>
                 </div>
+            </div>
+        </div>
+        
+        <!-- Pending Vendor Alert -->
+        <div th:if="${pendingVendors > 0}" class="alert alert-warning border-0 shadow-sm mb-4">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                <div class="flex-grow-1">
+                    <h5 class="alert-heading mb-1">Có <span th:text="${pendingVendors}">0</span> đơn đăng ký vendor đang chờ phê duyệt!</h5>
+                    <p class="mb-0">Vui lòng xem xét và phê duyệt để người dùng có thể bắt đầu bán hàng.</p>
+                </div>
+                <a th:href="@{/admin/vendor-registrations}" class="btn btn-warning">
+                    <i class="fas fa-clipboard-check me-2"></i>Xem ngay
+                </a>
             </div>
         </div>
 
