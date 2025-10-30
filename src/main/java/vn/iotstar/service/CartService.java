@@ -9,6 +9,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.RequiredArgsConstructor;
 import vn.iotstar.entity.CartItem;
 import vn.iotstar.entity.Product;
@@ -42,32 +44,44 @@ public class CartService {
      * Add product to cart
      */
     @Transactional
-    public CartItem addToCart(String productId, Integer quantity) {
+    public CartItem addToCart(String productId, Integer quantity, List<String> styleValueIds) {
         User user = getCurrentUser();
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new RuntimeException("Product not found"));
-        
-        // Check if product already in cart
-        CartItem cartItem = cartItemRepository.findByUserAndProduct(user, product)
+
+        // 🔹 Chuyển styleValueIds thành chuỗi JSON để lưu
+        String styleValueIdsJson = null;
+        try {
+            if (styleValueIds != null && !styleValueIds.isEmpty()) {
+                styleValueIdsJson = new ObjectMapper().writeValueAsString(styleValueIds);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        // 🔹 Kiểm tra sản phẩm đã có trong giỏ chưa (cùng product + style)
+        CartItem cartItem = cartItemRepository
+                .findByUserAndProductAndStyleValueIds(user, product, styleValueIdsJson)
                 .orElse(null);
-        
+
         if (cartItem != null) {
-            // Update quantity
+            // Nếu đã có → cộng thêm số lượng
             cartItem.setQuantity(cartItem.getQuantity() + quantity);
             cartItem.setPrice(getProductPrice(product).multiply(BigDecimal.valueOf(cartItem.getQuantity())));
         } else {
-            // Create new cart item
+            // Nếu chưa có → tạo mới
             cartItem = new CartItem();
             cartItem.setId(UUID.randomUUID().toString());
             cartItem.setUser(user);
             cartItem.setProduct(product);
             cartItem.setQuantity(quantity);
             cartItem.setPrice(getProductPrice(product).multiply(BigDecimal.valueOf(quantity)));
+            cartItem.setStyleValueIds(styleValueIdsJson);
         }
-        
+
         return cartItemRepository.save(cartItem);
     }
-    
+        
     /**
      * Update cart item quantity
      */

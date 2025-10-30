@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import jakarta.persistence.Transient;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -18,12 +20,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import vn.iotstar.entity.Product;
+import vn.iotstar.entity.Review;
 import vn.iotstar.entity.StyleValue;
 import vn.iotstar.repository.StyleRepository;
 import vn.iotstar.repository.StyleValueRepository;
 import vn.iotstar.service.CartService;
 import vn.iotstar.service.FavoriteService;
 import vn.iotstar.service.ProductService;
+import vn.iotstar.repository.ReviewRepository;
 
 @Controller
 public class HomeController {
@@ -45,6 +49,12 @@ public class HomeController {
     
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private ReviewRepository reviewRepository;
+
+    @Transient
+    private List<String> styleValueNames;
     
     @GetMapping("/")
     public String home(Model model) {
@@ -111,39 +121,38 @@ public class HomeController {
     
     @GetMapping("/products/{id}")
     public String productDetail(@PathVariable String id, Model model, Authentication auth) {
-        // Kiểm tra đăng nhập
+        // 1️⃣ Kiểm tra đăng nhập
         if (auth == null || !auth.isAuthenticated()) {
             return "redirect:/login";
         }
-        
+
+        // 2️⃣ Lấy sản phẩm
         Optional<Product> productOpt = productService.getProductById(id);
-        
+
         if (productOpt.isPresent()) {
             Product product = productOpt.get();
-            
-            // Lấy sản phẩm liên quan (cùng category)
+
+            // 3️⃣ Sản phẩm liên quan
             List<Product> relatedProducts = productService.getProductsByCategory(product.getCategory().getId());
-            relatedProducts.removeIf(p -> p.getId().equals(id)); // Loại bỏ sản phẩm hiện tại
+            relatedProducts.removeIf(p -> p.getId().equals(id));
             if (relatedProducts.size() > 4) {
-                relatedProducts = relatedProducts.subList(0, 4); // Chỉ lấy 4 sản phẩm
+                relatedProducts = relatedProducts.subList(0, 4);
             }
-            
-            // Kiểm tra sản phẩm có trong yêu thích không
+
+            // 4️⃣ Kiểm tra yêu thích
             boolean isFavorite = favoriteService.isFavorite(id);
-            
-            // Parse styleValueIds và lấy thông tin Style + StyleValue
+
+            // 5️⃣ Parse styleValueIds
             Map<String, List<StyleValue>> styleMap = new HashMap<>();
             try {
                 if (product.getStyleValueIds() != null && !product.getStyleValueIds().equals("[]")) {
                     List<String> styleValueIds = objectMapper.readValue(
-                        product.getStyleValueIds(), 
+                        product.getStyleValueIds(),
                         objectMapper.getTypeFactory().constructCollectionType(List.class, String.class)
                     );
-                    
+
                     if (!styleValueIds.isEmpty()) {
                         List<StyleValue> styleValues = styleValueRepository.findAllById(styleValueIds);
-                        
-                        // Nhóm StyleValue theo Style
                         for (StyleValue sv : styleValues) {
                             String styleName = sv.getStyle().getName();
                             styleMap.computeIfAbsent(styleName, k -> new ArrayList<>()).add(sv);
@@ -153,15 +162,46 @@ public class HomeController {
             } catch (Exception e) {
                 e.printStackTrace();
             }
-            
+
+            // 🧩 Add dữ liệu cơ bản
             model.addAttribute("product", product);
             model.addAttribute("relatedProducts", relatedProducts);
             model.addAttribute("isFavorite", isFavorite);
             model.addAttribute("isAuthenticated", true);
             model.addAttribute("styleMap", styleMap);
+
+            // ✅ 6️⃣ Thêm phần load reviews ở đây
+            List<Review> reviews = reviewRepository.findByProduct_Id(product.getId());
+
+            ObjectMapper mapper = new ObjectMapper();
+            for (Review review : reviews) {
+                try {
+                    if (review.getOrderItem() != null && review.getOrderItem().getStyleValueIds() != null) {
+                        List<String> styleValueIds = mapper.readValue(
+                            review.getOrderItem().getStyleValueIds(),
+                            mapper.getTypeFactory().constructCollectionType(List.class, String.class)
+                        );
+                        if (!styleValueIds.isEmpty()) {
+                            List<StyleValue> styleValues = styleValueRepository.findAllById(styleValueIds);
+                            List<String> styleValueNames = new ArrayList<>();
+                            for (StyleValue sv : styleValues) {
+                                styleValueNames.add(sv.getStyle().getName() + ": " + sv.getName());
+                            }
+                            review.getOrderItem().setStyleValueNames(styleValueNames);
+                        }
+                    }
+                } catch (Exception e) {
+                    System.err.println("⚠️ Lỗi parse thuộc tính trong review: " + e.getMessage());
+                }
+            }
+
+            model.addAttribute("reviews", reviews);
+
+            // ✅ 7️⃣ Trả về view
             return "user/product-detail";
         }
-        
+
+        // ❌ Nếu không tìm thấy product
         return "redirect:/products";
     }
 }

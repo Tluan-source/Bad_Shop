@@ -50,4 +50,7 @@ public class OrderItem {
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Transient
+    private boolean reviewed;
 }

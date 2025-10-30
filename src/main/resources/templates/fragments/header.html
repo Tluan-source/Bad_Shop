@@ -8,6 +8,17 @@
      </head>
      <body>
           <header th:fragment="header">
+               <style>
+                    /* 🔥 Fix dropdown bị che bởi sticky-top (cart summary) */
+                    .navbar .dropdown-menu {
+                         z-index: 3000 !important;
+                    }
+
+                    /* Nếu muốn đảm bảo overlay đẹp hơn */
+                    .navbar .dropdown-menu.show {
+                         position: absolute !important;
+                    }
+               </style>
                <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
                     <div class="container">
                          <a class="navbar-brand d-flex align-items-center" th:href="@{/}">
@@ -46,7 +57,7 @@
                                         <a
                                              class="nav-link d-flex align-items-center position-relative"
                                              th:href="@{/cart}"
-                                             style="position: relative; top: 13px;"
+                                             style="position: relative; top: 13px"
                                         >
                                              <i class="fas fa-shopping-cart fa-lg"></i>
                                              <span
@@ -63,7 +74,7 @@
                                         <a
                                              class="nav-link d-flex align-items-center position-relative"
                                              th:href="@{/favorites}"
-                                             style="position: relative; top: 13px;"
+                                             style="position: relative; top: 13px"
                                         >
                                              <i class="fas fa-heart fa-lg"></i>
                                              <span
@@ -110,7 +121,7 @@
                                                   </h6>
                                              </li>
                                              <li><hr class="dropdown-divider" /></li>
-                                             
+
                                              <!-- User Menu Items -->
                                              <li>
                                                   <a
@@ -145,7 +156,7 @@
                                                   </a>
                                              </li>
                                              <li><hr class="dropdown-divider" /></li>
-                                             
+
                                              <!-- Vendor/Shop Management Menu -->
                                              <li>
                                                   <h6 class="dropdown-header text-primary">
@@ -159,8 +170,8 @@
                                                        class="dropdown-item"
                                                        th:href="@{/vendor/register}"
                                                   >
-                                                       <i class="fas fa-store-alt me-2"></i>Đăng ký làm
-                                                       người bán
+                                                       <i class="fas fa-store-alt me-2"></i>Đăng ký
+                                                       làm người bán
                                                   </a>
                                              </li>
                                              <!-- Các menu quản lý shop chỉ hiển thị khi có role VENDOR -->
@@ -169,8 +180,8 @@
                                                        class="dropdown-item"
                                                        th:href="@{/vendor/dashboard}"
                                                   >
-                                                       <i class="fas fa-tachometer-alt me-2"></i>Trang
-                                                       quản lý Shop
+                                                       <i class="fas fa-tachometer-alt me-2"></i
+                                                       >Trang quản lý Shop
                                                   </a>
                                              </li>
                                              <li sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
@@ -186,7 +197,8 @@
                                                        class="dropdown-item"
                                                        th:href="@{/vendor/products}"
                                                   >
-                                                       <i class="fas fa-box me-2"></i>Sản phẩm của tôi
+                                                       <i class="fas fa-box me-2"></i>Sản phẩm của
+                                                       tôi
                                                   </a>
                                              </li>
                                              <li sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
@@ -211,10 +223,11 @@
                                                        class="dropdown-item"
                                                        th:href="@{/vendor/analytics}"
                                                   >
-                                                       <i class="fas fa-chart-line me-2"></i>Doanh thu
+                                                       <i class="fas fa-chart-line me-2"></i>Doanh
+                                                       thu
                                                   </a>
                                              </li>
-                                             
+
                                              <li><hr class="dropdown-divider" /></li>
                                              <li>
                                                   <form
