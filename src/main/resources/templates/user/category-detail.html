@@ -38,7 +38,7 @@
                          <div th:each="product : ${products}" class="col-md-3 mb-4">
                               <div class="card h-100">
                                    <img
-                                        th:src="${product.listImages}"
+                                        th:src="${product.firstImage}"
                                         class="card-img-top"
                                         alt="Product Image"
                                         style="height: 200px; object-fit: cover"
@@ -46,15 +46,22 @@
                                    <div class="card-body">
                                         <h5 class="card-title" th:text="${product.name}"></h5>
                                         <p class="card-text">
-                                             <span
-                                                  class="text-danger fw-bold"
-                                                  th:text="${#numbers.formatCurrency(product.promotionalPrice ?: product.price)}"
-                                             ></span>
-                                             <span
-                                                  th:if="${product.promotionalPrice}"
+                                             <span class="text-danger fw-bold"
+                                                  th:text="${#numbers.formatDecimal(product.promotionalPrice ?: product.price, 0, 'POINT', 0, 'COMMA')} + ' đ'">
+                                             </span>
+                                             <div class="product-rating mb-2">
+                                                  <span th:each="i : ${#numbers.sequence(1,5)}">
+                                                      <i th:classappend="${i <= product.rating ? 'fas fa-star text-warning' : 
+                                                                         (i - product.rating <= 0.5 ? 'fas fa-star-half-alt text-warning' : 
+                                                                         'far fa-star text-warning')}"></i>
+                                                  </span>
+                                                  <span class="text-muted ms-2">(<span th:text="${product.rating}"></span>)</span>
+                                              </div>
+                                             <span th:if="${product.promotionalPrice}"
                                                   class="text-muted text-decoration-line-through ms-2"
-                                                  th:text="${#numbers.formatCurrency(product.price)}"
-                                             ></span>
+                                                  th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'COMMA')} + ' đ'">
+                                             </span>
+
                                         </p>
                                         <div class="mb-2">
                                              <small class="text-muted">

@@ -456,6 +456,50 @@ public List<Order> createOrders(List<CheckoutItemDTO> items, CheckoutRequest req
         
         return orders;
     }
+
+    /**
+     * Lấy danh sách đơn hàng của user, cho phép lọc theo khoảng ngày và ưu tiên trạng thái DELIVERED
+     * @param userId user id
+     * @param daysFilter số ngày gần đây (null hoặc rỗng để lấy tất cả)
+     */
+    @Transactional(readOnly = true)
+    public List<Order> getUserOrdersWithStyleValuesFiltered(String userId, String daysFilter) {
+        List<Order> orders = getUserOrdersWithStyleValues(userId);
+
+        LocalDateTime start = null;
+        try {
+            if (daysFilter != null && !daysFilter.isBlank()) {
+                int d = Integer.parseInt(daysFilter.trim());
+                start = LocalDateTime.now().minusDays(d);
+            }
+        } catch (NumberFormatException ignored) {}
+
+        // Filter by start date if provided
+        if (start != null) {
+            final LocalDateTime startFilter = start;
+            orders = orders.stream()
+                .filter(o -> o.getCreatedAt() != null ? !o.getCreatedAt().isBefore(startFilter)
+                        : (o.getUpdatedAt() == null || !o.getUpdatedAt().isBefore(startFilter)))
+                .toList();
+        }
+
+        // Sort: DELIVERED first, then by created/updated desc
+        orders = orders.stream()
+            .sorted((o1, o2) -> {
+                int p1 = (o1.getStatus() == Order.OrderStatus.DELIVERED) ? 0 : 1;
+                int p2 = (o2.getStatus() == Order.OrderStatus.DELIVERED) ? 0 : 1;
+                if (p1 != p2) return Integer.compare(p1, p2);
+                LocalDateTime t1 = o1.getCreatedAt() != null ? o1.getCreatedAt() : o1.getUpdatedAt();
+                LocalDateTime t2 = o2.getCreatedAt() != null ? o2.getCreatedAt() : o2.getUpdatedAt();
+                if (t1 == null && t2 == null) return 0;
+                if (t1 == null) return 1;
+                if (t2 == null) return -1;
+                return t2.compareTo(t1);
+            })
+            .toList();
+
+        return orders;
+    }
     
     public Optional<Order> getOrderById(String orderId) {
         return orderRepository.findById(orderId);

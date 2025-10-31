@@ -9,8 +9,8 @@
      <body>
           <th:block th:replace="~{fragments/header :: header}"></th:block>
 
-          <!-- Hero Slider Section -->
-          <section class="hero-slider">
+           <!-- Hero Slider Section -->
+           <section class="hero-slider">
                <div id="heroCarousel" class="carousel slide" data-bs-ride="carousel">
                     <div class="carousel-indicators">
                          <button
@@ -134,30 +134,45 @@
                <div class="container">
                     <h2 class="text-center mb-5 fw-bold">Danh mục sản phẩm</h2>
                     <div class="row g-4">
-                         <div class="col-lg-3 col-md-6">
+                         <!-- Category 1 -->
+                         <div class="col-lg-3 col-md-6" th:if="${categories.size() > 0}">
                               <div class="category-card text-center">
                                    <div class="category-icon mb-3">
                                         <i class="fas fa-baseball-ball fa-4x text-primary"></i>
                                    </div>
-                                   <h4 class="mb-3">Vợt cầu lông</h4>
-                                   <p class="text-muted mb-3">Hơn 500+ sản phẩm</p>
+                                   <h4 class="mb-3" th:text="${categories[0].name}">
+                                        Vợt cầu lông
+                                   </h4>
+                                   <p class="text-muted mb-3">
+                                        Hơn
+                                        <span th:text="${categoryCounts[categories[0].id]}">0</span>
+                                        sản phẩm
+                                   </p>
                                    <a
-                                        th:href="@{/products(category='C1')}"
+                                        th:href="@{/products(category=${categories[0].id})}"
                                         class="btn btn-outline-primary"
                                    >
                                         Xem ngay
                                    </a>
                               </div>
                          </div>
-                         <div class="col-lg-3 col-md-6">
+
+                         <!-- Category 2 -->
+                         <div class="col-lg-3 col-md-6" th:if="${categories.size() > 1}">
                               <div class="category-card text-center">
                                    <div class="category-icon mb-3">
                                         <i class="fas fa-shoe-prints fa-4x text-success"></i>
                                    </div>
-                                   <h4 class="mb-3">Giày cầu lông</h4>
-                                   <p class="text-muted mb-3">Hơn 300+ sản phẩm</p>
+                                   <h4 class="mb-3" th:text="${categories[1].name}">
+                                        Giày cầu lông
+                                   </h4>
+                                   <p class="text-muted mb-3">
+                                        Hơn
+                                        <span th:text="${categoryCounts[categories[1].id]}">0</span>
+                                        sản phẩm
+                                   </p>
                                    <a
-                                        th:href="@{/products(category='C3')}"
+                                        th:href="@{/products(category=${categories[1].id})}"
                                         class="btn btn-outline-success"
                                    >
                                         Xem ngay
@@ -165,33 +180,47 @@
                               </div>
                          </div>
 
-                         <div class="col-lg-3 col-md-6">
+                         <!-- Category 3 -->
+                         <div class="col-lg-3 col-md-6" th:if="${categories.size() > 2}">
                               <div class="category-card text-center">
                                    <div class="category-icon mb-3">
                                         <i class="fas fa-tshirt fa-4x text-warning"></i>
                                    </div>
-                                   <h4 class="mb-3">Quả cầu & Phụ kiện</h4>
-                                   <p class="text-muted mb-3">Hơn 400+ sản phẩm</p>
+                                   <h4 class="mb-3" th:text="${categories[2].name}">
+                                        Quả cầu & Phụ kiện
+                                   </h4>
+                                   <p class="text-muted mb-3">
+                                        Hơn
+                                        <span th:text="${categoryCounts[categories[2].id]}">0</span>
+                                        sản phẩm
+                                   </p>
                                    <a
-                                        th:href="@{/products(category='C2')}"
+                                        th:href="@{/products(category=${categories[2].id})}"
                                         class="btn btn-outline-warning"
                                    >
                                         Xem ngay
                                    </a>
                               </div>
                          </div>
-                         <div class="col-lg-3 col-md-6">
+
+                         <!-- Category 4 -->
+                         <div class="col-lg-3 col-md-6" th:if="${categories.size() > 3}">
                               <div class="category-card text-center">
                                    <div class="category-icon mb-3">
                                         <i class="fas fa-briefcase fa-4x text-danger"></i>
                                    </div>
-                                   <h4 class="mb-3">Phụ kiện</h4>
-                                   <p class="text-muted mb-3">Hơn 200+ sản phẩm</p>
+                                   <h4 class="mb-3" th:text="${categories[3].name}">Phụ kiện</h4>
+                                   <p class="text-muted mb-3">
+                                        Hơn
+                                        <span th:text="${categoryCounts[categories[3].id]}">0</span>
+                                        sản phẩm
+                                   </p>
                                    <a
-                                        th:href="@{/products(category='C4')}"
+                                        th:href="@{/products(category=${categories[3].id})}"
                                         class="btn btn-outline-danger"
-                                        >Xem ngay</a
                                    >
+                                        Xem ngay
+                                   </a>
                               </div>
                          </div>
                     </div>
@@ -235,27 +264,62 @@
                                         <h5 class="product-title mb-2" th:text="${product.name}">
                                              Product Name
                                         </h5>
-                                        <div class="product-rating mb-2">
-                                             <i class="fas fa-star text-warning"></i>
-                                             <i class="fas fa-star text-warning"></i>
-                                             <i class="fas fa-star text-warning"></i>
-                                             <i class="fas fa-star text-warning"></i>
-                                             <i class="fas fa-star-half-alt text-warning"></i>
-                                             <span class="text-muted ms-2">(4.5)</span>
+
+                                        <!-- ⭐ Rating -->
+                                        <div
+                                             class="product-rating mb-2"
+                                             th:with="
+                                                r=${product.rating != null ? product.rating : 0},
+                                                full=${T(java.lang.Math).floor(r)},
+                                                half=${(r - full) >= 0.5}
+                                            "
+                                        >
+                                             <!-- full stars -->
+                                             <span
+                                                  th:each="i : ${#numbers.sequence(1, full.intValue())}"
+                                             >
+                                                  <i class="fas fa-star text-warning"></i>
+                                             </span>
+
+                                             <!-- half star -->
+                                             <i
+                                                  class="fas fa-star-half-alt text-warning"
+                                                  th:if="${half}"
+                                             ></i>
+
+                                             <!-- empty stars -->
+                                             <span
+                                                  th:each="i : ${#numbers.sequence(1, 5 - full.intValue() - (half ? 1 : 0))}"
+                                             >
+                                                  <i class="far fa-star text-warning"></i>
+                                             </span>
+
+                                             <span class="text-muted ms-2"
+                                                  >( <span th:text="${r}">0</span> )</span
+                                             >
                                         </div>
+
+                                        <!-- 💰 Price -->
                                         <div class="product-price">
                                              <span
                                                   class="price-current fw-bold fs-5 text-danger"
-                                                  th:text="${#numbers.formatCurrency(product.promotionalPrice ?: product.price)}"
+                                                  th:text="${#numbers.formatDecimal(
+                                                            product.promotionalPrice != null ? product.promotionalPrice : product.price,
+                                                            0,'POINT',0,'COMMA'
+                                                        )} + ' đ'"
                                              >
-                                                  500,000₫
+                                                  0 đ
                                              </span>
+
                                              <span
-                                                  th:if="${product.promotionalPrice}"
+                                                  th:if="${product.promotionalPrice != null}"
                                                   class="price-original text-muted text-decoration-line-through ms-2"
-                                                  th:text="${#numbers.formatCurrency(product.price)}"
+                                                  th:text="${#numbers.formatDecimal(
+                                                            product.price,
+                                                            0,'POINT',0,'COMMA'
+                                                        )} + ' đ'"
                                              >
-                                                  700,000₫
+                                                  0 đ
                                              </span>
                                         </div>
                                    </div>
@@ -275,7 +339,11 @@
                                    Giảm giá lên đến 50% cho các sản phẩm chính hãng. Nhanh tay sở
                                    hữu ngay!
                               </p>
-                              <a th:href="@{/promotions}" class="btn btn-light btn-lg">
+                              <a
+                                   href="#featured-products-section"
+                                   class="btn btn-light btn-lg"
+                                   onclick="event.preventDefault(); document.getElementById('featured-products-section').scrollIntoView({behavior: 'smooth'});"
+                              >
                                    <i class="fas fa-gift me-2"></i>Xem ưu đãi
                               </a>
                          </div>

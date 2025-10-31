@@ -209,7 +209,7 @@
                                              <p class="text-muted mb-1">
                                                   Đơn giá:
                                                   <span
-                                                       th:text="${#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') + ' đ'}"
+                                                       th:text="${item.price != null ? (#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')) : '0'} + ' đ'"
                                                   ></span>
                                              </p>
                                              <p class="text-muted mb-0">
@@ -219,7 +219,7 @@
                                         <div class="text-end">
                                              <strong
                                                   class="text-danger"
-                                                  th:text="${#numbers.formatDecimal(item.total, 0, 'COMMA', 0, 'POINT') + ' đ'}"
+                                                  th:text="${item.total != null ? (#numbers.formatDecimal(item.total, 0, 'COMMA', 0, 'POINT')) : '0'} + ' đ'"
                                              ></strong>
                                         </div>
                                    </div>
@@ -261,11 +261,11 @@
                                         <div
                                              class="info-value text-end"
                                              th:text="${#numbers.formatDecimal(
-                         (order.amountFromUser ?: 0)
-                         + (order.promotionDiscount ?: 0)
-                         + (order.voucherDiscount ?: 0),
+                         ((order.amountFromUser != null ? order.amountFromUser : 0)
+                         + (order.promotionDiscount != null ? order.promotionDiscount : 0)
+                         + (order.voucherDiscount != null ? order.voucherDiscount : 0)),
                          0, 'COMMA', 0, 'POINT'
-                    ) + ' đ'}"
+                    )} + ' đ'"
                                         ></div>
                                    </div>
 
@@ -326,9 +326,9 @@
                                         <div class="info-label">Phí vận chuyển:</div>
                                         <div
                                              class="info-value text-end"
-                                             th:text="${order.shippingProvider != null ? 
-                         #numbers.formatDecimal(order.shippingProvider.shippingFee, 0, 'COMMA', 0, 'POINT') + ' đ' : 
-                         (order.shippingFee != null ? #numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT') + ' đ' : '0 đ')}"
+                                             th:text="${order.shippingProvider != null && order.shippingProvider.shippingFee != null ? 
+                         (#numbers.formatDecimal(order.shippingProvider.shippingFee, 0, 'COMMA', 0, 'POINT')) + ' đ' : 
+                         (order.shippingFee != null ? (#numbers.formatDecimal(order.shippingFee, 0, 'COMMA', 0, 'POINT')) + ' đ' : '0 đ')}"
                                         ></div>
                                    </div>
 
@@ -339,9 +339,10 @@
                                              <strong
                                                   class="text-danger fs-5"
                                                   th:text="${#numbers.formatDecimal(
-                                                            (order.amountFromUser ?: 0) + (order.shippingFee ?: 0),
+                                                            ((order.amountFromUser != null ? order.amountFromUser : 0) 
+                                                            + (order.shippingFee != null ? order.shippingFee : 0)),
                                                             0, 'COMMA', 0, 'POINT'
-                                                       ) + ' đ'}"
+                                                       )} + ' đ'"
                                              >
                                              </strong>
                                         </div>
@@ -487,7 +488,7 @@
                                                             <span
                                                                  class="fw-bold text-danger"
                                                                  style="font-size: 1.1rem"
-                                                                 th:text="${#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT') + ' đ'}"
+                                                                 th:text="${product.price != null ? (#numbers.formatDecimal(product.price, 0, 'COMMA', 0, 'POINT')) : '0'} + ' đ'"
                                                             >
                                                                  500,000₫
                                                             </span>

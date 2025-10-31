@@ -19,9 +19,6 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     List<Product> findByStoreIdAndIsActiveTrue(String storeId);
     List<Product> findByCategoryIdAndIsActiveTrueAndIsSellingTrue(String categoryId);
     
-    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.isSelling = true ORDER BY p.sold DESC")
-    List<Product> findTop10ByOrderBySoldDesc();
-    
     List<Product> findByNameContainingIgnoreCaseAndIsActiveTrueAndIsSellingTrue(String name);
     
     // ===== VENDOR METHODS - Added 2025-10-24 =====
@@ -104,5 +101,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
            "AND p.category.id = :categoryId ORDER BY COALESCE(p.promotionalPrice, p.price) ASC")
     List<Product> findCheapestByCategory(@Param("categoryId") String categoryId,
                                          org.springframework.data.domain.Pageable pageable);
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.isSelling = true ORDER BY p.sold DESC")
+    List<Product> findTop20ByOrderBySoldDesc(Pageable pageable);
 
 }

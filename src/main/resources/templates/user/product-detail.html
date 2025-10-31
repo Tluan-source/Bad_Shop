@@ -147,33 +147,33 @@
                                    >
                                         <div style="display: flex; align-items: center; gap: 3px">
                                              <span
-                                                  style="color: #0d6efd; font-weight: 600"
+                                                  style="color: #555454; font-weight: 600"
                                                   th:text="${product.rating}"
                                                   >5</span
                                              >
                                              <i
                                                   class="fas fa-star"
-                                                  style="color: #0d6efd; font-size: 0.85rem"
+                                                  style="color: #ffbe1b; font-size: 0.85rem"
                                              ></i>
                                              <i
                                                   class="fas fa-star"
-                                                  style="color: #0d6efd; font-size: 0.85rem"
+                                                  style="color: #ffbe1b; font-size: 0.85rem"
                                              ></i>
                                              <i
                                                   class="fas fa-star"
-                                                  style="color: #0d6efd; font-size: 0.85rem"
+                                                  style="color: #ffbe1b; font-size: 0.85rem"
                                              ></i>
                                              <i
                                                   class="fas fa-star"
-                                                  style="color: #0d6efd; font-size: 0.85rem"
+                                                  style="color: #ffbe1b; font-size: 0.85rem"
                                              ></i>
                                              <i
                                                   class="fas fa-star"
-                                                  style="color: #0d6efd; font-size: 0.85rem"
+                                                  style="color: #ffbe1b; font-size: 0.85rem"
                                              ></i>
                                         </div>
                                         <span style="color: #d8d8d8">|</span>
-                                        <div style="color: #666"><span>1</span> đánh giá</div>
+                                        <div style="color: #666"><span th:text="${#lists.size(reviews)}">0</span> đánh giá</div>
                                         <span style="color: #d8d8d8">|</span>
                                         <div style="color: #666">
                                              <strong>Đã bán:</strong>
@@ -196,7 +196,7 @@
                                                   font-size: 2rem;
                                                   font-weight: 700;
                                              "
-                                             th:text="${#numbers.formatCurrency(product.price)}"
+                                             th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'COMMA')} + ' đ'"
                                              >1.150.000₫</span
                                         >
                                    </div>
@@ -544,22 +544,21 @@
                                              style="font-size: 0.875rem"
                                         >
                                              <span
-                                                  style="color: #0d6efd"
+                                                  style="color: #636363"
                                                   th:text="${relatedProduct.rating}"
                                                   >4.5</span
                                              >
                                              <i
                                                   class="fas fa-star ms-1"
-                                                  style="color: #0d6efd; font-size: 0.75rem"
+                                                  style="color: #ffbe1b; font-size: 0.75rem"
                                              ></i>
                                         </div>
                                         <div>
-                                             <span
-                                                  class="fw-bold"
-                                                  style="color: #0d6efd; font-size: 1.1rem"
-                                                  th:text="${#numbers.formatCurrency(relatedProduct.price)}"
-                                                  >500,000₫</span
-                                             >
+                                             <span class="fw-bold"
+                                             style="color: #0d6efd; font-size: 1.1rem"
+                                             th:text="${#numbers.formatDecimal(relatedProduct.price, 0, 'POINT', 0, 'COMMA')} + ' đ'">
+                                        </span>
+
                                         </div>
                                    </div>
                               </div>

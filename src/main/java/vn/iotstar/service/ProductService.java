@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -17,8 +18,9 @@ public class ProductService {
     @Autowired
     private ProductRepository productRepository;
 
-    public List<Product> getTop10Products() {
-        return productRepository.findTop10ByOrderBySoldDesc();
+    public List<Product> getTop20Products() {
+        Pageable pageable = PageRequest.of(0, 20);
+        return productRepository.findTop20ByOrderBySoldDesc(pageable);
     }
 
     public List<Product> getAllActiveProducts() {

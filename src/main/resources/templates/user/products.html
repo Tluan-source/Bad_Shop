@@ -487,26 +487,25 @@
                                                        Mô tả sản phẩm
                                                   </p>
                                                   <div class="product-rating mb-2">
-                                                       <i class="fas fa-star text-warning"></i>
-                                                       <i class="fas fa-star text-warning"></i>
-                                                       <i class="fas fa-star text-warning"></i>
-                                                       <i class="fas fa-star text-warning"></i>
-                                                       <i
-                                                            class="fas fa-star-half-alt text-warning"
-                                                       ></i>
-                                                       <span class="text-muted ms-2">(4.5)</span>
-                                                  </div>
+                                                       <span th:each="i : ${#numbers.sequence(1,5)}">
+                                                           <i th:classappend="${i <= product.rating ? 'fas fa-star text-warning' : 
+                                                                              (i - product.rating <= 0.5 ? 'fas fa-star-half-alt text-warning' : 
+                                                                              'far fa-star text-warning')}"></i>
+                                                       </span>
+                                                       <span class="text-muted ms-2">(<span th:text="${product.rating}"></span>)</span>
+                                                   </div>
+                                                   
                                                   <div class="product-price">
                                                        <span
                                                             class="price-current fw-bold fs-5 text-danger"
-                                                            th:text="${#numbers.formatCurrency(product.promotionalPrice ?: product.price)}"
+                                                            th:text="${#numbers.formatDecimal(product.promotionalPrice ?: product.price, 0, 'POINT', 0, 'COMMA')} + ' đ'"
                                                        >
                                                             500,000₫
                                                        </span>
                                                        <span
                                                             th:if="${product.promotionalPrice}"
                                                             class="price-original text-muted text-decoration-line-through ms-2"
-                                                            th:text="${#numbers.formatCurrency(product.price)}"
+                                                            th:text="${#numbers.formatDecimal(product.promotionalPrice ?: product.price, 0, 'POINT', 0, 'COMMA')} + ' đ'"
                                                        >
                                                             700,000₫
                                                        </span>

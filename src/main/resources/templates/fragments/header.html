@@ -107,18 +107,50 @@
                                              data-bs-toggle="dropdown"
                                              aria-expanded="false"
                                         >
-                                             <i class="fas fa-user-circle me-1"></i>
-                                             <span sec:authentication="name">Tài khoản</span>
+                                             <img
+                                                  th:if="${currentUser != null and currentUser.avatar != null and !#strings.isEmpty(currentUser.avatar)}"
+                                                  th:src="${currentUser.avatar}"
+                                                  alt="Avatar"
+                                                  class="rounded-circle me-2"
+                                                  style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(255,255,255,0.3);"
+                                             />
+                                             <img
+                                                  th:if="${currentUser == null or currentUser.avatar == null or #strings.isEmpty(currentUser.avatar)}"
+                                                  src="/images/default-avatar.png"
+                                                  alt="Avatar"
+                                                  class="rounded-circle me-2"
+                                                  style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(255,255,255,0.3);"
+                                             />
+                                             <span th:if="${currentUser != null and currentUser.fullName != null}" th:text="${currentUser.fullName}">Tài khoản</span>
+                                             <span th:if="${currentUser == null or currentUser.fullName == null}" sec:authentication="name">Tài khoản</span>
                                         </a>
                                         <ul
                                              class="dropdown-menu dropdown-menu-end"
                                              aria-labelledby="accountDropdown"
                                         >
                                              <li>
-                                                  <h6 class="dropdown-header">
-                                                       <i class="fas fa-user"></i>
-                                                       <span sec:authentication="name"></span>
-                                                  </h6>
+                                                  <div class="dropdown-header d-flex align-items-center">
+                                                       <img
+                                                            th:if="${currentUser != null and currentUser.avatar != null and !#strings.isEmpty(currentUser.avatar)}"
+                                                            th:src="${currentUser.avatar}"
+                                                            alt="Avatar"
+                                                            class="rounded-circle me-2"
+                                                            style="width: 40px; height: 40px; object-fit: cover;"
+                                                       />
+                                                       <img
+                                                            th:if="${currentUser == null or currentUser.avatar == null or #strings.isEmpty(currentUser.avatar)}"
+                                                            src="/images/default-avatar.png"
+                                                            alt="Avatar"
+                                                            class="rounded-circle me-2"
+                                                            style="width: 40px; height: 40px; object-fit: cover;"
+                                                       />
+                                                       <div>
+                                                            <div class="fw-bold" th:if="${currentUser != null and currentUser.fullName != null}" th:text="${currentUser.fullName}"></div>
+                                                            <div class="fw-bold" th:if="${currentUser == null or currentUser.fullName == null}" sec:authentication="name"></div>
+                                                            <small class="text-muted" th:if="${currentUser != null and currentUser.email != null}" th:text="${currentUser.email}"></small>
+                                                            <small class="text-muted" th:if="${currentUser == null or currentUser.email == null}" sec:authentication="name"></small>
+                                                       </div>
+                                                  </div>
                                              </li>
                                              <li><hr class="dropdown-divider" /></li>
 

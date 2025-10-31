@@ -18,6 +18,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -34,12 +36,16 @@ import vn.iotstar.service.FavoriteService;
 import vn.iotstar.service.ProductService;
 import vn.iotstar.service.StyleService;
 import vn.iotstar.repository.ReviewRepository;
+import vn.iotstar.repository.ProductRepository;
 
 @Controller
 public class HomeController {
     
     @Autowired
     private ProductService productService;
+
+    @Autowired
+    private ProductRepository productRepository;
     
     @Autowired
     private FavoriteService favoriteService;
@@ -70,10 +76,26 @@ public class HomeController {
     
     @GetMapping("/")
     public String home(Model model) {
-        List<Product> topProducts = productService.getTop10Products();
+
+        // ✅ Top 20 sản phẩm bán chạy
+        Pageable pageable = PageRequest.of(0, 20);
+        List<Product> topProducts = productRepository.findTop20ByOrderBySoldDesc(pageable);
         model.addAttribute("topProducts", topProducts);
+
+        // ✅ Lấy danh mục từ DB
+        List<Category> categories = categoryService.getActiveCategories();
+        model.addAttribute("categories", categories);
+
+        // ✅ Đếm sản phẩm theo Category
+        Map<String, Long> categoryCounts = new HashMap<>();
+        categories.forEach(c ->
+            categoryCounts.put(c.getId(), productRepository.countByCategory_Id(c.getId()))
+        );
+        model.addAttribute("categoryCounts", categoryCounts);
+
         return "user/index";
     }
+
     
     @GetMapping("/products")
     public String products(

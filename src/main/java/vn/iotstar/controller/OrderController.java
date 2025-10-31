@@ -38,7 +38,7 @@ public class OrderController {
      */
     @GetMapping
     @Transactional(readOnly = true)
-    public String viewOrders(Model model, Authentication auth) {
+    public String viewOrders(Model model, Authentication auth, @org.springframework.web.bind.annotation.RequestParam(value = "date", required = false) String date) {
         if (auth == null || !auth.isAuthenticated()) {
             return "redirect:/login";
         }
@@ -46,7 +46,7 @@ public class OrderController {
         User user = userService.findByEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
-        List<Order> orders = orderService.getUserOrdersWithStyleValues(user.getId());
+        List<Order> orders = orderService.getUserOrdersWithStyleValuesFiltered(user.getId(), date);
         
         // Debug: Log số lượng đơn hàng
         System.out.println("=== DEBUG: User " + user.getEmail() + " có " + orders.size() + " đơn hàng ===");
@@ -56,6 +56,7 @@ public class OrderController {
         }
         
         model.addAttribute("orders", orders);
+        model.addAttribute("date", date);
         
         return "user/orders";
     }
