@@ -228,8 +228,17 @@ public class OrderService {
             payment.setOrder(order);
             payment.setAmount(finalAmount);
             payment.setStatus(Payment.PaymentStatus.PENDING);
-            payment.setPaymentMethod("VNPAY".equalsIgnoreCase(request.getPaymentMethod()) 
-                    ? Payment.PaymentMethod.VNPAY : Payment.PaymentMethod.COD);
+            // Map đầy đủ phương thức thanh toán (VNPAY / BANK_QR / COD)
+            String method = request.getPaymentMethod() == null ? "" : request.getPaymentMethod().toUpperCase();
+            if ("VNPAY".equals(method)) {
+                payment.setPaymentMethod(Payment.PaymentMethod.VNPAY);
+            } else if ("BANK_QR".equals(method) || "VIETQR".equals(method) || "QR".equals(method)) {
+                payment.setPaymentMethod(Payment.PaymentMethod.BANK_QR);
+                order.setIsPaidBefore(true);
+                orderRepository.save(order);
+            } else {
+                payment.setPaymentMethod(Payment.PaymentMethod.COD);
+            }
             
             order.setPayment(payment);
             
