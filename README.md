@@ -74,38 +74,38 @@ File jar nằm trong `target/`.
 
 # Tính năng dự án (Bad Shop)
 - Người dùng (khách mua)
-    --Đăng ký/đăng nhập, cập nhật hồ sơ
-    --Duyệt danh mục, tìm kiếm sản phẩm, xem chi tiết
-    --Giỏ hàng: thêm/xoá/sửa số lượng, mua ngay
-    --Mã giảm giá/khuyến mãi (áp dụng ở checkout)
-    --Thanh toán
-    --VNPay (đã tích hợp)
-    --VietQR (chuyển khoản QR – chưa tự động đối soát)
-    --Đặt hàng: tạo đơn nhiều sản phẩm/cửa hàng, theo dõi trạng thái
-    --Đánh giá sản phẩm (rating, ảnh)
-    --Yêu thích (favorites), lịch sử xem (nếu có)
-    --Trò chuyện realtime với người bán
-    --Trợ lý AI chat (gợi ý theo dữ liệu shop)
+    Đăng ký/đăng nhập, cập nhật hồ sơ
+    Duyệt danh mục, tìm kiếm sản phẩm, xem chi tiết
+    Giỏ hàng: thêm/xoá/sửa số lượng, mua ngay
+    Mã giảm giá/khuyến mãi (áp dụng ở checkout)
+    Thanh toán
+    VNPay (đã tích hợp)
+    VietQR (chuyển khoản QR – chưa tự động đối soát)
+    Đặt hàng: tạo đơn nhiều sản phẩm/cửa hàng, theo dõi trạng thái
+    Đánh giá sản phẩm (rating, ảnh)
+    Yêu thích (favorites), lịch sử xem (nếu có)
+    Trò chuyện realtime với người bán
+    Trợ lý AI chat (gợi ý theo dữ liệu shop)
 - Người bán (Vendor)
-    --Quản lý sản phẩm: thêm/sửa/xoá, hình ảnh, thuộc tính/biến thể
-    --Quản lý đơn hàng: xem, xác nhận, cập nhật trạng thái giao hàng
-    --Quản lý khuyến mãi/mã giảm giá
-    --Thống kê cơ bản: doanh thu, đơn bán chạy (tùy phạm vi)
-    --Chat realtime với người mua
+    Quản lý sản phẩm: thêm/sửa/xoá, hình ảnh, thuộc tính/biến thể
+    Quản lý đơn hàng: xem, xác nhận, cập nhật trạng thái giao hàng
+    Quản lý khuyến mãi/mã giảm giá
+    Thống kê cơ bản: doanh thu, đơn bán chạy (tùy phạm vi)
+    Chat realtime với người mua
 - Quản trị (Admin)
-    --Quản lý danh mục, cửa hàng, người dùng
-    --Duyệt/kiểm soát nội dung (sản phẩm, đánh giá)
-    --Cấu hình khuyến mãi chung, phí/hoa hồng (nếu bật)
-    --Theo dõi hoạt động, log sự kiện (nếu bật)
+    Quản lý danh mục, cửa hàng, người dùng
+    Duyệt/kiểm soát nội dung (sản phẩm, đánh giá)
+    Cấu hình khuyến mãi chung, phí/hoa hồng (nếu bật)
+    Theo dõi hoạt động, log sự kiện (nếu bật)
 - Hệ thống/khác
-    --Xác thực Spring Security (Form Login)
-    --WebSocket chat realtime
-    --Lưu trữ ảnh Cloudinary
-    --Giao diện Thymeleaf + Bootstrap 5, responsive
-    --AI Chat: API /api/ai-chat, widget nổi ở footer, chiến lược DB-first + model
-    --Tích hợp vận chuyển (hiển thị provider), trạng thái đơn (PENDING → DELIVERED…)
-    --Email/OTP (nếu cấu hình)
-    --Cấu hình đa phân hệ header/footer cho user/vendor/admin/shipper
+    Xác thực Spring Security (Form Login)
+    WebSocket chat realtime
+    Lưu trữ ảnh Cloudinary
+    Giao diện Thymeleaf + Bootstrap 5, responsive
+    AI Chat: API /api/ai-chat, widget nổi ở footer, chiến lược DB-first + model
+    Tích hợp vận chuyển (hiển thị provider), trạng thái đơn (PENDING → DELIVERED…)
+    Email/OTP (nếu cấu hình)
+    Cấu hình đa phân hệ header/footer cho user/vendor/admin/shipper
 
 ## Xử lý sự cố (Troubleshooting)
 - Kết nối SQL Server: bật SQL auth, cổng 1433; dùng `encrypt=true;trustServerCertificate=true` khi chạy local.
