@@ -5,6 +5,7 @@ import java.util.Map;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -12,7 +13,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import vn.iotstar.entity.Product;
+import vn.iotstar.entity.Category;
 import vn.iotstar.repository.ProductRepository;
+import vn.iotstar.repository.CategoryRepository;
 
 @Service
 public class AiChatService {
@@ -21,15 +24,18 @@ public class AiChatService {
     private final String apiKey;
     private final String openRouterModel;
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
     public AiChatService(WebClient openAiClient, 
                          @Value("${OPENAI_API_KEY:}") String apiKey,
                          @Value("${OPENROUTER_MODEL:meta-llama/llama-3.1-8b-instruct:free}") String openRouterModel,
-                         ProductRepository productRepository) {
+                         ProductRepository productRepository,
+                         CategoryRepository categoryRepository) {
         this.openAiClient = openAiClient;
         this.apiKey = apiKey == null ? "" : apiKey.trim();
         this.openRouterModel = openRouterModel;
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     public String chat(String userMessage) {
@@ -49,15 +55,27 @@ public class AiChatService {
             return curated; // short-circuit without calling AI
         }
 
+        // Build category info from database
+        List<Category> allCategories = categoryRepository.findByIsActiveTrueOrderByNameAsc();
+        StringBuilder categoryInfo = new StringBuilder();
+        if (!allCategories.isEmpty()) {
+            categoryInfo.append("Danh mục hiện có: ");
+            for (int i = 0; i < allCategories.size(); i++) {
+                Category cat = allCategories.get(i);
+                categoryInfo.append(cat.getId()).append("=").append(cat.getName());
+                if (i < allCategories.size() - 1) categoryInfo.append(", ");
+            }
+            categoryInfo.append(". ");
+        }
+        
         String systemPrompt = String.join(" ",
                 "Bạn hãy trả lời tự nhiên, lịch sự và gọi khách hàng trước khi nói chuyện nhé",
                 "Bạn là trợ lý mua sắm cho website Bad Shop (nội bộ), chỉ nói những sản phẩm có trong dữ liệu",
                 "Trả lời BẰNG TIẾNG VIỆT, dùng thuật ngữ Việt. Không dùng từ tiếng Anh như 'Racket'.",
-                "Danh mục nội bộ: C1=Vợt, C2=Quả cầu & Phụ kiện, C3=Giày, C4=Phụ kiện.",
+                categoryInfo.toString(),
                 "Chỉ gợi ý sản phẩm/đường dẫn NỘI BỘ của website, KHÔNG đưa link ngoài.",
-                "Nếu cần link, dùng các dạng: /products, /products/{id}, /products?category=C1|C2|C3|C4,",
-                "/products?category=C4&maxPrice=50000 (nếu người dùng nói ngân sách), /stores/{id}.",
-                "Nếu không chắc ID, hãy dẫn về danh mục phù hợp (ví dụ phụ kiện: category=C4).",
+                "Nếu cần link, dùng các dạng: /products, /products/{id}, /products?category={categoryId},",
+                "/products?category={categoryId}&maxPrice=50000 (nếu người dùng nói ngân sách), /stores/{id}.",
                 "Luôn trả lời ngắn gọn, gợi ý mức giá trong cửa hàng nếu biết, hỏi rõ ngân sách khi cần.",
                 "Tuyệt đối tránh mọi link ngoài hoặc tên sàn TMĐT khác."
         );
@@ -131,10 +149,32 @@ public class AiChatService {
     private String fallbackReply(String userMessage, String note) {
         String lower = userMessage == null ? "" : userMessage.toLowerCase();
         if (lower.contains("20k") || lower.contains("20 k") || lower.contains("20000")) {
-            return note + " Gợi ý: Với ngân sách ~20k, bạn có thể tham khảo phụ kiện nhỏ như quấn cán hoặc tất. Vợt chính hãng thường từ 300k+. Xem danh mục phụ kiện tại /products?category=C4.";
+            // Tìm category phụ kiện trong database
+            List<Category> categories = categoryRepository.findByIsActiveTrueOrderByNameAsc();
+            String accessoryCategoryId = null;
+            for (Category cat : categories) {
+                String catName = cat.getName().toLowerCase();
+                if (catName.contains("phụ kiện") || catName.contains("accessory")) {
+                    accessoryCategoryId = cat.getId();
+                    break;
+                }
+            }
+            String categoryLink = accessoryCategoryId != null ? "/products?category=" + accessoryCategoryId : "/products";
+            return note + " Gợi ý: Với ngân sách ~20k, bạn có thể tham khảo phụ kiện nhỏ như quấn cán hoặc tất. Vợt chính hãng thường từ 300k+. Xem danh mục phụ kiện tại " + categoryLink + ".";
         }
         if (lower.contains("vợt")) {
-            return note + " Bạn muốn vợt giá tầm nào? Phổ biến: 300k-700k (cơ bản), 700k-1.5m (trung cấp), 1.5m+ (cao cấp). Bạn có thể xem nhanh tại /products?category=C1.";
+            // Tìm category vợt trong database
+            List<Category> categories = categoryRepository.findByIsActiveTrueOrderByNameAsc();
+            String racketCategoryId = null;
+            for (Category cat : categories) {
+                String catName = cat.getName().toLowerCase();
+                if (catName.contains("vợt") || catName.contains("racket")) {
+                    racketCategoryId = cat.getId();
+                    break;
+                }
+            }
+            String categoryLink = racketCategoryId != null ? "/products?category=" + racketCategoryId : "/products";
+            return note + " Bạn muốn vợt giá tầm nào? Phổ biến: 300k-700k (cơ bản), 700k-1.5m (trung cấp), 1.5m+ (cao cấp). Bạn có thể xem nhanh tại " + categoryLink + ".";
         }
         return note + " Bạn có thể hỏi về vợt, giày hoặc phụ kiện và ngân sách mong muốn.";
     }
@@ -142,10 +182,42 @@ public class AiChatService {
     private String inferCategoryId(String message) {
         if (message == null) return null;
         String lower = message.toLowerCase();
-        if (lower.contains("phụ kiện") || lower.contains("quấn cán") || lower.contains("bọc grip") || lower.contains("tất")) return "C4"; // accessories
-        if (lower.contains("vợt")) return "C1"; // rackets
-        if (lower.contains("giày")) return "C3"; // shoes
-        if (lower.contains("quả cầu") || lower.contains("cầu lông")) return "C2"; // shuttles & apparel
+        
+        // Lấy tất cả category active từ database
+        List<Category> categories = categoryRepository.findByIsActiveTrueOrderByNameAsc();
+        
+        // Tìm category theo từ khóa trong message
+        for (Category category : categories) {
+            String categoryName = category.getName().toLowerCase();
+            
+            // Kiểm tra từ khóa "vợt"
+            if (lower.contains("vợt") && (categoryName.contains("vợt") || categoryName.contains("racket"))) {
+                return category.getId();
+            }
+            
+            // Kiểm tra từ khóa "giày"
+            if (lower.contains("giày") && (categoryName.contains("giày") || categoryName.contains("shoe"))) {
+                return category.getId();
+            }
+            
+            // Kiểm tra từ khóa "quả cầu" hoặc "cầu lông"
+            if ((lower.contains("quả cầu") || lower.contains("cầu lông")) && 
+                (categoryName.contains("quả cầu") || categoryName.contains("cầu lông") || categoryName.contains("shuttle"))) {
+                return category.getId();
+            }
+            
+            // Kiểm tra từ khóa "phụ kiện"
+            if ((lower.contains("phụ kiện") || lower.contains("quấn cán") || lower.contains("bọc grip") || lower.contains("tất")) && 
+                (categoryName.contains("phụ kiện") || categoryName.contains("accessory"))) {
+                return category.getId();
+            }
+            
+            // Kiểm tra nếu message chứa tên category
+            if (categoryName.length() > 2 && lower.contains(categoryName)) {
+                return category.getId();
+            }
+        }
+        
         return null;
     }
 
@@ -197,47 +269,85 @@ public class AiChatService {
         try {
             if (categoryId == null) return null;
             List<Product> picked = new ArrayList<>();
-            // 1) exact/under budget, closest first
+            
+            // Nếu có budget: tìm sản phẩm theo budget
             if (budget != null) {
+                // 1) exact/under budget, closest first
                 picked = productRepository.findTopClosestUnderBudget(categoryId, budget, PageRequest.of(0, 3));
+                // 2) nearest within ±20% nếu không tìm thấy
+                if (picked == null || picked.isEmpty()) {
+                    BigDecimal min = budget.subtract(budget.multiply(new BigDecimal("0.20")));
+                    if (min.compareTo(BigDecimal.ZERO) < 0) min = BigDecimal.ZERO;
+                    BigDecimal max = budget.add(budget.multiply(new BigDecimal("0.20")));
+                    picked = productRepository.findNearestWithinRange(categoryId, budget, min, max, PageRequest.of(0, 3));
+                }
             }
-            // 2) nearest within ±20%
-            if ((picked == null || picked.isEmpty()) && budget != null) {
-                BigDecimal min = budget.subtract(budget.multiply(new BigDecimal("0.20")));
-                if (min.compareTo(BigDecimal.ZERO) < 0) min = BigDecimal.ZERO;
-                BigDecimal max = budget.add(budget.multiply(new BigDecimal("0.20")));
-                picked = productRepository.findNearestWithinRange(categoryId, budget, min, max, PageRequest.of(0, 2));
-            }
-            // 3) cheapest fallback
+            
+            // Nếu không có budget hoặc chưa tìm thấy: lấy top sản phẩm trong category
             if (picked == null || picked.isEmpty()) {
-                picked = productRepository.findCheapestByCategory(categoryId, PageRequest.of(0, 1));
+                // Lấy top sản phẩm bán chạy hoặc sản phẩm trong category (tối đa 5 sản phẩm)
+                List<Product> categoryProducts = productRepository.findByCategoryIdAndIsActiveTrueAndIsSellingTrue(categoryId);
+                if (categoryProducts != null && !categoryProducts.isEmpty()) {
+                    // Sắp xếp theo sold (bán chạy) hoặc rating, sau đó lấy top 5
+                    picked = categoryProducts.stream()
+                        .sorted((p1, p2) -> {
+                            // Ưu tiên sản phẩm bán chạy, sau đó là rating
+                            int soldCompare = Integer.compare(
+                                p2.getSold() != null ? p2.getSold() : 0,
+                                p1.getSold() != null ? p1.getSold() : 0
+                            );
+                            if (soldCompare != 0) return soldCompare;
+                            
+                            // Nếu sold bằng nhau, sắp xếp theo rating
+                            BigDecimal r1 = p1.getRating() != null ? p1.getRating() : BigDecimal.ZERO;
+                            BigDecimal r2 = p2.getRating() != null ? p2.getRating() : BigDecimal.ZERO;
+                            return r2.compareTo(r1);
+                        })
+                        .limit(5)
+                        .collect(Collectors.toList());
+                }
             }
+            
+            // Fallback cuối cùng: lấy sản phẩm rẻ nhất nếu vẫn không có
             if (picked == null || picked.isEmpty()) {
-                return "Hiện Bad Shop chưa có mặt hàng này. Bạn cần mua loại nào (vợt/giày/phụ kiện) và tầm giá bao nhiêu để mình gợi ý lại?";
+                picked = productRepository.findCheapestByCategory(categoryId, PageRequest.of(0, 3));
+            }
+            
+            // Nếu vẫn không có sản phẩm trong category
+            if (picked == null || picked.isEmpty()) {
+                return null; // Trả về null để gọi AI thay vì trả về message lỗi
             }
 
-            String intro;
-            switch (categoryId) {
-                case "C1": intro = "Gợi ý vợt phù hợp:"; break;
-                case "C3": intro = "Gợi ý giày phù hợp:"; break;
-                case "C2": intro = "Gợi ý quả cầu/phụ kiện tập luyện:"; break;
-                case "C4": intro = "Gợi ý phụ kiện phù hợp:"; break;
-                default: intro = "Gợi ý sản phẩm phù hợp:"; break;
+            // Lấy tên category từ database
+            String categoryName = "sản phẩm";
+            Category category = categoryRepository.findById(categoryId).orElse(null);
+            if (category != null) {
+                categoryName = category.getName();
             }
+            
+            String intro = "Chào bạn! Dưới đây là các " + categoryName + " đang bán chạy tại Bad Shop:";
 
-            StringBuilder sb = new StringBuilder(intro).append("\n");
+            StringBuilder sb = new StringBuilder(intro).append("\n\n");
+            int index = 1;
             for (Product p : picked) {
                 java.math.BigDecimal effective = p.getPromotionalPrice() != null ? p.getPromotionalPrice() : p.getPrice();
-                sb.append("- ")
+                String priceStr = effective != null ? String.format("%,d", effective.longValue()) : "0";
+                sb.append(index).append(". ")
                   .append(p.getName())
-                  .append(" | ")
-                  .append(effective != null ? effective.longValue() : 0).append(" đ | ")
-                  .append("/products/").append(p.getId())
-                  .append("\n");
+                  .append(" - ")
+                  .append(priceStr).append(" đ");
+                if (p.getPromotionalPrice() != null && p.getPromotionalPrice().compareTo(p.getPrice()) < 0) {
+                    sb.append(" (Giảm giá từ ").append(String.format("%,d", p.getPrice().longValue())).append(" đ)");
+                }
+                if (p.getRating() != null && p.getRating().compareTo(BigDecimal.ZERO) > 0) {
+                    sb.append(" ⭐ ").append(p.getRating());
+                }
+                sb.append("\n   Xem chi tiết: /products/").append(p.getId()).append("\n");
+                index++;
             }
 
             // add follow-up question
-            sb.append("Bạn muốn mình lọc theo màu/thương hiệu hay ngân sách khác không?");
+            sb.append("\nBạn có muốn tìm theo ngân sách cụ thể, màu sắc, hay thương hiệu nào không?");
             return sb.toString();
         } catch (Exception e) {
             return null;

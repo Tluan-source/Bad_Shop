@@ -467,19 +467,46 @@ public List<Order> createOrders(List<CheckoutItemDTO> items, CheckoutRequest req
         List<Order> orders = getUserOrdersWithStyleValues(userId);
 
         LocalDateTime start = null;
-        try {
-            if (daysFilter != null && !daysFilter.isBlank()) {
-                int d = Integer.parseInt(daysFilter.trim());
+        LocalDateTime end = null;
+        
+        if (daysFilter != null && !daysFilter.isBlank()) {
+            String filter = daysFilter.trim();
+            
+            // Check if it's a number (days) or a date (yyyy-MM-dd)
+            try {
+                // Try to parse as integer (number of days)
+                int d = Integer.parseInt(filter);
                 start = LocalDateTime.now().minusDays(d);
+            } catch (NumberFormatException e) {
+                // Try to parse as date (yyyy-MM-dd)
+                try {
+                    java.time.LocalDate date = java.time.LocalDate.parse(filter);
+                    start = date.atStartOfDay(); // 00:00:00 of that day
+                    end = date.atTime(23, 59, 59, 999999999); // 23:59:59.999999999 of that day
+                } catch (Exception ignored) {
+                    // Invalid format, ignore filter
+                }
             }
-        } catch (NumberFormatException ignored) {}
+        }
 
-        // Filter by start date if provided
+        // Filter by date range if provided
         if (start != null) {
             final LocalDateTime startFilter = start;
+            final LocalDateTime endFilter = end;
+            
             orders = orders.stream()
-                .filter(o -> o.getCreatedAt() != null ? !o.getCreatedAt().isBefore(startFilter)
-                        : (o.getUpdatedAt() == null || !o.getUpdatedAt().isBefore(startFilter)))
+                .filter(o -> {
+                    LocalDateTime orderDate = o.getCreatedAt() != null ? o.getCreatedAt() : o.getUpdatedAt();
+                    if (orderDate == null) return false;
+                    
+                    if (endFilter != null) {
+                        // Filter by specific date (between start and end of day)
+                        return !orderDate.isBefore(startFilter) && !orderDate.isAfter(endFilter);
+                    } else {
+                        // Filter by number of days (from start to now)
+                        return !orderDate.isBefore(startFilter);
+                    }
+                })
                 .toList();
         }
 

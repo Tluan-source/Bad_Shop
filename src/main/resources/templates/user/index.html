@@ -266,37 +266,30 @@
                                         </h5>
 
                                         <!-- ⭐ Rating -->
-                                        <div
-                                             class="product-rating mb-2"
+                                        <div class="product-rating mb-2"
                                              th:with="
-                                                r=${product.rating != null ? product.rating : 0},
-                                                full=${T(java.lang.Math).floor(r)},
-                                                half=${(r - full) >= 0.5}
-                                            "
-                                        >
-                                             <!-- full stars -->
-                                             <span
-                                                  th:each="i : ${#numbers.sequence(1, full.intValue())}"
-                                             >
-                                                  <i class="fas fa-star text-warning"></i>
-                                             </span>
+                                             raw=${product.rating != null ? product.rating : 0},
+                                             r=${raw > 5 ? 5 : (raw < 0 ? 0 : raw)},
+                                             full=${T(java.lang.Math).floor(r)},
+                                             hasHalf=${(r - full) >= 0.5},
+                                             halfCount=${hasHalf ? 1 : 0},
+                                             empty=${5 - full - halfCount}
+                                        ">
 
-                                             <!-- half star -->
-                                             <i
-                                                  class="fas fa-star-half-alt text-warning"
-                                                  th:if="${half}"
-                                             ></i>
+                                        <!-- full stars -->
+                                        <span th:each="i : ${#numbers.sequence(1, full)}">
+                                             <i class="fas fa-star text-warning"></i>
+                                        </span>
 
-                                             <!-- empty stars -->
-                                             <span
-                                                  th:each="i : ${#numbers.sequence(1, 5 - full.intValue() - (half ? 1 : 0))}"
-                                             >
-                                                  <i class="far fa-star text-warning"></i>
-                                             </span>
+                                        <!-- half star -->
+                                        <i class="fas fa-star-half-alt text-warning" th:if="${hasHalf}"></i>
 
-                                             <span class="text-muted ms-2"
-                                                  >( <span th:text="${r}">0</span> )</span
-                                             >
+                                        <!-- empty stars -->
+                                        <span th:each="i : ${#numbers.sequence(1, empty)}">
+                                             <i class="far fa-star text-warning"></i>
+                                        </span>
+
+                                        <span class="text-muted ms-2">( <span th:text="${raw}">0</span> )</span>
                                         </div>
 
                                         <!-- 💰 Price -->
@@ -423,7 +416,6 @@
                     </div>
                </div>
           </section>
-
           <th:block th:replace="~{fragments/footer :: footer}"></th:block>
      </body>
 </html>

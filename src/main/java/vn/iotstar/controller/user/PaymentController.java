@@ -1,7 +1,9 @@
 package vn.iotstar.controller.user;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Controller;
@@ -55,56 +57,95 @@ public class PaymentController {
             
             // Get payment status
             String paymentStatus = vnPayService.getPaymentStatus(params);
-            String orderId = params.get("vnp_TxnRef");
+            String orderIdsParam = params.get("vnp_TxnRef");
             String transactionId = params.get("vnp_TransactionNo");
             String responseCode = params.get("vnp_ResponseCode");
             
-            log.info("Payment status for order {}: {}", orderId, paymentStatus);
+            log.info("Payment status for orderIds {}: {}", orderIdsParam, paymentStatus);
             
-            // Update order and payment
-            Order order = orderRepository.findById(orderId).orElse(null);
+            // Split orderIds if multiple orders (comma-separated)
+            String[] orderIds = orderIdsParam.split(",");
+            List<Order> orders = new ArrayList<>();
+            List<String> notFoundOrders = new ArrayList<>();
             
-            if (order == null) {
-                log.error("Order not found: {}", orderId);
+            // Find all orders
+            for (String rawOrderId : orderIds) {
+                if (rawOrderId == null || rawOrderId.trim().isEmpty()) {
+                    continue;
+                }
+                String orderId = rawOrderId.trim();
+                Order order = orderRepository.findById(orderId).orElse(null);
+                if (order != null) {
+                    orders.add(order);
+                } else {
+                    notFoundOrders.add(orderId);
+                    log.warn("Order not found: {}", orderId);
+                }
+            }
+            
+            // Check if any order not found
+            if (orders.isEmpty()) {
+                log.error("No orders found for orderIds: {}", orderIdsParam);
                 model.addAttribute("success", false);
                 model.addAttribute("message", "Không tìm thấy đơn hàng");
                 return "user/payment-result";
             }
             
-            Payment payment = order.getPayment();
-            log.info("Order payment: {}", payment);
-            
-            if (payment != null) {
-                payment.setTransactionId(transactionId);
+            // Update all orders and payments
+            boolean allSuccess = true;
+            for (Order order : orders) {
+                Payment payment = order.getPayment();
+                log.info("Order {} payment: {}", order.getId(), payment);
                 
-                if ("SUCCESS".equals(paymentStatus)) {
-                    log.info("Updating payment and order for successful payment");
-                    payment.setStatus(Payment.PaymentStatus.PAID);
-                    payment.setPaymentDate(LocalDateTime.now());
-                    order.setIsPaidBefore(true);
+                if (payment != null) {
+                    payment.setTransactionId(transactionId);
                     
-                    log.info("Before save - Order isPaidBefore: {}", order.getIsPaidBefore());
-                    log.info("Before save - Payment status: {}", payment.getStatus());
-                    
-                    paymentRepository.save(payment);
-                    orderRepository.save(order);
-                    
-                    log.info("After save - Order saved successfully");
-                    
-                    model.addAttribute("success", true);
-                    model.addAttribute("message", "Thanh toán thành công");
+                    if ("SUCCESS".equals(paymentStatus)) {
+                        log.info("Updating payment and order {} for successful payment", order.getId());
+                        payment.setStatus(Payment.PaymentStatus.PAID);
+                        payment.setPaymentDate(LocalDateTime.now());
+                        order.setIsPaidBefore(true);
+                        
+                        paymentRepository.save(payment);
+                        orderRepository.save(order);
+                        
+                        log.info("Order {} saved successfully", order.getId());
+                    } else {
+                        payment.setStatus(Payment.PaymentStatus.FAILED);
+                        paymentRepository.save(payment);
+                        orderRepository.save(order);
+                        allSuccess = false;
+                    }
                 } else {
-                    payment.setStatus(Payment.PaymentStatus.FAILED);
-                    
-                    model.addAttribute("success", false);
-                    model.addAttribute("message", "Thanh toán thất bại - Mã lỗi: " + responseCode);
+                    log.warn("Payment not found for order: {}", order.getId());
                 }
-                
-                paymentRepository.save(payment);
-                orderRepository.save(order);
             }
             
-            model.addAttribute("orderId", orderId);
+            // Set result message
+            if ("SUCCESS".equals(paymentStatus) && allSuccess) {
+                if (orders.size() > 1) {
+                    model.addAttribute("success", true);
+                    model.addAttribute("message", "Thanh toán thành công cho " + orders.size() + " đơn hàng");
+                } else {
+                    model.addAttribute("success", true);
+                    model.addAttribute("message", "Thanh toán thành công");
+                }
+            } else {
+                model.addAttribute("success", false);
+                model.addAttribute("message", "Thanh toán thất bại - Mã lỗi: " + responseCode);
+            }
+            
+            // Warning if some orders not found
+            if (!notFoundOrders.isEmpty()) {
+                log.warn("Some orders not found: {}", notFoundOrders);
+                String existingMessage = (String) model.getAttribute("message");
+                model.addAttribute("message", existingMessage + " (Một số đơn hàng không tìm thấy: " + String.join(", ", notFoundOrders) + ")");
+            }
+            
+            // Set attributes for display
+            model.addAttribute("orderId", orderIds.length == 1 ? orderIds[0] : orderIdsParam);
+            model.addAttribute("orderIds", orderIdsParam);
+            model.addAttribute("ordersCount", orders.size());
             model.addAttribute("transactionId", transactionId);
             model.addAttribute("amount", params.get("vnp_Amount"));
             

@@ -498,16 +498,16 @@
                                                   <div class="product-price">
                                                        <span
                                                             class="price-current fw-bold fs-5 text-danger"
-                                                            th:text="${#numbers.formatDecimal(product.promotionalPrice ?: product.price, 0, 'POINT', 0, 'COMMA')} + ' đ'"
+                                                            th:text="|${#numbers.formatDecimal(product.promotionalPrice != null ? product.promotionalPrice : product.price, 0, 'POINT', 0, 'COMMA')} đ|"
                                                        >
-                                                            500,000₫
+                                                            500,000 đ
                                                        </span>
                                                        <span
-                                                            th:if="${product.promotionalPrice}"
+                                                            th:if="${product.promotionalPrice != null}"
                                                             class="price-original text-muted text-decoration-line-through ms-2"
-                                                            th:text="${#numbers.formatDecimal(product.promotionalPrice ?: product.price, 0, 'POINT', 0, 'COMMA')} + ' đ'"
+                                                            th:text="|${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'COMMA')} đ|"
                                                        >
-                                                            700,000₫
+                                                            700,000 đ
                                                        </span>
                                                   </div>
                                              </div>

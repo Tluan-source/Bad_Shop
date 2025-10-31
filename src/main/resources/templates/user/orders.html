@@ -104,14 +104,46 @@
                               <h2 class="mb-3 mb-md-0">
                                    <i class="fas fa-shopping-bag me-2"></i>Đơn hàng của tôi
                               </h2>
-                              <div class="d-flex align-items-center gap-2">
+                              <div class="d-flex align-items-center gap-2 flex-wrap">
                                    <label for="dateFilter" class="me-2 text-muted">Lọc theo ngày:</label>
-                                   <select id="dateFilter" class="form-select form-select-sm" onchange="if(this.value) window.location.href=this.value;">
-                                        <option th:value="@{/orders}" th:selected="${param.date == null}">Tất cả</option>
-                                        <option th:value="@{/orders(date='7')}" th:selected="${param.date == '7'}">7 ngày</option>
-                                        <option th:value="@{/orders(date='30')}" th:selected="${param.date == '30'}">30 ngày</option>
+                                   <select id="dateFilter" class="form-select form-select-sm" style="width: auto;" onchange="handleDateFilterChange(this.value);">
+                                        <option value="" th:selected="${param.date == null}">Tất cả</option>
+                                        <option value="7" th:selected="${param.date == '7'}">7 ngày</option>
+                                        <option value="30" th:selected="${param.date == '30'}">30 ngày</option>
+                                        <option value="custom" th:selected="${param.date != null && param.date != '7' && param.date != '30'}">Chọn ngày cụ thể</option>
                                    </select>
+                                   <input type="date" id="customDate" class="form-control form-control-sm" style="width: auto; display: none;" 
+                                          th:value="${param.date != null && param.date != '7' && param.date != '30' ? param.date : ''}"
+                                          onchange="if(this.value) { const url = baseUrl + '?date=' + this.value; window.location.href = url; }">
                               </div>
+                              <script th:inline="javascript">
+                                   /*<![CDATA[*/
+                                   const baseUrl = /*[[@{/orders}]]*/ '/orders';
+                                   function handleDateFilterChange(value) {
+                                        const customDateInput = document.getElementById('customDate');
+                                        if (value === 'custom') {
+                                             customDateInput.style.display = 'inline-block';
+                                             customDateInput.focus();
+                                        } else if (value === '' || value === '7' || value === '30') {
+                                             customDateInput.style.display = 'none';
+                                             if (value) {
+                                                  window.location.href = baseUrl + '?date=' + value;
+                                             } else {
+                                                  window.location.href = baseUrl;
+                                             }
+                                        }
+                                   }
+                                   // Show custom date input if current filter is a date
+                                   (function() {
+                                        const dateFilter = document.getElementById('dateFilter');
+                                        const customDateInput = document.getElementById('customDate');
+                                        if (dateFilter && customDateInput && customDateInput.value) {
+                                             dateFilter.value = 'custom';
+                                             customDateInput.style.display = 'inline-block';
+                                        }
+                                   })();
+                                   /*]]>*/
+                              </script>
                          </div>
 
                          <!-- Empty state -->
@@ -258,13 +290,13 @@
                                                             <span th:text="${item.quantity}"></span>
                                                             x
                                                             <span
-                                                                 th:text="${item.price != null ? (#numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT')) : '0'} + ' đ'"
+                                                                 th:text="|${item.price != null ? #numbers.formatDecimal(item.price, 0, 'COMMA', 0, 'POINT') : '0'} đ|"
                                                             ></span>
                                                        </p>
                                                        <p class="mb-0">
                                                             <strong
                                                                  class="text-danger"
-                                                                 th:text="${item.total != null ? (#numbers.formatDecimal(item.total, 0, 'COMMA', 0, 'POINT')) : '0'} + ' đ'"
+                                                                 th:text="|${item.total != null ? #numbers.formatDecimal(item.total, 0, 'COMMA', 0, 'POINT') : '0'} đ|"
                                                             ></strong>
                                                        </p>
                                                   </div>
@@ -296,7 +328,11 @@
                                                        <span class="text-muted">Tổng tiền:</span>
                                                        <strong
                                                             class="text-danger fs-5 ms-2"
-                                                            th:text="${order.amountFromUser != null ? (#numbers.formatDecimal(order.amountFromUser, 0, 'COMMA', 0, 'POINT')) : '0'} + ' đ'"
+                                                            th:text="|${#numbers.formatDecimal(
+                                                              ((order.amountFromUser != null ? order.amountFromUser : 0) +
+                                                              (order.shippingProvider != null && order.shippingProvider.shippingFee != null ? order.shippingProvider.shippingFee : (order.shippingFee != null ? order.shippingFee : 0))),
+                                                              0, 'COMMA', 0, 'POINT'
+                                                            )} đ|"
                                                        ></strong>
                                                   </div>
                                              </div>
