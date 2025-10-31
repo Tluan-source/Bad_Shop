@@ -80,4 +80,29 @@ public interface ProductRepository extends JpaRepository<Product, String> {
                                                @Param("maxPrice") java.math.BigDecimal maxPrice,
                                                org.springframework.data.domain.Pageable pageable);
 
+    // Exact-or-under budget ordered by closeness to budget
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.isSelling = true " +
+           "AND p.category.id = :categoryId AND COALESCE(p.promotionalPrice, p.price) <= :budget " +
+           "ORDER BY (:budget - COALESCE(p.promotionalPrice, p.price)) ASC, p.sold DESC")
+    List<Product> findTopClosestUnderBudget(@Param("categoryId") String categoryId,
+                                            @Param("budget") java.math.BigDecimal budget,
+                                            org.springframework.data.domain.Pageable pageable);
+
+    // Nearest within [min, max] around budget
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.isSelling = true " +
+           "AND p.category.id = :categoryId AND COALESCE(p.promotionalPrice, p.price) BETWEEN :min AND :max " +
+           "ORDER BY CASE WHEN COALESCE(p.promotionalPrice, p.price) >= :budget " +
+           "THEN COALESCE(p.promotionalPrice, p.price) - :budget ELSE :budget - COALESCE(p.promotionalPrice, p.price) END ASC, p.sold DESC")
+    List<Product> findNearestWithinRange(@Param("categoryId") String categoryId,
+                                         @Param("budget") java.math.BigDecimal budget,
+                                         @Param("min") java.math.BigDecimal min,
+                                         @Param("max") java.math.BigDecimal max,
+                                         org.springframework.data.domain.Pageable pageable);
+
+    // Cheapest in category
+    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.isSelling = true " +
+           "AND p.category.id = :categoryId ORDER BY COALESCE(p.promotionalPrice, p.price) ASC")
+    List<Product> findCheapestByCategory(@Param("categoryId") String categoryId,
+                                         org.springframework.data.domain.Pageable pageable);
+
 }

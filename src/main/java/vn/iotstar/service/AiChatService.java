@@ -7,7 +7,6 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -44,8 +43,15 @@ public class AiChatService {
         BigDecimal maxPrice = inferMaxPrice(userMessage);
         String productContext = buildProductContext(categoryId, maxPrice);
 
+        // DB-first deterministic suggestions: if we can identify category, try to return curated list directly
+        String curated = tryDbFirstSuggestion(categoryId, maxPrice, userMessage);
+        if (curated != null && !curated.isBlank()) {
+            return curated; // short-circuit without calling AI
+        }
+
         String systemPrompt = String.join(" ",
-                "Bạn là trợ lý mua sắm cho website Bad Shop (nội bộ).",
+                "Bạn hãy trả lời tự nhiên, lịch sự và gọi khách hàng trước khi nói chuyện nhé",
+                "Bạn là trợ lý mua sắm cho website Bad Shop (nội bộ), chỉ nói những sản phẩm có trong dữ liệu",
                 "Trả lời BẰNG TIẾNG VIỆT, dùng thuật ngữ Việt. Không dùng từ tiếng Anh như 'Racket'.",
                 "Danh mục nội bộ: C1=Vợt, C2=Quả cầu & Phụ kiện, C3=Giày, C4=Phụ kiện.",
                 "Chỉ gợi ý sản phẩm/đường dẫn NỘI BỘ của website, KHÔNG đưa link ngoài.",
@@ -53,8 +59,7 @@ public class AiChatService {
                 "/products?category=C4&maxPrice=50000 (nếu người dùng nói ngân sách), /stores/{id}.",
                 "Nếu không chắc ID, hãy dẫn về danh mục phù hợp (ví dụ phụ kiện: category=C4).",
                 "Luôn trả lời ngắn gọn, gợi ý mức giá trong cửa hàng nếu biết, hỏi rõ ngân sách khi cần.",
-                "Tuyệt đối tránh mọi link ngoài hoặc tên sàn TMĐT khác.",
-                productContext
+                "Tuyệt đối tránh mọi link ngoài hoặc tên sàn TMĐT khác."
         );
 
         Map<String, Object> body = Map.of(
@@ -95,7 +100,15 @@ public class AiChatService {
                     }
                     Object content = msg.get("content");
                     String text = content instanceof String s ? s : "";
-                    return text.isBlank() ? fallbackReply(userMessage, "AI phản hồi rỗng.") : text;
+                    if (text == null || text.isBlank()) {
+                        return fallbackReply(userMessage, "AI phản hồi rỗng.");
+                    }
+                    // Tránh trả về 1 link đơn lẻ: chuẩn hóa gợi ý giàu thông tin và nhiều lựa chọn
+                    String normalized = text.trim();
+                    boolean looksLikeBareUrl = normalized.startsWith("/products");
+                    boolean tooShort = normalized.length() < 80; // thiếu ngữ cảnh
+                    // Nếu phản hồi quá ngắn hoặc chỉ là một URL, vẫn trả về như hiện tại (đã tối giản logic)
+                    return normalized;
                 } catch (WebClientResponseException ex) {
                     int code = ex.getStatusCode().value();
                     if (code == 429 || (code >= 500 && code < 600)) {
@@ -179,6 +192,59 @@ public class AiChatService {
             return "";
         }
     }
+
+    private String tryDbFirstSuggestion(String categoryId, BigDecimal budget, String message) {
+        try {
+            if (categoryId == null) return null;
+            List<Product> picked = new ArrayList<>();
+            // 1) exact/under budget, closest first
+            if (budget != null) {
+                picked = productRepository.findTopClosestUnderBudget(categoryId, budget, PageRequest.of(0, 3));
+            }
+            // 2) nearest within ±20%
+            if ((picked == null || picked.isEmpty()) && budget != null) {
+                BigDecimal min = budget.subtract(budget.multiply(new BigDecimal("0.20")));
+                if (min.compareTo(BigDecimal.ZERO) < 0) min = BigDecimal.ZERO;
+                BigDecimal max = budget.add(budget.multiply(new BigDecimal("0.20")));
+                picked = productRepository.findNearestWithinRange(categoryId, budget, min, max, PageRequest.of(0, 2));
+            }
+            // 3) cheapest fallback
+            if (picked == null || picked.isEmpty()) {
+                picked = productRepository.findCheapestByCategory(categoryId, PageRequest.of(0, 1));
+            }
+            if (picked == null || picked.isEmpty()) {
+                return "Hiện Bad Shop chưa có mặt hàng này. Bạn cần mua loại nào (vợt/giày/phụ kiện) và tầm giá bao nhiêu để mình gợi ý lại?";
+            }
+
+            String intro;
+            switch (categoryId) {
+                case "C1": intro = "Gợi ý vợt phù hợp:"; break;
+                case "C3": intro = "Gợi ý giày phù hợp:"; break;
+                case "C2": intro = "Gợi ý quả cầu/phụ kiện tập luyện:"; break;
+                case "C4": intro = "Gợi ý phụ kiện phù hợp:"; break;
+                default: intro = "Gợi ý sản phẩm phù hợp:"; break;
+            }
+
+            StringBuilder sb = new StringBuilder(intro).append("\n");
+            for (Product p : picked) {
+                java.math.BigDecimal effective = p.getPromotionalPrice() != null ? p.getPromotionalPrice() : p.getPrice();
+                sb.append("- ")
+                  .append(p.getName())
+                  .append(" | ")
+                  .append(effective != null ? effective.longValue() : 0).append(" đ | ")
+                  .append("/products/").append(p.getId())
+                  .append("\n");
+            }
+
+            // add follow-up question
+            sb.append("Bạn muốn mình lọc theo màu/thương hiệu hay ngân sách khác không?");
+            return sb.toString();
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    // Removed curated suggestion builder to keep service concise
 }
 
 
