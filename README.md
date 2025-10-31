@@ -1,6 +1,6 @@
 # Bad Shop – Hệ thống thương mại điện tử cầu lông (Spring Boot)
 
-Ứng dụng web bán hàng cầu lông được xây dựng bằng Spring Boot, Thymeleaf và SQL Server. Bao gồm giỏ hàng, đặt hàng, đánh giá, khu vực người bán, thanh toán và trợ lý chat AI.
+Ứng dụng web bán hàng cầu lông được xây dựng bằng Spring Boot, Thymeleaf và SQL Server. Bao gồm giỏ hàng, đặt hàng, đánh giá, khu vực người bán, thanh toán, nhắn tin trực tiếp realtime giữa người bán và mua hàng, và trợ lý chat AI.
 
 ## Công nghệ sử dụng
 - Backend: Spring Boot 3 (Web, Security, JPA, Validation, WebSocket)
@@ -72,15 +72,40 @@ dev\mvnw.cmd spring-boot:run   # hoặc mvnw.cmd spring-boot:run
 ```
 File jar nằm trong `target/`.
 
-## Tính năng chính
-- Duyệt sản phẩm/danh mục/cửa hàng
-- Giỏ hàng, thanh toán, đơn hàng, đánh giá, yêu thích
-- Bảng điều khiển người bán (sản phẩm, đơn hàng, khuyến mãi)
-- Trợ lý chat AI
-  - API: `GET /api/ai-chat/ping`, `POST /api/ai-chat`
-  - Widget ở `templates/fragments/footer.html`
-  - Chiến lược: “DB-first” (trả về tên sản phẩm từ DB) rồi mới đến model AI khi cần
-  - Chi tiết thêm trong `ai-chat.md`
+# Tính năng dự án (Bad Shop)
+- Người dùng (khách mua)
+    --Đăng ký/đăng nhập, cập nhật hồ sơ
+    --Duyệt danh mục, tìm kiếm sản phẩm, xem chi tiết
+    --Giỏ hàng: thêm/xoá/sửa số lượng, mua ngay
+    --Mã giảm giá/khuyến mãi (áp dụng ở checkout)
+    --Thanh toán
+    --VNPay (đã tích hợp)
+    --VietQR (chuyển khoản QR – chưa tự động đối soát)
+    --Đặt hàng: tạo đơn nhiều sản phẩm/cửa hàng, theo dõi trạng thái
+    --Đánh giá sản phẩm (rating, ảnh)
+    --Yêu thích (favorites), lịch sử xem (nếu có)
+    --Trò chuyện realtime với người bán
+    --Trợ lý AI chat (gợi ý theo dữ liệu shop)
+- Người bán (Vendor)
+    --Quản lý sản phẩm: thêm/sửa/xoá, hình ảnh, thuộc tính/biến thể
+    --Quản lý đơn hàng: xem, xác nhận, cập nhật trạng thái giao hàng
+    --Quản lý khuyến mãi/mã giảm giá
+    --Thống kê cơ bản: doanh thu, đơn bán chạy (tùy phạm vi)
+    --Chat realtime với người mua
+- Quản trị (Admin)
+    --Quản lý danh mục, cửa hàng, người dùng
+    --Duyệt/kiểm soát nội dung (sản phẩm, đánh giá)
+    --Cấu hình khuyến mãi chung, phí/hoa hồng (nếu bật)
+    --Theo dõi hoạt động, log sự kiện (nếu bật)
+- Hệ thống/khác
+    --Xác thực Spring Security (Form Login)
+    --WebSocket chat realtime
+    --Lưu trữ ảnh Cloudinary
+    --Giao diện Thymeleaf + Bootstrap 5, responsive
+    --AI Chat: API /api/ai-chat, widget nổi ở footer, chiến lược DB-first + model
+    --Tích hợp vận chuyển (hiển thị provider), trạng thái đơn (PENDING → DELIVERED…)
+    --Email/OTP (nếu cấu hình)
+    --Cấu hình đa phân hệ header/footer cho user/vendor/admin/shipper
 
 ## Xử lý sự cố (Troubleshooting)
 - Kết nối SQL Server: bật SQL auth, cổng 1433; dùng `encrypt=true;trustServerCertificate=true` khi chạy local.
