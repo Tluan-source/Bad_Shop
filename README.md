@@ -8,7 +8,7 @@
 - CSDL: Microsoft SQL Server (JPA/Hibernate)
 - Xác thực: Spring Security (Form Login)
 - Lưu trữ ảnh: Cloudinary
-- Thanh toán: VNPay (đã cấu hình)
+- Thanh toán: VNPay (đã cấu hình), VietQR (chưa tự động kiểm tra thanh toán)
 - AI: OpenRouter/OpenAI qua WebClient (RAG nhẹ trên dữ liệu sản phẩm)
 
 ## Cấu trúc thư mục
