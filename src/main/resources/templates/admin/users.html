@@ -1,381 +1,532 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
-<head th:replace="~{fragments/head :: head}">
-    <title>Quản lý người dùng - Admin</title>
-</head>
-<body class="admin-page">
-    <div th:replace="~{fragments/header-admin :: header-admin}"></div>
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+>
+     <head th:replace="~{fragments/head :: head}">
+          <title>Quản lý người dùng - Admin</title>
+     </head>
+     <body class="admin-page">
+          <div th:replace="~{fragments/header-admin :: header-admin}"></div>
 
-    <div class="container-fluid mt-4 px-4">
-        <div class="admin-content">
-            <!-- Flash Messages -->
-            <div th:if="${message}" class="alert alert-dismissible fade show" 
-                 th:classappend="${'alert-' + messageType}" role="alert">
-                <i class="fas fa-info-circle me-2"></i>
-                <span th:text="${message}">Message</span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            
-            <!-- Error Message -->
-            <div th:if="${error}" class="alert alert-danger alert-dismissible fade show" role="alert">
-                <i class="fas fa-exclamation-circle me-2"></i>
-                <span th:text="${error}">Error</span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3><i class="fas fa-users text-primary me-2"></i>Quản lý người dùng</h3>
-                <div>
-                    <input type="text" class="admin-search me-2" placeholder="Tìm kiếm người dùng..." id="searchUser">
-                    <button class="btn btn-admin-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                        <i class="fas fa-user-plus me-2"></i>Thêm người dùng
-                    </button>
-                </div>
-            </div>
+          <div class="container-fluid mt-4 px-4">
+               <div class="admin-content">
+                    <!-- Flash Messages -->
+                    <div
+                         th:if="${message}"
+                         class="alert alert-dismissible fade show"
+                         th:classappend="${'alert-' + messageType}"
+                         role="alert"
+                    >
+                         <i class="fas fa-info-circle me-2"></i>
+                         <span th:text="${message}">Message</span>
+                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    </div>
 
-            <div class="row g-3 mb-4">
-                <div class="col-md-3">
-                    <div class="mini-stat-card">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-users text-white bg-primary p-3 rounded-circle me-3"></i>
-                            <div>
-                                <h6 class="text-muted mb-1">Tổng người dùng</h6>
-                                <h4 class="mb-0" th:text="${totalUsers != null ? totalUsers : 0}">0</h4>
-                            </div>
-                        </div>
+                    <!-- Error Message -->
+                    <div
+                         th:if="${error}"
+                         class="alert alert-danger alert-dismissible fade show"
+                         role="alert"
+                    >
+                         <i class="fas fa-exclamation-circle me-2"></i>
+                         <span th:text="${error}">Error</span>
+                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="mini-stat-card">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-user-shield text-white bg-danger p-3 rounded-circle me-3"></i>
-                            <div>
-                                <h6 class="text-muted mb-1">Admin</h6>
-                                <h4 class="mb-0" th:text="${adminCount != null ? adminCount : 0}">0</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="mini-stat-card">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-store-alt text-white bg-success p-3 rounded-circle me-3"></i>
-                            <div>
-                                <h6 class="text-muted mb-1">Vendor</h6>
-                                <h4 class="mb-0" th:text="${vendorCount != null ? vendorCount : 0}">0</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="mini-stat-card">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-user text-white bg-info p-3 rounded-circle me-3"></i>
-                            <div>
-                                <h6 class="text-muted mb-1">Khách hàng</h6>
-                                <h4 class="mb-0" th:text="${userCount != null ? userCount : 0}">0</h4>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
 
-            <div class="table-responsive">
-                <table class="table admin-table">
-                    <thead>
-                        <tr>
-                            <th><i class="fas fa-hashtag me-1"></i>ID</th>
-                            <th><i class="fas fa-user me-1"></i>Họ tên</th>
-                            <th><i class="fas fa-envelope me-1"></i>Email</th>
-                            <th><i class="fas fa-phone me-1"></i>Điện thoại</th>
-                            <th><i class="fas fa-user-tag me-1"></i>Vai trò</th>
-                            <th><i class="fas fa-calendar me-1"></i>Ngày tạo</th>
-                            <th><i class="fas fa-toggle-on me-1"></i>Trạng thái</th>
-                            <th><i class="fas fa-cog me-1"></i>Thao tác</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr th:if="${users == null or users.isEmpty()}">
-                            <td colspan="8" class="text-center text-muted py-4">
-                                <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
-                                <p>Chưa có người dùng nào trong hệ thống</p>
-                            </td>
-                        </tr>
-                        <tr th:each="user : ${users}" th:if="${user != null}">
-                            <td th:text="${user.id != null ? user.id : 'N/A'}">USER001</td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-user-circle fa-2x me-2"
-                                       th:classappend="${user.role != null and user.role.name() == 'ADMIN' ? 'text-danger' : 
-                                                       (user.role != null and user.role.name() == 'VENDOR' ? 'text-success' : 'text-primary')}"></i>
-                                    <strong th:text="${user.fullName != null ? user.fullName : 'N/A'}">Nguyễn Văn A</strong>
-                                </div>
-                            </td>
-                            <td th:text="${user.email != null ? user.email : 'N/A'}">nguyenvana@email.com</td>
-                            <td th:text="${user.phone != null ? user.phone : 'N/A'}">0123456789</td>
-                            <td>
-                                <span class="badge-admin"
-                                      th:classappend="${user.role != null and user.role.name() == 'ADMIN' ? 'bg-danger' : 
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                         <h3><i class="fas fa-users text-primary me-2"></i>Quản lý người dùng</h3>
+                         <div>
+                              <input
+                                   type="text"
+                                   class="admin-search me-2"
+                                   placeholder="Tìm kiếm người dùng..."
+                                   id="searchUser"
+                              />
+                              <button
+                                   class="btn btn-admin-primary"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#addUserModal"
+                              >
+                                   <i class="fas fa-user-plus me-2"></i>Thêm người dùng
+                              </button>
+                         </div>
+                    </div>
+
+                    <div class="row g-3 mb-4">
+                         <div class="col-md-3">
+                              <div class="mini-stat-card">
+                                   <div class="d-flex align-items-center">
+                                        <i
+                                             class="fas fa-users text-white bg-primary p-3 rounded-circle me-3"
+                                        ></i>
+                                        <div>
+                                             <h6 class="text-muted mb-1">Tổng người dùng</h6>
+                                             <h4
+                                                  class="mb-0"
+                                                  th:text="${totalUsers != null ? totalUsers : 0}"
+                                             >
+                                                  0
+                                             </h4>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                         <div class="col-md-3">
+                              <div class="mini-stat-card">
+                                   <div class="d-flex align-items-center">
+                                        <i
+                                             class="fas fa-user-shield text-white bg-danger p-3 rounded-circle me-3"
+                                        ></i>
+                                        <div>
+                                             <h6 class="text-muted mb-1">Admin</h6>
+                                             <h4
+                                                  class="mb-0"
+                                                  th:text="${adminCount != null ? adminCount : 0}"
+                                             >
+                                                  0
+                                             </h4>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                         <div class="col-md-3">
+                              <div class="mini-stat-card">
+                                   <div class="d-flex align-items-center">
+                                        <i
+                                             class="fas fa-store-alt text-white bg-success p-3 rounded-circle me-3"
+                                        ></i>
+                                        <div>
+                                             <h6 class="text-muted mb-1">Vendor</h6>
+                                             <h4
+                                                  class="mb-0"
+                                                  th:text="${vendorCount != null ? vendorCount : 0}"
+                                             >
+                                                  0
+                                             </h4>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                         <div class="col-md-3">
+                              <div class="mini-stat-card">
+                                   <div class="d-flex align-items-center">
+                                        <i
+                                             class="fas fa-user text-white bg-info p-3 rounded-circle me-3"
+                                        ></i>
+                                        <div>
+                                             <h6 class="text-muted mb-1">Khách hàng</h6>
+                                             <h4
+                                                  class="mb-0"
+                                                  th:text="${userCount != null ? userCount : 0}"
+                                             >
+                                                  0
+                                             </h4>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+
+                    <div class="table-responsive">
+                         <table class="table admin-table">
+                              <thead>
+                                   <tr>
+                                        <th><i class="fas fa-hashtag me-1"></i>ID</th>
+                                        <th><i class="fas fa-user me-1"></i>Họ tên</th>
+                                        <th><i class="fas fa-envelope me-1"></i>Email</th>
+                                        <th><i class="fas fa-phone me-1"></i>Điện thoại</th>
+                                        <th><i class="fas fa-user-tag me-1"></i>Vai trò</th>
+                                        <th><i class="fas fa-calendar me-1"></i>Ngày tạo</th>
+                                        <th><i class="fas fa-toggle-on me-1"></i>Trạng thái</th>
+                                        <th><i class="fas fa-cog me-1"></i>Thao tác</th>
+                                   </tr>
+                              </thead>
+                              <tbody>
+                                   <tr th:if="${users == null or users.isEmpty()}">
+                                        <td colspan="8" class="text-center text-muted py-4">
+                                             <i class="fas fa-inbox fa-3x mb-3 d-block"></i>
+                                             <p>Chưa có người dùng nào trong hệ thống</p>
+                                        </td>
+                                   </tr>
+                                   <tr th:each="user : ${users}" th:if="${user != null}">
+                                        <td th:text="${user.id != null ? user.id : 'N/A'}">
+                                             USER001
+                                        </td>
+                                        <td>
+                                             <div class="d-flex align-items-center">
+                                                  <i
+                                                       class="fas fa-user-circle fa-2x me-2"
+                                                       th:classappend="${user.role != null and user.role.name() == 'ADMIN' ? 'text-danger' : 
+                                                       (user.role != null and user.role.name() == 'VENDOR' ? 'text-success' : 'text-primary')}"
+                                                  ></i>
+                                                  <strong
+                                                       th:text="${user.fullName != null ? user.fullName : 'N/A'}"
+                                                       >Nguyễn Văn A</strong
+                                                  >
+                                             </div>
+                                        </td>
+                                        <td th:text="${user.email != null ? user.email : 'N/A'}">
+                                             nguyenvana@email.com
+                                        </td>
+                                        <td th:text="${user.phone != null ? user.phone : 'N/A'}">
+                                             0123456789
+                                        </td>
+                                        <td>
+                                             <span
+                                                  class="badge-admin"
+                                                  th:classappend="${user.role != null and user.role.name() == 'ADMIN' ? 'bg-danger' : 
                                                        (user.role != null and user.role.name() == 'VENDOR' ? 'bg-success' : 
                                                        (user.role != null and user.role.name() == 'SHIPPER' ? 'bg-warning' : 'bg-primary'))}"
-                                      th:text="${user.role != null and user.role.name() == 'ADMIN' ? 'Admin' :
+                                                  th:text="${user.role != null and user.role.name() == 'ADMIN' ? 'Admin' :
                                                (user.role != null and user.role.name() == 'VENDOR' ? 'Vendor' :
-                                               (user.role != null and user.role.name() == 'SHIPPER' ? 'Shipper' : 'Customer'))}">
-                                    Customer
-                                </span>
-                            </td>
-                            <td th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm') : 'N/A'}">20/10/2024</td>
-                            <td>
-                                <span class="badge-admin"
-                                      th:classappend="${user.status != null and user.status.name() == 'ACTIVE' ? 'bg-success' : 
+                                               (user.role != null and user.role.name() == 'SHIPPER' ? 'Shipper' : 'Customer'))}"
+                                             >
+                                                  Customer
+                                             </span>
+                                        </td>
+                                        <td
+                                             th:text="${user.createdAt != null ? #temporals.format(user.createdAt, 'dd/MM/yyyy HH:mm') : 'N/A'}"
+                                        >
+                                             20/10/2024
+                                        </td>
+                                        <td>
+                                             <span
+                                                  class="badge-admin"
+                                                  th:classappend="${user.status != null and user.status.name() == 'ACTIVE' ? 'bg-success' : 
                                                        (user.status != null and user.status.name() == 'BANNED' ? 'bg-dark' : 'bg-danger')}"
-                                      th:text="${user.status != null and user.status.name() == 'ACTIVE' ? 'Active' : 
-                                               (user.status != null and user.status.name() == 'BANNED' ? 'Banned' : 'Inactive')}">
-                                    Active
-                                </span>
-                            </td>
-                            <td>
-                                <a th:href="@{/admin/users/{id}/details(id=${user.id})}" 
-                                   class="btn btn-sm btn-info me-1" title="Xem chi tiết">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <form th:action="@{/admin/users/{id}/toggle-status(id=${user.id})}" 
-                                      method="post" class="d-inline"
-                                      th:if="${user.status == null or user.status.name() != 'BANNED'}">
-                                    <button type="submit" class="btn btn-sm btn-warning me-1" 
-                                            th:title="${user.status != null and user.status.name() == 'ACTIVE' ? 'Khóa' : 'Mở khóa'}">
-                                        <i class="fas" th:classappend="${user.status != null and user.status.name() == 'ACTIVE' ? 'fa-lock' : 'fa-unlock'}"></i>
-                                    </button>
-                                </form>
-                                <button class="btn btn-sm btn-danger" title="Xóa" 
-                                        th:attr="data-user-name=${user.fullName}, data-user-id=${user.id}"
-                                        onclick="confirmDelete(this.getAttribute('data-user-name'), this.getAttribute('data-user-id'))">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Pagination -->
-            <div class="pagination-container mt-4" th:if="${users != null and !users.isEmpty()}">
-                <nav>
-                    <ul class="pagination justify-content-center">
-                        <!-- Pagination items will be injected by JavaScript -->
-                    </ul>
-                </nav>
-            </div>
-        </div>
-    </div>
-
-    <!-- Add User Modal -->
-    <div class="modal fade" id="addUserModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-primary text-white">
-                    <h5 class="modal-title">
-                        <i class="fas fa-user-plus me-2"></i>Thêm người dùng mới
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <form th:action="@{/admin/users/create}" method="post">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label"><i class="fas fa-user me-1"></i>Họ và tên *</label>
-                            <input type="text" name="fullName" class="form-control" 
-                                   placeholder="Nhập họ và tên" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label"><i class="fas fa-envelope me-1"></i>Email *</label>
-                            <input type="email" name="email" class="form-control" 
-                                   placeholder="example@email.com" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label"><i class="fas fa-phone me-1"></i>Số điện thoại *</label>
-                            <input type="tel" name="phone" class="form-control" 
-                                   placeholder="0123456789" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label"><i class="fas fa-lock me-1"></i>Mật khẩu *</label>
-                            <input type="password" name="password" class="form-control" 
-                                   placeholder="Nhập mật khẩu" required minlength="6">
-                            <small class="text-muted">Tối thiểu 6 ký tự</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label"><i class="fas fa-user-tag me-1"></i>Vai trò *</label>
-                            <select name="role" id="roleSelect" class="form-select" required>
-                                <option value="">-- Chọn vai trò --</option>
-                                <option value="USER">Customer (Khách hàng)</option>
-                                <option value="VENDOR">Vendor (Người bán)</option>
-                                <option value="SHIPPER">Shipper (Người giao hàng)</option>
-                                <option value="ADMIN">Admin (Quản trị viên)</option>
-                            </select>
-                        </div>
-                        <div class="mb-3" id="shippingProviderGroup" style="display: none;">
-                            <label class="form-label"><i class="fas fa-truck me-1"></i>Nhà vận chuyển</label>
-                            <select name="shippingProviderId" id="shippingProviderSelect" class="form-select">
-                                <option value="">-- Chọn nhà vận chuyển --</option>
-                                <option th:each="provider : ${shippingProviders}" 
-                                        th:value="${provider.id}" 
-                                        th:text="${provider.name}">
-                                    Nhà vận chuyển
-                                </option>
-                            </select>
-                            <small class="text-muted">Chỉ hiển thị khi vai trò là Shipper</small>
-                        </div>
+                                                  th:text="${user.status != null and user.status.name() == 'ACTIVE' ? 'Active' : 
+                                               (user.status != null and user.status.name() == 'BANNED' ? 'Banned' : 'Inactive')}"
+                                             >
+                                                  Active
+                                             </span>
+                                        </td>
+                                        <td>
+                                             <!-- Nút xem chi tiết và xóa đã bị vô hiệu hóa -->
+                                             <form
+                                                  th:action="@{/admin/users/{id}/toggle-status(id=${user.id})}"
+                                                  method="post"
+                                                  class="d-inline"
+                                                  th:if="${user.status == null or user.status.name() != 'BANNED'}"
+                                             >
+                                                  <button
+                                                       type="submit"
+                                                       class="btn btn-sm btn-warning"
+                                                       th:title="${user.status != null and user.status.name() == 'ACTIVE' ? 'Khóa' : 'Mở khóa'}"
+                                                  >
+                                                       <i
+                                                            class="fas"
+                                                            th:classappend="${user.status != null and user.status.name() == 'ACTIVE' ? 'fa-lock' : 'fa-unlock'}"
+                                                       ></i>
+                                                  </button>
+                                             </form>
+                                        </td>
+                                   </tr>
+                              </tbody>
+                         </table>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-1"></i>Hủy
-                        </button>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-save me-2"></i>Tạo người dùng
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
 
-    <div th:replace="~{fragments/footer-admin :: footer-admin}"></div>
-    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
-    
-    <script>
-        // Role change handler - show/hide shipping provider field
-        document.getElementById('roleSelect').addEventListener('change', function() {
-            const shippingProviderGroup = document.getElementById('shippingProviderGroup');
-            const shippingProviderSelect = document.getElementById('shippingProviderSelect');
-            
-            if (this.value === 'SHIPPER') {
-                shippingProviderGroup.style.display = 'block';
-            } else {
-                shippingProviderGroup.style.display = 'none';
-                shippingProviderSelect.value = ''; // Reset selection
-            }
-        });
-        
-        // Search functionality
-        document.getElementById('searchUser').addEventListener('keyup', function() {
-            const searchValue = this.value.toLowerCase();
-            const tableRows = document.querySelectorAll('.admin-table tbody tr');
-            let visibleCount = 0;
-            
-            tableRows.forEach(row => {
-                // Skip the empty state row
-                if (row.querySelector('td[colspan]')) {
-                    return;
-                }
-                
-                const text = row.textContent.toLowerCase();
-                if (text.includes(searchValue)) {
-                    row.style.display = '';
-                    visibleCount++;
-                } else {
-                    row.style.display = 'none';
-                }
-            });
-            
-            // Show/hide pagination based on search
-            const pagination = document.querySelector('.pagination-container');
-            if (pagination) {
-                pagination.style.display = searchValue ? 'none' : 'block';
-            }
-        });
-        
-        // Pagination functionality
-        const itemsPerPage = 10;
-        let currentPage = 1;
-        
-        function paginateTable() {
-            const tableRows = Array.from(document.querySelectorAll('.admin-table tbody tr')).filter(row => 
-                !row.querySelector('td[colspan]') && row.style.display !== 'none'
-            );
-            const totalPages = Math.ceil(tableRows.length / itemsPerPage);
-            
-            // Hide all rows first
-            tableRows.forEach(row => row.classList.add('d-none'));
-            
-            // Show only current page rows
-            const start = (currentPage - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            tableRows.slice(start, end).forEach(row => row.classList.remove('d-none'));
-            
-            // Update pagination controls
-            updatePaginationControls(totalPages);
-        }
-        
-        function updatePaginationControls(totalPages) {
-            const paginationContainer = document.querySelector('.pagination-container .pagination');
-            if (!paginationContainer) return;
-            
-            let html = '';
-            
-            // Previous button
-            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Trước</a>
+                    <!-- Pagination -->
+                    <div
+                         class="pagination-container mt-4"
+                         th:if="${users != null and !users.isEmpty()}"
+                    >
+                         <nav>
+                              <ul class="pagination justify-content-center">
+                                   <!-- Pagination items will be injected by JavaScript -->
+                              </ul>
+                         </nav>
+                    </div>
+               </div>
+          </div>
+
+          <!-- Add User Modal -->
+          <div class="modal fade" id="addUserModal" tabindex="-1">
+               <div class="modal-dialog">
+                    <div class="modal-content">
+                         <div class="modal-header bg-primary text-white">
+                              <h5 class="modal-title">
+                                   <i class="fas fa-user-plus me-2"></i>Thêm người dùng mới
+                              </h5>
+                              <button
+                                   type="button"
+                                   class="btn-close btn-close-white"
+                                   data-bs-dismiss="modal"
+                              ></button>
+                         </div>
+                         <form th:action="@{/admin/users/create}" method="post">
+                              <div class="modal-body">
+                                   <div class="mb-3">
+                                        <label class="form-label"
+                                             ><i class="fas fa-user me-1"></i>Họ và tên *</label
+                                        >
+                                        <input
+                                             type="text"
+                                             name="fullName"
+                                             class="form-control"
+                                             placeholder="Nhập họ và tên"
+                                             required
+                                        />
+                                   </div>
+                                   <div class="mb-3">
+                                        <label class="form-label"
+                                             ><i class="fas fa-envelope me-1"></i>Email *</label
+                                        >
+                                        <input
+                                             type="email"
+                                             name="email"
+                                             class="form-control"
+                                             placeholder="example@email.com"
+                                             required
+                                        />
+                                   </div>
+                                   <div class="mb-3">
+                                        <label class="form-label"
+                                             ><i class="fas fa-phone me-1"></i>Số điện thoại
+                                             *</label
+                                        >
+                                        <input
+                                             type="tel"
+                                             name="phone"
+                                             class="form-control"
+                                             placeholder="0123456789"
+                                             required
+                                        />
+                                   </div>
+                                   <div class="mb-3">
+                                        <label class="form-label"
+                                             ><i class="fas fa-lock me-1"></i>Mật khẩu *</label
+                                        >
+                                        <input
+                                             type="password"
+                                             name="password"
+                                             class="form-control"
+                                             placeholder="Nhập mật khẩu"
+                                             required
+                                             minlength="6"
+                                        />
+                                        <small class="text-muted">Tối thiểu 6 ký tự</small>
+                                   </div>
+                                   <div class="mb-3">
+                                        <label class="form-label"
+                                             ><i class="fas fa-user-tag me-1"></i>Vai trò *</label
+                                        >
+                                        <select
+                                             name="role"
+                                             id="roleSelect"
+                                             class="form-select"
+                                             required
+                                        >
+                                             <option value="">-- Chọn vai trò --</option>
+                                             <option value="USER">Customer (Khách hàng)</option>
+                                             <option value="VENDOR">Vendor (Người bán)</option>
+                                             <option value="SHIPPER">
+                                                  Shipper (Người giao hàng)
+                                             </option>
+                                             <option value="ADMIN">Admin (Quản trị viên)</option>
+                                        </select>
+                                   </div>
+                                   <div
+                                        class="mb-3"
+                                        id="shippingProviderGroup"
+                                        style="display: none"
+                                   >
+                                        <label class="form-label"
+                                             ><i class="fas fa-truck me-1"></i>Nhà vận chuyển</label
+                                        >
+                                        <select
+                                             name="shippingProviderId"
+                                             id="shippingProviderSelect"
+                                             class="form-select"
+                                        >
+                                             <option value="">-- Chọn nhà vận chuyển --</option>
+                                             <option
+                                                  th:each="provider : ${shippingProviders}"
+                                                  th:value="${provider.id}"
+                                                  th:text="${provider.name}"
+                                             >
+                                                  Nhà vận chuyển
+                                             </option>
+                                        </select>
+                                        <small class="text-muted"
+                                             >Chỉ hiển thị khi vai trò là Shipper</small
+                                        >
+                                   </div>
+                              </div>
+                              <div class="modal-footer">
+                                   <button
+                                        type="button"
+                                        class="btn btn-secondary"
+                                        data-bs-dismiss="modal"
+                                   >
+                                        <i class="fas fa-times me-1"></i>Hủy
+                                   </button>
+                                   <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-2"></i>Tạo người dùng
+                                   </button>
+                              </div>
+                         </form>
+                    </div>
+               </div>
+          </div>
+
+          <div th:replace="~{fragments/footer-admin :: footer-admin}"></div>
+          <link rel="stylesheet" th:href="@{/css/admin-style.css}" />
+
+          <script>
+               // Role change handler - show/hide shipping provider field
+               document.getElementById("roleSelect").addEventListener("change", function () {
+                    const shippingProviderGroup = document.getElementById("shippingProviderGroup");
+                    const shippingProviderSelect =
+                         document.getElementById("shippingProviderSelect");
+
+                    if (this.value === "SHIPPER") {
+                         shippingProviderGroup.style.display = "block";
+                    } else {
+                         shippingProviderGroup.style.display = "none";
+                         shippingProviderSelect.value = ""; // Reset selection
+                    }
+               });
+
+               // Search functionality
+               document.getElementById("searchUser").addEventListener("keyup", function () {
+                    const searchValue = this.value.toLowerCase();
+                    const tableRows = document.querySelectorAll(".admin-table tbody tr");
+                    let visibleCount = 0;
+
+                    tableRows.forEach((row) => {
+                         // Skip the empty state row
+                         if (row.querySelector("td[colspan]")) {
+                              return;
+                         }
+
+                         const text = row.textContent.toLowerCase();
+                         if (text.includes(searchValue)) {
+                              row.style.display = "";
+                              visibleCount++;
+                         } else {
+                              row.style.display = "none";
+                         }
+                    });
+
+                    // Show/hide pagination based on search
+                    const pagination = document.querySelector(".pagination-container");
+                    if (pagination) {
+                         pagination.style.display = searchValue ? "none" : "block";
+                    }
+               });
+
+               // Pagination functionality
+               const itemsPerPage = 10;
+               let currentPage = 1;
+
+               function paginateTable() {
+                    const tableRows = Array.from(
+                         document.querySelectorAll(".admin-table tbody tr")
+                    ).filter(
+                         (row) => !row.querySelector("td[colspan]") && row.style.display !== "none"
+                    );
+                    const totalPages = Math.ceil(tableRows.length / itemsPerPage);
+
+                    // Hide all rows first
+                    tableRows.forEach((row) => row.classList.add("d-none"));
+
+                    // Show only current page rows
+                    const start = (currentPage - 1) * itemsPerPage;
+                    const end = start + itemsPerPage;
+                    tableRows.slice(start, end).forEach((row) => row.classList.remove("d-none"));
+
+                    // Update pagination controls
+                    updatePaginationControls(totalPages);
+               }
+
+               function updatePaginationControls(totalPages) {
+                    const paginationContainer = document.querySelector(
+                         ".pagination-container .pagination"
+                    );
+                    if (!paginationContainer) return;
+
+                    let html = "";
+
+                    // Previous button
+                    html += `<li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${
+                     currentPage - 1
+                }); return false;">Trước</a>
             </li>`;
-            
-            // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-                    html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
+
+                    // Page numbers
+                    for (let i = 1; i <= totalPages; i++) {
+                         if (
+                              i === 1 ||
+                              i === totalPages ||
+                              (i >= currentPage - 2 && i <= currentPage + 2)
+                         ) {
+                              html += `<li class="page-item ${i === currentPage ? "active" : ""}">
                         <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
                     </li>`;
-                } else if (i === currentPage - 3 || i === currentPage + 3) {
-                    html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-                }
-            }
-            
-            // Next button
-            html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Sau</a>
+                         } else if (i === currentPage - 3 || i === currentPage + 3) {
+                              html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                         }
+                    }
+
+                    // Next button
+                    html += `<li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${
+                     currentPage + 1
+                }); return false;">Sau</a>
             </li>`;
-            
-            paginationContainer.innerHTML = html;
-        }
-        
-        function changePage(page) {
-            const tableRows = Array.from(document.querySelectorAll('.admin-table tbody tr')).filter(row => 
-                !row.querySelector('td[colspan]') && row.style.display !== 'none'
-            );
-            const totalPages = Math.ceil(tableRows.length / itemsPerPage);
-            
-            if (page < 1 || page > totalPages) return;
-            
-            currentPage = page;
-            paginateTable();
-            
-            // Scroll to top of table
-            document.querySelector('.admin-table').scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-        
-        // Initialize pagination on page load
-        document.addEventListener('DOMContentLoaded', function() {
-            const tableRows = document.querySelectorAll('.admin-table tbody tr');
-            if (tableRows.length > itemsPerPage) {
-                paginateTable();
-            }
-        });
-        
-        function confirmDelete(userName, userId) {
-            if (confirm('Bạn có chắc chắn muốn xóa người dùng "' + userName + '"?')) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '/admin/users/' + userId + '/delete';
-                
-                // Add CSRF token
-                const csrfToken = document.querySelector('meta[name="_csrf"]').getAttribute('content');
-                const csrfInput = document.createElement('input');
-                csrfInput.type = 'hidden';
-                csrfInput.name = '_csrf';
-                csrfInput.value = csrfToken;
-                form.appendChild(csrfInput);
-                
-                document.body.appendChild(form);
-                form.submit();
-            }
-        }
-    </script>
-</body>
+
+                    paginationContainer.innerHTML = html;
+               }
+
+               function changePage(page) {
+                    const tableRows = Array.from(
+                         document.querySelectorAll(".admin-table tbody tr")
+                    ).filter(
+                         (row) => !row.querySelector("td[colspan]") && row.style.display !== "none"
+                    );
+                    const totalPages = Math.ceil(tableRows.length / itemsPerPage);
+
+                    if (page < 1 || page > totalPages) return;
+
+                    currentPage = page;
+                    paginateTable();
+
+                    // Scroll to top of table
+                    document
+                         .querySelector(".admin-table")
+                         .scrollIntoView({ behavior: "smooth", block: "start" });
+               }
+
+               // Initialize pagination on page load
+               document.addEventListener("DOMContentLoaded", function () {
+                    const tableRows = document.querySelectorAll(".admin-table tbody tr");
+                    if (tableRows.length > itemsPerPage) {
+                         paginateTable();
+                    }
+               });
+
+               function confirmDelete(userName, userId) {
+                    if (confirm('Bạn có chắc chắn muốn xóa người dùng "' + userName + '"?')) {
+                         const form = document.createElement("form");
+                         form.method = "POST";
+                         form.action = "/admin/users/" + userId + "/delete";
+
+                         // Add CSRF token
+                         const csrfToken = document
+                              .querySelector('meta[name="_csrf"]')
+                              .getAttribute("content");
+                         const csrfInput = document.createElement("input");
+                         csrfInput.type = "hidden";
+                         csrfInput.name = "_csrf";
+                         csrfInput.value = csrfToken;
+                         form.appendChild(csrfInput);
+
+                         document.body.appendChild(form);
+                         form.submit();
+                    }
+               }
+          </script>
+     </body>
 </html>

@@ -1,110 +1,236 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="~{fragments/head :: head}">
-    <title>CHI TIẾT ĐƠN HÀNG - Badminton Shop</title>
-</head>
-<body>
-<div th:replace="~{fragments/header-shipper :: header-shipper}"></div>
+     <head th:replace="~{fragments/head :: head}">
+          <title>CHI TIẾT ĐƠN HÀNG - Badminton Shop</title>
+     </head>
+     <body>
+          <div th:replace="~{fragments/header-shipper :: header-shipper}"></div>
 
-<div class="container mt-4">
-    <a th:href="@{/shipper/dashboard}" class="btn btn-outline-primary mb-3">
-        <i class="fas fa-arrow-left"></i> Back to Dashboard
-    </a>
+          <div class="container mt-4">
+               <a th:href="@{/shipper/dashboard}" class="btn btn-outline-primary mb-3">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+               </a>
 
-    <div class="card shadow">
-        <div class="card-header bg-info text-white">
-            <h4><i class="fas fa-shipping-fast"></i> Chi tiết đơn hàng</h4>
-        </div>
-        <div class="card-body">
-            <h5 class="mb-3 text-primary">Thông tin đơn hàng</h5>
-            <table class="table table-bordered">
-                <tr><th>Id đơn hàng</th><td th:text="${order.id}"></td></tr>
+               <div class="card shadow">
+                    <div class="card-header bg-info text-white">
+                         <h4><i class="fas fa-shipping-fast"></i> Chi tiết đơn hàng</h4>
+                    </div>
+                    <div class="card-body">
+                         <h5 class="mb-3 text-primary">Thông tin đơn hàng</h5>
+                         <table class="table table-bordered">
+                              <tr>
+                                   <th>Id đơn hàng</th>
+                                   <td th:text="${order.id}"></td>
+                              </tr>
 
-                <tr>
-                    <th>Trạng thái</th>
-                    <td>
-                        <span class="badge"
-                              th:classappend="${order.status.name() == 'DELIVERED' ? ' bg-success' :
+                              <tr>
+                                   <th>Trạng thái</th>
+                                   <td>
+                                        <span
+                                             class="badge"
+                                             th:classappend="${order.status.name() == 'DELIVERED' ? ' bg-success' :
                                              (order.status.name() == 'SHIPPED' ? ' bg-info' :
                                              (order.status.name() == 'CANCELLED' ? ' bg-danger' : ' bg-warning'))}"
-                              th:text="${order.status.name() == 'SHIPPED' ? 'Đang giao hàng' :
+                                             th:text="${order.status.name() == 'SHIPPED' ? 'Đang giao hàng' :
                                        (order.status.name() == 'DELIVERED' ? 'Đã giao thành công' :
                                        (order.status.name() == 'CANCELLED' ? 'Giao hàng thất bại' :
                                        (order.status.name() == 'NOT_PROCESSED' ? 'Pending' :
-                                       (order.status.name() == 'PROCESSING' ? 'Chờ nhận đơn' : order.status.name()))))}">
-                        </span>
-                    </td>
-                </tr>
+                                       (order.status.name() == 'PROCESSING' ? 'Chờ nhận đơn' : order.status.name()))))}"
+                                        >
+                                        </span>
+                                   </td>
+                              </tr>
 
-                <tr><th>Phí vận chuyển</th>
-                    <td th:text="${#numbers.formatDecimal(shipment.shippingFee,0,'POINT',0,'COMMA')} + ' VND'"></td>
-                </tr>
+                              <tr>
+                                   <th>Phí vận chuyển</th>
+                                   <td
+                                        th:text="${#numbers.formatDecimal(shipment.shippingFee,0,'POINT',0,'COMMA')} + ' VND'"
+                                   ></td>
+                              </tr>
 
-                <tr><th>Giá trị đơn hàng</th>
-                    <td th:text="${#numbers.formatDecimal(order.amountFromUser,0,'POINT',0,'COMMA')} + ' VND'"></td>
-                </tr>
+                              <tr>
+                                   <th>Giá trị đơn hàng</th>
+                                   <td
+                                        th:text="${#numbers.formatDecimal(order.amountFromUser,0,'POINT',0,'COMMA')} + ' VND'"
+                                   ></td>
+                              </tr>
 
-                <!-- Dynamic date/time display depending on status -->
-                <tr th:if="${order.status.name() == 'NOT_PROCESSED' or order.status.name() == 'PROCESSING'}">
-                    <th>Created At</th>
-                    <td th:text="${#temporals.format(order.createdAt, 'HH:mm dd/MM/yyyy')}"></td>
-                </tr>
+                              <!-- Dynamic date/time display depending on status -->
+                              <tr
+                                   th:if="${order.status.name() == 'NOT_PROCESSED' or order.status.name() == 'PROCESSING'}"
+                              >
+                                   <th>Created At</th>
+                                   <td
+                                        th:text="${#temporals.format(order.createdAt, 'HH:mm dd/MM/yyyy')}"
+                                   ></td>
+                              </tr>
 
-                <tr th:if="${order.status.name() == 'SHIPPED' or order.status.name() == 'DELIVERED' or order.status.name() == 'CANCELLED'}">
-                    <th>Thời gian nhận đơn</th>
-                    <td th:text="${shipment.assignedAt != null ? #temporals.format(shipment.assignedAt, 'HH:mm dd/MM/yyyy') : 'N/A'}"></td>
-                </tr>
+                              <tr
+                                   th:if="${order.status.name() == 'SHIPPED' or order.status.name() == 'DELIVERED' or order.status.name() == 'CANCELLED'}"
+                              >
+                                   <th>Thời gian nhận đơn</th>
+                                   <td
+                                        th:text="${shipment.assignedAt != null ? #temporals.format(shipment.assignedAt, 'HH:mm dd/MM/yyyy') : 'N/A'}"
+                                   ></td>
+                              </tr>
 
-                <tr th:if="${order.status.name() == 'DELIVERED'}">
-                    <th>Thời gian giao hàng</th>
-                    <td th:text="${#temporals.format(shipment.deliveredAt, 'HH:mm dd/MM/yyyy')}"></td>
-                </tr>
+                              <tr th:if="${order.status.name() == 'DELIVERED'}">
+                                   <th>Thời gian giao hàng</th>
+                                   <td
+                                        th:text="${#temporals.format(shipment.deliveredAt, 'HH:mm dd/MM/yyyy')}"
+                                   ></td>
+                              </tr>
 
-                <tr th:if="${order.status.name() == 'CANCELLED'}">
-                    <th>Kết quả giao hàng</th>
-                    <td><span class="text-danger fw-bold">Giao hàng thất bại</span></td>
-                </tr>
+                              <tr th:if="${order.status.name() == 'CANCELLED'}">
+                                   <th>Kết quả giao hàng</th>
+                                   <td>
+                                        <span class="text-danger fw-bold">Giao hàng thất bại</span>
+                                   </td>
+                              </tr>
 
-                <tr th:if="${order.status.name() == 'CANCELLED'}">
-                    <th>Ghi chú</th>
-                    <td th:text="${shipment.note != null ? shipment.note : 'No note provided'}"></td>
-                </tr>
-            </table>
+                              <tr th:if="${order.status.name() == 'CANCELLED'}">
+                                   <th>Ghi chú</th>
+                                   <td
+                                        th:text="${shipment.note != null ? shipment.note : 'No note provided'}"
+                                   ></td>
+                              </tr>
+                         </table>
 
-            <h5 class="mt-4 mb-3 text-success">Thông tin khách hàng</h5>
-            <table class="table table-bordered">
-                <tr><th>Tên khách hàng</th><td th:text="${order.user.fullName}"></td></tr>
-                <tr><th>Số điện thoại</th><td th:text="${order.phone}"></td></tr>
-                <tr><th>Địa chỉ giao hàng</th><td th:text="${order.address}"></td></tr>
-            </table>
+                         <!-- Delivery Image Section -->
+                         <div
+                              th:if="${shipment.deliveryImageUrl != null && !#strings.isEmpty(shipment.deliveryImageUrl)}"
+                              class="mt-4"
+                         >
+                              <h5 class="mb-3 text-success">
+                                   <i class="fas fa-camera"></i> Ảnh xác nhận giao hàng
+                              </h5>
+                              <div class="text-center p-3 border rounded bg-light">
+                                   <img
+                                        th:src="${shipment.deliveryImageUrl}"
+                                        alt="Ảnh giao hàng"
+                                        class="img-fluid rounded shadow"
+                                        style="
+                                             max-height: 500px;
+                                             object-fit: contain;
+                                             cursor: pointer;
+                                        "
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#deliveryImageModal"
+                                   />
+                                   <p class="text-muted mt-2 mb-0">
+                                        <small
+                                             ><i class="fas fa-info-circle"></i> Click vào ảnh để
+                                             xem kích thước đầy đủ</small
+                                        >
+                                   </p>
+                              </div>
+                         </div>
 
-            <h5 class="mt-4 mb-3 text-warning">Danh sách sản phẩm</h5>
-            <table class="table table-striped table-hover align-middle">
-                <thead class="table-light">
-                <tr><th>Tên sản phẩm</th><th>Số lượng</th><th>Giá</th><th>Tổng cộng</th></tr>
-                </thead>
-                <tbody>
-                <tr th:each="item : ${orderItems}">
-                    <td th:text="${item.product.name}"></td>
-                    <td th:text="${item.quantity}"></td>
-                    <td th:text="${#numbers.formatDecimal(item.price,0,'POINT',0,'COMMA')} + ' VND'"></td>
-                    <td th:text="${#numbers.formatDecimal(item.total,0,'POINT',0,'COMMA')} + ' VND'"></td>
-                </tr>
-                <tr th:if="${#lists.isEmpty(orderItems)}">
-                    <td colspan="4" class="text-center text-muted">Không có sản phẩm nào ở đây</td>
-                </tr>
-                </tbody>
-            </table>
+                         <h5 class="mt-4 mb-3 text-success">Thông tin khách hàng</h5>
+                         <table class="table table-bordered">
+                              <tr>
+                                   <th>Tên khách hàng</th>
+                                   <td th:text="${order.user.fullName}"></td>
+                              </tr>
+                              <tr>
+                                   <th>Số điện thoại</th>
+                                   <td th:text="${order.phone}"></td>
+                              </tr>
+                              <tr>
+                                   <th>Địa chỉ giao hàng</th>
+                                   <td th:text="${order.address}"></td>
+                              </tr>
+                         </table>
 
-            <div class="mt-4 text-end">
-                <a th:href="@{/shipper/dashboard}" class="btn btn-secondary">
-                    <i class="fas fa-arrow-left"></i> Back
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
+                         <h5 class="mt-4 mb-3 text-warning">Danh sách sản phẩm</h5>
+                         <table class="table table-striped table-hover align-middle">
+                              <thead class="table-light">
+                                   <tr>
+                                        <th>Tên sản phẩm</th>
+                                        <th>Số lượng</th>
+                                        <th>Giá</th>
+                                        <th>Tổng cộng</th>
+                                   </tr>
+                              </thead>
+                              <tbody>
+                                   <tr th:each="item : ${orderItems}">
+                                        <td th:text="${item.product.name}"></td>
+                                        <td th:text="${item.quantity}"></td>
+                                        <td
+                                             th:text="${#numbers.formatDecimal(item.price,0,'POINT',0,'COMMA')} + ' VND'"
+                                        ></td>
+                                        <td
+                                             th:text="${#numbers.formatDecimal(item.total,0,'POINT',0,'COMMA')} + ' VND'"
+                                        ></td>
+                                   </tr>
+                                   <tr th:if="${#lists.isEmpty(orderItems)}">
+                                        <td colspan="4" class="text-center text-muted">
+                                             Không có sản phẩm nào ở đây
+                                        </td>
+                                   </tr>
+                              </tbody>
+                         </table>
 
-<div th:replace="~{fragments/footer-shipper :: footer-shipper}"></div>
-</body>
+                         <div class="mt-4 text-end">
+                              <a th:href="@{/shipper/dashboard}" class="btn btn-secondary">
+                                   <i class="fas fa-arrow-left"></i> Back
+                              </a>
+                         </div>
+                    </div>
+               </div>
+          </div>
+
+          <!-- Delivery Image Modal (Full Size View) -->
+          <div
+               class="modal fade"
+               id="deliveryImageModal"
+               tabindex="-1"
+               aria-hidden="true"
+               th:if="${shipment.deliveryImageUrl != null}"
+          >
+               <div class="modal-dialog modal-xl modal-dialog-centered">
+                    <div class="modal-content">
+                         <div class="modal-header">
+                              <h5 class="modal-title">
+                                   <i class="fas fa-camera"></i> Ảnh xác nhận giao hàng - Đơn hàng
+                                   <span th:text="${order.id}"></span>
+                              </h5>
+                              <button
+                                   type="button"
+                                   class="btn-close"
+                                   data-bs-dismiss="modal"
+                                   aria-label="Close"
+                              ></button>
+                         </div>
+                         <div class="modal-body text-center p-0">
+                              <img
+                                   th:src="${shipment.deliveryImageUrl}"
+                                   alt="Ảnh giao hàng"
+                                   class="img-fluid"
+                                   style="width: 100%; height: auto"
+                              />
+                         </div>
+                         <div class="modal-footer">
+                              <a
+                                   th:href="${shipment.deliveryImageUrl}"
+                                   target="_blank"
+                                   class="btn btn-primary"
+                                   download
+                              >
+                                   <i class="fas fa-download"></i> Tải ảnh
+                              </a>
+                              <button
+                                   type="button"
+                                   class="btn btn-secondary"
+                                   data-bs-dismiss="modal"
+                              >
+                                   Đóng
+                              </button>
+                         </div>
+                    </div>
+               </div>
+          </div>
+
+          <div th:replace="~{fragments/footer-shipper :: footer-shipper}"></div>
+     </body>
 </html>

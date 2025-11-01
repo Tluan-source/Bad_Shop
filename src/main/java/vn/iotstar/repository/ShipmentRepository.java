@@ -1,16 +1,17 @@
 package vn.iotstar.repository;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
 import vn.iotstar.entity.Shipment;
 import vn.iotstar.entity.Shipment.ShipmentStatus;
-
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Repository
 public interface ShipmentRepository extends JpaRepository<Shipment, String> {
@@ -18,6 +19,7 @@ public interface ShipmentRepository extends JpaRepository<Shipment, String> {
     /* ===========================================================
        🔹 1. Truy vấn cơ bản theo trạng thái và shipper
        =========================================================== */
+
 
     // 🟡 Danh sách tất cả shipment theo trạng thái (không lọc shipper)
     Page<Shipment> findByStatus(ShipmentStatus status, Pageable pageable);
@@ -27,6 +29,8 @@ public interface ShipmentRepository extends JpaRepository<Shipment, String> {
 
     // 🔵 Shipment của 1 shipper theo trạng thái
     Page<Shipment> findByShipper_IdAndStatus(String shipperId, ShipmentStatus status, Pageable pageable);
+
+    Shipment findByOrderId(String orderId);
 
     // 🔵 Shipment của 1 shipper (dạng list, dùng cho thống kê hoặc không phân trang)
     List<Shipment> findByShipper_IdAndStatus(String shipperId, ShipmentStatus status);

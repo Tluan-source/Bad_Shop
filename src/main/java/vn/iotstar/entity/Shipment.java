@@ -1,12 +1,21 @@
 package vn.iotstar.entity;
 
-import jakarta.persistence.*;
-import lombok.Data;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.Data;
 
 @Entity
 @Table(name = "shipments")
@@ -41,6 +50,9 @@ public class Shipment {
     
     @Column(columnDefinition = "NVARCHAR(500)")
     private String note;
+
+    @Column(name = "delivery_image_url", columnDefinition = "NVARCHAR(500)")
+    private String deliveryImageUrl;
     
     @CreationTimestamp
     @Column(name = "created_at")

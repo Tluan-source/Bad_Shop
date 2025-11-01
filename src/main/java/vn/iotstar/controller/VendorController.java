@@ -1,8 +1,9 @@
 package vn.iotstar.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.servlet.http.HttpServletResponse;
-import jakarta.validation.Valid;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -11,7 +12,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,40 +21,37 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.validation.Valid;
 import vn.iotstar.dto.vendor.ProductCreateDTO;
 import vn.iotstar.dto.vendor.ProductUpdateDTO;
-import vn.iotstar.dto.vendor.PromotionCreateDTO;
 import vn.iotstar.dto.vendor.StoreRegistrationDTO;
 import vn.iotstar.dto.vendor.StoreUpdateDTO;
 import vn.iotstar.dto.vendor.VendorDashboardStatsDTO;
 import vn.iotstar.dto.vendor.VendorOrderDTO;
 import vn.iotstar.dto.vendor.VendorProductDTO;
-import vn.iotstar.dto.vendor.VendorPromotionDTO;
 import vn.iotstar.dto.vendor.VendorStoreDTO;
 import vn.iotstar.entity.Category;
 import vn.iotstar.entity.Order;
+import vn.iotstar.entity.Shipment;
 import vn.iotstar.entity.Style;
 import vn.iotstar.entity.StyleValue;
 import vn.iotstar.entity.User;
-import vn.iotstar.entity.Promotion;
 import vn.iotstar.repository.CategoryRepository;
+import vn.iotstar.repository.PromotionRepository;
+import vn.iotstar.repository.ShipmentRepository;
 import vn.iotstar.repository.StyleRepository;
 import vn.iotstar.repository.StyleValueRepository;
-import vn.iotstar.repository.PromotionRepository;
+import vn.iotstar.service.CloudinaryService;
 import vn.iotstar.service.UserService;
 import vn.iotstar.service.vendor.VendorAnalyticsService;
 import vn.iotstar.service.vendor.VendorOrderService;
 import vn.iotstar.service.vendor.VendorProductService;
+import vn.iotstar.service.vendor.VendorPromotionService;
+import vn.iotstar.service.vendor.VendorRegistrationService;
 import vn.iotstar.service.vendor.VendorSecurityService;
 import vn.iotstar.service.vendor.VendorStoreService;
-import vn.iotstar.service.vendor.VendorRegistrationService;
-import vn.iotstar.service.CloudinaryService;
-import vn.iotstar.service.vendor.VendorPromotionService;
 
 /**
  * Main Vendor Controller - handles all vendor operations
@@ -108,6 +105,8 @@ public class VendorController {
     @Autowired
     private vn.iotstar.service.ChatService chatService;
     
+    @Autowired
+    private ShipmentRepository shipmentRepository;
     // ========================================
     // VENDOR REGISTRATION (for USER role)
     // ========================================
@@ -626,6 +625,10 @@ public class VendorController {
         
         VendorOrderDTO order = orderService.getOrderDetail(id, storeId);
         model.addAttribute("order", order);
+
+        Shipment shipment = shipmentRepository.findByOrderId(id);
+        model.addAttribute("shipment", shipment);
+
         
         return "vendor/orders/detail";
     }

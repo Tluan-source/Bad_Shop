@@ -1,14 +1,31 @@
 package vn.iotstar.controller;
 
-import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.*;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import com.cloudinary.Cloudinary;
+import com.cloudinary.utils.ObjectUtils;
+
+import lombok.RequiredArgsConstructor;
 import vn.iotstar.entity.Order;
 import vn.iotstar.entity.Shipment;
 import vn.iotstar.entity.Shipment.ShipmentStatus;
@@ -16,10 +33,6 @@ import vn.iotstar.entity.User;
 import vn.iotstar.repository.OrderRepository;
 import vn.iotstar.repository.ShipmentRepository;
 import vn.iotstar.repository.UserRepository;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.List;
 
 @Controller
 @RequestMapping("/shipper")
@@ -30,7 +43,8 @@ public class ShipperController {
     private final OrderRepository orderRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-
+    private final Cloudinary cloudinary;
+    
     /** 🏠 Trang dashboard chính của Shipper */
     @GetMapping("/dashboard")
     public String dashboard(
@@ -259,19 +273,46 @@ public class ShipperController {
 
     /** 🟢 Giao hàng thành công */
     @PostMapping("/delivered/{id}")
-    public String delivered(@PathVariable String id) {
-        Shipment shipment = shipmentRepository.findById(id).orElse(null);
-        if (shipment != null) {
+public String delivered(
+        @PathVariable String id,
+        @RequestParam("image") MultipartFile image,
+        Authentication auth) 
+{
+    Shipment shipment = shipmentRepository.findById(id).orElse(null);
+    if (shipment != null) {
+
+        // 🔐 Check đúng shipper không
+        String email = auth.getName();
+        User currentUser = userRepository.findByEmail(email).orElseThrow();
+        if (!shipment.getShipper().getId().equals(currentUser.getId())) {
+            return "redirect:/shipper/dashboard?error=not_allowed";
+        }
+
+        try {
+            // ✅ Upload ảnh lên Cloudinary
+            Map uploadResult = cloudinary.uploader().upload(image.getBytes(), ObjectUtils.emptyMap());
+            String imageUrl = uploadResult.get("secure_url").toString();
+
+            // ✅ Lưu vào bảng shipment
+            shipment.setDeliveryImageUrl(imageUrl);
             shipment.setStatus(ShipmentStatus.DELIVERED);
             shipment.setDeliveredAt(LocalDateTime.now());
             shipmentRepository.save(shipment);
 
+            // ✅ Update trạng thái Order
             Order order = shipment.getOrder();
             order.setStatus(Order.OrderStatus.DELIVERED);
+            // order.setDeliveredAt(LocalDateTime.now());
             orderRepository.save(order);
+
+        } catch (Exception e) {
+            System.out.println("Upload ảnh lỗi: " + e.getMessage());
         }
-        return "redirect:/shipper/dashboard";
     }
+
+    return "redirect:/shipper/dashboard";
+}
+
 
     /** 🔴 Giao hàng thất bại (ghi chú nguyên nhân) */
     @PostMapping("/failed/{id}")

@@ -60,6 +60,11 @@ public class Store {
     
     @Column(name = "e_wallet", precision = 15, scale = 2)
     private BigDecimal eWallet = BigDecimal.ZERO;
+
+    @ManyToOne
+    @JoinColumn(name = "owner_id")
+    private User owner;
+
     
     @CreationTimestamp
     @Column(name = "created_at")
