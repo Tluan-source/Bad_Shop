@@ -52,7 +52,7 @@ public class SecurityConfig {
             .authenticationProvider(authenticationProvider())
             .csrf(csrf -> csrf
                 .csrfTokenRepository(org.springframework.security.web.csrf.CookieCsrfTokenRepository.withHttpOnlyFalse())
-                .ignoringRequestMatchers("/checkout/from-cart", "/admin/shipping/delete", "/admin/categories/*/delete", "/api/ai-chat")
+                .ignoringRequestMatchers("/checkout/from-cart", "/admin/shipping/delete", "/admin/categories/*/delete", "/api/ai-chat", "/ws-chat/**")
             );
         
         return http.build();

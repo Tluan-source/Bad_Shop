@@ -56,7 +56,7 @@ public class VendorAnalyticsServiceImpl implements VendorAnalyticsService {
         stats.setNewOrders(orderRepository.countByStoreIdAndStatus(storeId, Order.OrderStatus.NOT_PROCESSED));
         stats.setPendingOrders(stats.getNewOrders()); // Alias for newOrders
         stats.setProcessingOrders(orderRepository.countByStoreIdAndStatus(storeId, Order.OrderStatus.PROCESSING));
-        stats.setShippingOrders(orderRepository.countByStoreIdAndStatus(storeId, Order.OrderStatus.SHIPPED));
+        stats.setShippingOrders(orderRepository.countByStoreIdAndStatus(storeId, Order.OrderStatus.DELIVERING));
         stats.setDeliveredOrders(orderRepository.countByStoreIdAndStatus(storeId, Order.OrderStatus.DELIVERED));
         stats.setCancelledOrders(orderRepository.countByStoreIdAndStatus(storeId, Order.OrderStatus.CANCELLED));
         stats.setReturnedOrders(orderRepository.countByStoreIdAndStatus(storeId, Order.OrderStatus.RETURNED));

@@ -169,7 +169,7 @@ public class VendorOrderServiceImpl implements VendorOrderService {
         }
         
         // Update to SHIPPED status
-        order.setStatus(Order.OrderStatus.SHIPPED);
+        order.setStatus(Order.OrderStatus.DELIVERING);
         order.setUpdatedAt(LocalDateTime.now());
         
         // TODO: Create Shipment entity if needed
@@ -281,7 +281,7 @@ public class VendorOrderServiceImpl implements VendorOrderService {
                 .orElseThrow(() -> ResourceNotFoundException.order(orderId));
         
         // Check current status - can only mark SHIPPED orders as delivered
-        if (order.getStatus() != Order.OrderStatus.SHIPPED) {
+        if (order.getStatus() != Order.OrderStatus.DELIVERING) {
             throw new InvalidOrderStatusException(
                 "Chỉ có thể đánh dấu đã giao khi đơn hàng đang được vận chuyển"
             );
@@ -373,6 +373,7 @@ public class VendorOrderServiceImpl implements VendorOrderService {
         dto.setUserFullName(user.getFullName());
         dto.setUserEmail(user.getEmail());
         dto.setUserPhone(user.getPhone());
+        dto.setUserAvatar(user.getAvatar());
         
         // Store info
         dto.setStoreId(order.getStore().getId());
@@ -389,13 +390,21 @@ public class VendorOrderServiceImpl implements VendorOrderService {
         if (order.getShipment() != null) {
             dto.setShipmentId(order.getShipment().getId());
             dto.setShipmentStatus(order.getShipment().getStatus().name());
+            dto.setDeliveryImageUrl(order.getShipment().getDeliveryImageUrl());
+            dto.setAssignedAt(order.getShipment().getAssignedAt());
+            dto.setDeliveredAt(order.getShipment().getDeliveredAt());
             if (order.getShipment().getShipper() != null) {
                 dto.setShipperName(order.getShipment().getShipper().getFullName());
+                dto.setShipperPhone(order.getShipment().getShipper().getPhone());
+                dto.setShipperAvatar(order.getShipment().getShipper().getAvatar());
             }
             if (order.getShipment().getShippingProvider() != null) {
                 dto.setShippingProviderName(order.getShipment().getShippingProvider().getName());
             }
         }
+        
+        // Confirmation info
+        dto.setConfirmedByUserAt(order.getConfirmedByUserAt());
         
         // Order items
         if (order.getOrderItems() != null && !order.getOrderItems().isEmpty()) {

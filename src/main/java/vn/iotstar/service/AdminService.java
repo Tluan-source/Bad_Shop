@@ -69,7 +69,7 @@ public class AdminService {
         // Count orders by status
         List<Order> allOrders = orderRepository.findAll();
         long shippedToday = allOrders.stream()
-            .filter(o -> o.getStatus() == Order.OrderStatus.SHIPPED)
+            .filter(o -> o.getStatus() == Order.OrderStatus.DELIVERING)
             .count();
         long deliveredToday = allOrders.stream()
             .filter(o -> o.getStatus() == Order.OrderStatus.DELIVERED && 

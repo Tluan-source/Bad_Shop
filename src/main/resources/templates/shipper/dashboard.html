@@ -122,7 +122,7 @@
                                    class="card-body d-flex justify-content-between align-items-center"
                               >
                                    <div>
-                                        <h6 class="mb-1">Đã giao</h6>
+                                        <h6 class="mb-1">Đã xác nhận</h6>
                                         <h3 class="mb-0" th:text="${totalDelivered}">0</h3>
                                    </div>
                                    <i class="fas fa-check-circle fa-2x d-none d-sm-block"></i>
@@ -189,7 +189,7 @@
                                              class="fas fa-check-circle fa-lg me-2"
                                              th:classappend="${status == 'DELIVERED'} ? 'text-white' : 'text-success'"
                                         ></i>
-                                        <span class="fw-bold">Đã giao</span>
+                                        <span class="fw-bold">Đã xác nhận</span>
                                    </a>
                               </li>
                               <li class="nav-item flex-fill" role="presentation">
@@ -237,26 +237,27 @@
                                              </thead>
                                              <tbody>
                                                   <tr th:each="order : ${pendingOrders.content}">
-                                                       <td class="ps-3" th:text="${order.id}">
+                                                       <td class="ps-3 order-id-warp" th:text="${order.id}">
                                                             #ORD
                                                        </td>
                                                        <td th:text="${order.user.fullName}">Tên</td>
                                                        <td
-                                                            class="d-none d-md-table-cell"
+                                                            class="d-none d-md-table-cell address-warp"
                                                             th:text="${order.address}"
                                                        >
                                                             Địa chỉ
                                                        </td>
-                                                       <td
-                                                            th:text="${#numbers.formatDecimal(order.amountFromUser,0,'POINT',0,'COMMA')} + ' ₫'"
-                                                       ></td>
+                                                       <td class="fw-bold text-danger text-nowrap"
+                                                            th:text="${#numbers.formatDecimal((order.amountFromUser ?: 0) + (order.shippingFee ?: 0), 0, 'COMMA', 0, 'POINT') + ' ₫'}">
+                                                       </td>
+
                                                        <td
                                                             class="d-none d-lg-table-cell"
                                                             th:text="${#temporals.format(order.createdAt,'dd/MM/yyyy')}"
                                                        >
                                                             Ngày
                                                        </td>
-                                                       <td class="text-end pe-3">
+                                                       <td class="text-end pe-3 text-nowrap">
                                                             <a
                                                                  th:href="@{'/shipper/order/' + ${order.id}}"
                                                                  class="btn btn-sm btn-outline-secondary"
@@ -328,7 +329,7 @@
                                                             Địa chỉ
                                                        </th>
                                                        <th>COD</th>
-                                                       <th class="d-none d-lg-table-cell">
+                                                       <th class="d-none d-lg-table-cell text-nowrap">
                                                             Thời gian nhận
                                                        </th>
                                                        <th class="text-end pe-3">Thao tác</th>
@@ -336,28 +337,28 @@
                                              </thead>
                                              <tbody>
                                                   <tr th:each="ship : ${delivering.content}">
-                                                       <td class="ps-3" th:text="${ship.order.id}">
+                                                       <td class="ps-3 order-id-warp" th:text="${ship.order.id}">
                                                             #ORD
                                                        </td>
-                                                       <td th:text="${ship.order.user.fullName}">
+                                                       <td th:text="${ship.order.user.fullName}" class="text-nowrap">
                                                             Tên
                                                        </td>
-                                                       <td
-                                                            class="d-none d-md-table-cell"
-                                                            th:text="${ship.order.address}"
-                                                       >
+                                                       <td class="d-none d-md-table-cell address-warp"
+                                                            th:title="${ship.order.address}"
+                                                            th:text="${ship.order.address}">
                                                             Địa chỉ
                                                        </td>
-                                                       <td
-                                                            th:text="${#numbers.formatDecimal(ship.order.amountFromUser,0,'POINT',0,'COMMA')} + ' ₫'"
-                                                       ></td>
+                                                       <td class="fw-bold text-danger text-nowrap"
+                                                            th:text="${#numbers.formatDecimal((ship.order.amountFromUser ?: 0) + (ship.order.shippingFee ?: 0), 0, 'COMMA', 0, 'POINT') + ' ₫'}">
+                                                       </td>
+
                                                        <td
                                                             class="d-none d-lg-table-cell"
                                                             th:text="${#temporals.format(ship.assignedAt,'HH:mm dd/MM')}"
                                                        >
                                                             Giờ
                                                        </td>
-                                                       <td class="text-end pe-3">
+                                                       <td class="text-end pe-3 text-nowrap">
                                                             <a
                                                                  th:href="@{'/shipper/shipment/' + ${ship.id}}"
                                                                  class="btn btn-sm btn-outline-secondary"
@@ -370,7 +371,7 @@
                                                                  class="btn btn-sm btn-success"
                                                                  data-bs-toggle="modal"
                                                                  th:attr="data-bs-target='#deliverModal' + ${ship.id}"
-                                                                 title="Xác nhận đã giao hàng + ảnh"
+                                                                 title="Xác nhận Đã xác nhận hàng + ảnh"
                                                             >
                                                                  <i class="fas fa-check"></i>
                                                             </button>
@@ -403,13 +404,11 @@
                               </div>
                          </div>
 
-                         <!-- 🟢 Tab Đã giao -->
-                         <div
-                              class="tab-pane fade show active"
-                              id="delivered"
-                              role="tabpanel"
-                              th:if="${status == 'DELIVERED'}"
-                         >
+                         <!-- 🟢 Tab Đã xác nhận -->
+                         <div class="tab-pane fade"
+                              th:classappend="${status == 'DELIVERED'} ? ' show active' : ''"
+                              th:if="${status == 'DELIVERED'}">
+
                               <div class="card-body p-0">
                                    <div class="table-responsive">
                                         <table class="table table-hover align-middle mb-0">
@@ -441,9 +440,9 @@
                                                        >
                                                             Địa chỉ
                                                        </td>
-                                                       <td
-                                                            th:text="${#numbers.formatDecimal(ship.order.amountFromUser,0,'POINT',0,'COMMA')} + ' ₫'"
-                                                       ></td>
+                                                       <td class="fw-bold text-danger text-nowrap"
+                                                            th:text="${#numbers.formatDecimal((ship.order.amountFromUser ?: 0) + (ship.order.shippingFee ?: 0), 0, 'COMMA', 0, 'POINT') + ' ₫'}">
+                                                       </td>
                                                        <td
                                                             class="d-none d-lg-table-cell"
                                                             th:text="${#temporals.format(ship.deliveredAt,'dd/MM/yyyy HH:mm')}"
@@ -469,7 +468,7 @@
                                                        >
                                                             <i class="fas fa-inbox fa-2x mb-2"></i
                                                             ><br />
-                                                            Không có đơn hàng đã giao
+                                                            Không có đơn hàng Đã xác nhận
                                                        </td>
                                                   </tr>
                                              </tbody>
@@ -479,12 +478,10 @@
                          </div>
 
                          <!-- 🔴 Tab Thất bại -->
-                         <div
-                              class="tab-pane fade show active"
-                              id="failed"
-                              role="tabpanel"
-                              th:if="${status == 'FAILED'}"
-                         >
+                         <div class="tab-pane fade"
+                         th:classappend="${status == 'FAILED'} ? ' show active' : ''"
+                         th:if="${status == 'FAILED'}">
+                    
                               <div class="card-body p-0">
                                    <div class="table-responsive">
                                         <table class="table table-hover align-middle mb-0">
@@ -519,9 +516,9 @@
                                                        >
                                                             Địa chỉ
                                                        </td>
-                                                       <td
-                                                            th:text="${#numbers.formatDecimal(ship.order.amountFromUser,0,'POINT',0,'COMMA')} + ' ₫'"
-                                                       ></td>
+                                                       <td class="fw-bold text-danger text-nowrap"
+                                                            th:text="${#numbers.formatDecimal((ship.order.amountFromUser ?: 0) + (ship.order.shippingFee ?: 0), 0, 'COMMA', 0, 'POINT') + ' ₫'}">
+                                                       </td>
                                                        <td
                                                             class="d-none d-lg-table-cell"
                                                             th:text="${#temporals.format(ship.updatedAt,'dd/MM/yyyy HH:mm')}"

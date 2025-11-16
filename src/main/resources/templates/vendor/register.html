@@ -3,393 +3,557 @@
      xmlns:th="http://www.thymeleaf.org"
      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
 >
-     <head th:replace="~{fragments/head :: head}">
+     <head th:replace="~{fragments/header-register-vendor :: header-register-vendor}">
           <title>Đăng ký làm Người bán - Badminton Marketplace</title>
      </head>
-     <body>
+     <body class="vendor-register-page">
           <div th:replace="~{fragments/header :: header}"></div>
 
-          <div class="container mt-5 mb-5">
-               <div class="row justify-content-center">
-                    <div class="col-md-8">
-                         <!-- Pending Registration Alert -->
-                         <div
-                              th:if="${hasPending}"
-                              class="alert alert-warning alert-dismissible fade show"
-                              role="alert"
-                         >
-                              <h5><i class="fas fa-clock"></i> Yêu cầu đang chờ phê duyệt</h5>
-                              <p th:text="${message}"></p>
-                              <p class="mb-0">
-                                   <strong>Lưu ý:</strong> Bạn cần được admin phê duyệt trước khi có
-                                   thể bắt đầu bán hàng. Vui lòng kiểm tra email để nhận thông báo
-                                   khi được duyệt.
-                              </p>
-                              <hr />
-                              <a th:href="@{/user/profile}" class="btn btn-sm btn-outline-primary">
-                                   <i class="fas fa-user"></i> Quay lại trang cá nhân
-                              </a>
-                         </div>
-
-                         <!-- Registration Form -->
-                         <div th:if="${!hasPending}" class="card shadow">
-                              <!-- Success/Error Messages -->
-                              <div
-                                   th:if="${success}"
-                                   class="alert alert-success alert-dismissible fade show m-3"
-                                   role="alert"
-                              >
-                                   <i class="fas fa-check-circle"></i>
-                                   <span th:text="${success}"></span>
-                                   <button
-                                        type="button"
-                                        class="btn-close"
-                                        data-bs-dismiss="alert"
-                                   ></button>
-                              </div>
-                              <div
-                                   th:if="${error}"
-                                   class="alert alert-danger alert-dismissible fade show m-3"
-                                   role="alert"
-                              >
-                                   <i class="fas fa-exclamation-circle"></i>
-                                   <span th:text="${error}"></span>
-                                   <button
-                                        type="button"
-                                        class="btn-close"
-                                        data-bs-dismiss="alert"
-                                   ></button>
-                              </div>
-
-                              <div class="card-header bg-primary text-white text-center py-4">
-                                   <h3><i class="fas fa-store-alt"></i> Đăng ký làm Người bán</h3>
-                                   <p class="mb-0">Bắt đầu kinh doanh cùng Badminton Marketplace</p>
-                              </div>
-                              <div class="card-body p-4">
-                                   <!-- Benefits Section -->
-                                   <div class="alert alert-info">
-                                        <h5>
-                                             <i class="fas fa-gift"></i> Lợi ích khi trở thành Người
-                                             bán:
-                                        </h5>
-                                        <ul class="mb-0">
-                                             <li>Tiếp cận hàng triệu khách hàng tiềm năng</li>
-                                             <li>Công cụ quản lý shop chuyên nghiệp</li>
-                                             <li>Hỗ trợ marketing và khuyến mãi</li>
-                                             <li>Thanh toán nhanh chóng, minh bạch</li>
-                                             <li>Hoa hồng cạnh tranh</li>
-                                        </ul>
-                                   </div>
-
-                                   <!-- Important Note -->
-                                   <div class="alert alert-warning">
-                                        <h6>
-                                             <i class="fas fa-info-circle"></i> Lưu ý quan trọng:
-                                        </h6>
-                                        <p class="mb-0">
-                                             <strong
-                                                  >Sau khi đăng ký, bạn cần đợi admin phê
-                                                  duyệt.</strong
-                                             ><br />
-                                             • Admin sẽ xem xét thông tin cửa hàng của bạn<br />
-                                             • Bạn sẽ nhận thông báo qua email khi được duyệt<br />
-                                             • Chỉ sau khi được duyệt, bạn mới có thể bắt đầu bán
-                                             hàng
-                                        </p>
-                                   </div>
-
-                                   <form
-                                        th:action="@{/vendor/register}"
-                                        method="post"
-                                        th:object="${storeRegistration}"
-                                        enctype="multipart/form-data"
-                                   >
-                                        <h5 class="mb-3 mt-4">
-                                             <i class="fas fa-info-circle"></i> Thông tin Cửa hàng
-                                        </h5>
-
-                                        <div class="mb-3">
-                                             <label for="storeName" class="form-label"
-                                                  >Tên cửa hàng
-                                                  <span class="text-danger">*</span></label
-                                             >
-                                             <input
-                                                  type="text"
-                                                  class="form-control"
-                                                  id="storeName"
-                                                  th:field="*{storeName}"
-                                                  placeholder="VD: Cửa hàng Cầu lông ABC"
-                                                  required
-                                             />
-                                             <small class="text-muted"
-                                                  >Tên này sẽ hiển thị công khai trên
-                                                  marketplace</small
-                                             >
-                                        </div>
-
-                                        <div class="mb-3">
-                                             <label for="description" class="form-label"
-                                                  >Mô tả cửa hàng
-                                                  <span class="text-danger">*</span></label
-                                             >
-                                             <textarea
-                                                  class="form-control"
-                                                  id="description"
-                                                  rows="4"
-                                                  th:field="*{description}"
-                                                  placeholder="Giới thiệu về cửa hàng, sản phẩm kinh doanh..."
-                                                  required
-                                             ></textarea>
-                                        </div>
-
-                                        <div class="row">
-                                             <div class="col-md-6 mb-3">
-                                                  <label for="phone" class="form-label"
-                                                       >Số điện thoại
-                                                       <span class="text-danger">*</span></label
-                                                  >
-                                                  <input
-                                                       type="tel"
-                                                       class="form-control"
-                                                       id="phone"
-                                                       th:field="*{phone}"
-                                                       placeholder="0123456789"
-                                                       pattern="[0-9]{10,11}"
-                                                       required
-                                                  />
-                                             </div>
-                                             <div class="col-md-6 mb-3">
-                                                  <label for="email" class="form-label"
-                                                       >Email liên hệ
-                                                       <span class="text-danger">*</span></label
-                                                  >
-                                                  <input
-                                                       type="email"
-                                                       class="form-control"
-                                                       id="email"
-                                                       th:field="*{email}"
-                                                       placeholder="shop@example.com"
-                                                       required
-                                                  />
-                                             </div>
-                                        </div>
-
-                                        <div class="mb-3">
-                                             <label for="address" class="form-label"
-                                                  >Địa chỉ cửa hàng
-                                                  <span class="text-danger">*</span></label
-                                             >
-                                             <input
-                                                  type="text"
-                                                  class="form-control"
-                                                  id="address"
-                                                  th:field="*{address}"
-                                                  placeholder="Số nhà, đường"
-                                                  required
-                                             />
-                                        </div>
-
-                                        <div class="row">
-                                             <div class="col-md-4 mb-3">
-                                                  <label for="city" class="form-label"
-                                                       >Tỉnh/Thành phố
-                                                       <span class="text-danger">*</span></label
-                                                  >
-                                                  <select
-                                                       class="form-select"
-                                                       id="city"
-                                                       th:field="*{city}"
-                                                       required
-                                                  >
-                                                       <option value="">-- Chọn --</option>
-                                                       <option value="Hà Nội">Hà Nội</option>
-                                                       <option value="Hồ Chí Minh">
-                                                            Hồ Chí Minh
-                                                       </option>
-                                                       <option value="Đà Nẵng">Đà Nẵng</option>
-                                                       <option value="Cần Thơ">Cần Thơ</option>
-                                                       <option value="Hải Phòng">Hải Phòng</option>
-                                                       <option value="An Giang">An Giang</option>
-                                                       <option value="Bà Rịa - Vũng Tàu">
-                                                            Bà Rịa - Vũng Tàu
-                                                       </option>
-                                                       <option value="Bắc Giang">Bắc Giang</option>
-                                                       <option value="Bắc Kạn">Bắc Kạn</option>
-                                                       <option value="Bạc Liêu">Bạc Liêu</option>
-                                                       <option value="Bắc Ninh">Bắc Ninh</option>
-                                                       <option value="Bến Tre">Bến Tre</option>
-                                                       <option value="Bình Định">Bình Định</option>
-                                                       <option value="Bình Dương">
-                                                            Bình Dương
-                                                       </option>
-                                                       <option value="Bình Phước">
-                                                            Bình Phước
-                                                       </option>
-                                                       <option value="Bình Thuận">
-                                                            Bình Thuận
-                                                       </option>
-                                                       <option value="Cà Mau">Cà Mau</option>
-                                                       <option value="Cao Bằng">Cao Bằng</option>
-                                                       <option value="Đắk Lắk">Đắk Lắk</option>
-                                                       <option value="Đắk Nông">Đắk Nông</option>
-                                                       <option value="Điện Biên">Điện Biên</option>
-                                                       <option value="Đồng Nai">Đồng Nai</option>
-                                                       <option value="Đồng Tháp">Đồng Tháp</option>
-                                                       <option value="Gia Lai">Gia Lai</option>
-                                                       <option value="Hà Giang">Hà Giang</option>
-                                                       <option value="Hà Nam">Hà Nam</option>
-                                                       <option value="Hà Tĩnh">Hà Tĩnh</option>
-                                                       <option value="Hải Dương">Hải Dương</option>
-                                                       <option value="Hậu Giang">Hậu Giang</option>
-                                                       <option value="Hòa Bình">Hòa Bình</option>
-                                                       <option value="Hưng Yên">Hưng Yên</option>
-                                                       <option value="Khánh Hòa">Khánh Hòa</option>
-                                                       <option value="Kiên Giang">
-                                                            Kiên Giang
-                                                       </option>
-                                                       <option value="Kon Tum">Kon Tum</option>
-                                                       <option value="Lai Châu">Lai Châu</option>
-                                                       <option value="Lâm Đồng">Lâm Đồng</option>
-                                                       <option value="Lạng Sơn">Lạng Sơn</option>
-                                                       <option value="Lào Cai">Lào Cai</option>
-                                                       <option value="Long An">Long An</option>
-                                                       <option value="Nam Định">Nam Định</option>
-                                                       <option value="Nghệ An">Nghệ An</option>
-                                                       <option value="Ninh Bình">Ninh Bình</option>
-                                                       <option value="Ninh Thuận">
-                                                            Ninh Thuận
-                                                       </option>
-                                                       <option value="Phú Thọ">Phú Thọ</option>
-                                                       <option value="Phú Yên">Phú Yên</option>
-                                                       <option value="Quảng Bình">
-                                                            Quảng Bình
-                                                       </option>
-                                                       <option value="Quảng Nam">Quảng Nam</option>
-                                                       <option value="Quảng Ngãi">
-                                                            Quảng Ngãi
-                                                       </option>
-                                                       <option value="Quảng Ninh">
-                                                            Quảng Ninh
-                                                       </option>
-                                                       <option value="Quảng Trị">Quảng Trị</option>
-                                                       <option value="Sóc Trăng">Sóc Trăng</option>
-                                                       <option value="Sơn La">Sơn La</option>
-                                                       <option value="Tây Ninh">Tây Ninh</option>
-                                                       <option value="Thái Bình">Thái Bình</option>
-                                                       <option value="Thái Nguyên">
-                                                            Thái Nguyên
-                                                       </option>
-                                                       <option value="Thanh Hóa">Thanh Hóa</option>
-                                                       <option value="Thừa Thiên Huế">
-                                                            Thừa Thiên Huế
-                                                       </option>
-                                                       <option value="Tiền Giang">
-                                                            Tiền Giang
-                                                       </option>
-                                                       <option value="Trà Vinh">Trà Vinh</option>
-                                                       <option value="Tuyên Quang">
-                                                            Tuyên Quang
-                                                       </option>
-                                                       <option value="Vĩnh Long">Vĩnh Long</option>
-                                                       <option value="Vĩnh Phúc">Vĩnh Phúc</option>
-                                                       <option value="Yên Bái">Yên Bái</option>
-                                                  </select>
-                                             </div>
-                                             <div class="col-md-4 mb-3">
-                                                  <label for="district" class="form-label"
-                                                       >Quận/Huyện
-                                                       <span class="text-danger">*</span></label
-                                                  >
-                                                  <input
-                                                       type="text"
-                                                       class="form-control"
-                                                       id="district"
-                                                       th:field="*{district}"
-                                                       placeholder="VD: Quận 1, Huyện Củ Chi"
-                                                       required
-                                                  />
-                                             </div>
-                                             <div class="col-md-4 mb-3">
-                                                  <label for="ward" class="form-label"
-                                                       >Phường/Xã
-                                                       <span class="text-danger">*</span></label
-                                                  >
-                                                  <input
-                                                       type="text"
-                                                       class="form-control"
-                                                       id="ward"
-                                                       th:field="*{ward}"
-                                                       placeholder="VD: Phường Bến Nghé"
-                                                       required
-                                                  />
-                                             </div>
-                                        </div>
-
-                                        <div class="mb-3">
-                                             <label for="logo" class="form-label"
-                                                  >Logo cửa hàng</label
-                                             >
-                                             <input
-                                                  type="file"
-                                                  class="form-control"
-                                                  id="logo"
-                                                  name="logoFile"
-                                                  accept="image/*"
-                                             />
-                                             <small class="text-muted"
-                                                  >Định dạng: JPG, PNG. Kích thước tối đa:
-                                                  2MB</small
-                                             >
-                                        </div>
-
-                                        <div class="form-check mb-4">
-                                             <input
-                                                  class="form-check-input"
-                                                  type="checkbox"
-                                                  id="agreeTerms"
-                                                  required
-                                             />
-                                             <label class="form-check-label" for="agreeTerms">
-                                                  Tôi đồng ý với
-                                                  <a href="#" target="_blank">Điều khoản dịch vụ</a>
-                                                  và
-                                                  <a href="#" target="_blank"
-                                                       >Chính sách bán hàng</a
-                                                  >
-                                                  của Badminton Marketplace
-                                                  <span class="text-danger">*</span>
-                                             </label>
-                                        </div>
-
-                                        <div class="d-grid gap-2">
-                                             <button type="submit" class="btn btn-primary btn-lg">
-                                                  <i class="fas fa-check-circle"></i> Đăng ký ngay
-                                             </button>
-                                             <a th:href="@{/}" class="btn btn-outline-secondary">
-                                                  <i class="fas fa-arrow-left"></i> Quay lại trang
-                                                  chủ
-                                             </a>
-                                        </div>
-                                   </form>
-                              </div>
-                         </div>
-
-                         <!-- Help Section -->
-                         <div class="card mt-4">
-                              <div class="card-body text-center">
-                                   <h5><i class="fas fa-question-circle"></i> Cần hỗ trợ?</h5>
-                                   <p>Liên hệ với chúng tôi:</p>
-                                   <p>
-                                        <i class="fas fa-phone"></i> Hotline: 1900-xxxx<br />
-                                        <i class="fas fa-envelope"></i> Email:
-                                        support@badmintonmarket.com
+          <!-- Hero Section -->
+          <div class="vendor-hero">
+               <div class="container">
+                    <div class="row align-items-center">
+                         <div class="col-lg-6">
+                              <div class="hero-content">
+                                   <span class="hero-badge">
+                                        <i class="fas fa-star me-2"></i>Bắt đầu kinh doanh ngay hôm
+                                        nay
+                                   </span>
+                                   <h1 class="hero-title">Trở thành Người bán</h1>
+                                   <p class="hero-subtitle">
+                                        Mở rộng kinh doanh cùng hàng triệu khách hàng trên Badminton
+                                        Marketplace
                                    </p>
+                                   <div class="hero-stats">
+                                        <div class="stat-item">
+                                             <i class="fas fa-users"></i>
+                                             <div>
+                                                  <strong>10,000+</strong>
+                                                  <span>Người bán</span>
+                                             </div>
+                                        </div>
+                                        <div class="stat-item">
+                                             <i class="fas fa-box"></i>
+                                             <div>
+                                                  <strong>50,000+</strong>
+                                                  <span>Sản phẩm</span>
+                                             </div>
+                                        </div>
+                                        <div class="stat-item">
+                                             <i class="fas fa-chart-line"></i>
+                                             <div>
+                                                  <strong>98%</strong>
+                                                  <span>Hài lòng</span>
+                                             </div>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                         <div class="col-lg-6">
+                              <div class="hero-illustration">
+                                   <i class="fas fa-store-alt"></i>
                               </div>
                          </div>
                     </div>
                </div>
           </div>
 
-          <div th:replace="~{fragments/footer :: footer}"></div>
+          <div class="container py-5">
+               <div class="row justify-content-center">
+                    <div class="col-lg-10">
+                         <!-- Pending Registration Alert -->
+                         <div th:if="${hasPending}" class="pending-alert-modern mb-4">
+                              <div class="pending-icon">
+                                   <i class="fas fa-clock"></i>
+                              </div>
+                              <div class="pending-content">
+                                   <h4>Yêu cầu đang chờ phê duyệt</h4>
+                                   <p th:text="${message}"></p>
+                                   <div class="pending-info">
+                                        <div class="info-item">
+                                             <i class="fas fa-check-circle"></i>
+                                             <span>Yêu cầu đã được gửi</span>
+                                        </div>
+                                        <div class="info-item">
+                                             <i class="fas fa-hourglass-half"></i>
+                                             <span>Đang chờ admin xem xét</span>
+                                        </div>
+                                        <div class="info-item">
+                                             <i class="fas fa-envelope"></i>
+                                             <span>Thông báo qua email khi được duyệt</span>
+                                        </div>
+                                   </div>
+                                   <a th:href="@{/user/profile}" class="btn btn-modern-primary">
+                                        <i class="fas fa-user me-2"></i>Quay lại trang cá nhân
+                                   </a>
+                              </div>
+                         </div>
+
+                         <!-- Registration Form - Always show -->
+                         <div class="registration-container">
+                              <!-- Success/Error Messages -->
+                              <div th:if="${success}" class="modern-alert success">
+                                   <i class="fas fa-check-circle"></i>
+                                   <span th:text="${success}"></span>
+                                   <button type="button" class="close-btn" data-bs-dismiss="alert">
+                                        <i class="fas fa-times"></i>
+                                   </button>
+                              </div>
+                              <div th:if="${error}" class="modern-alert error">
+                                   <i class="fas fa-exclamation-circle"></i>
+                                   <span th:text="${error}"></span>
+                                   <button type="button" class="close-btn" data-bs-dismiss="alert">
+                                        <i class="fas fa-times"></i>
+                                   </button>
+                              </div>
+
+                              <!-- Benefits Cards -->
+                              <div class="benefits-grid">
+                                   <div class="benefit-card">
+                                        <div class="benefit-icon blue">
+                                             <i class="fas fa-users"></i>
+                                        </div>
+                                        <h4>Tiếp cận rộng</h4>
+                                        <p>Hàng triệu khách hàng tiềm năng</p>
+                                   </div>
+                                   <div class="benefit-card">
+                                        <div class="benefit-icon green">
+                                             <i class="fas fa-tools"></i>
+                                        </div>
+                                        <h4>Quản lý dễ dàng</h4>
+                                        <p>Công cụ chuyên nghiệp</p>
+                                   </div>
+                                   <div class="benefit-card">
+                                        <div class="benefit-icon purple">
+                                             <i class="fas fa-bullhorn"></i>
+                                        </div>
+                                        <h4>Marketing miễn phí</h4>
+                                        <p>Hỗ trợ khuyến mãi đa dạng</p>
+                                   </div>
+                                   <div class="benefit-card">
+                                        <div class="benefit-icon orange">
+                                             <i class="fas fa-wallet"></i>
+                                        </div>
+                                        <h4>Thanh toán nhanh</h4>
+                                        <p>Minh bạch, an toàn</p>
+                                   </div>
+                              </div>
+
+                              <!-- Registration Steps -->
+                              <div class="registration-card">
+                                   <div class="card-header-modern">
+                                        <div class="header-left">
+                                             <i class="fas fa-store-alt"></i>
+                                             <div>
+                                                  <h3>Đăng ký làm Người bán</h3>
+                                                  <p>Hoàn thành thông tin để bắt đầu</p>
+                                             </div>
+                                        </div>
+                                        <div class="header-badge">
+                                             <i class="fas fa-shield-alt me-2"></i>Miễn phí
+                                        </div>
+                                   </div>
+
+                                   <div class="card-body-modern">
+                                        <!-- Important Note -->
+                                        <div class="info-banner">
+                                             <i class="fas fa-info-circle"></i>
+                                             <div>
+                                                  <strong>Lưu ý:</strong> Sau khi đăng ký, yêu cầu
+                                                  của bạn sẽ được admin xem xét trong vòng 24-48
+                                                  giờ. Bạn sẽ nhận thông báo qua email khi được phê
+                                                  duyệt.
+                                             </div>
+                                        </div>
+
+                                        <form
+                                             th:action="@{/vendor/register}"
+                                             method="post"
+                                             th:object="${storeRegistration}"
+                                             enctype="multipart/form-data"
+                                             class="modern-form"
+                                        >
+                                             <!-- Section 1: Store Info -->
+                                             <div class="form-section">
+                                                  <div class="section-header">
+                                                       <span class="section-number">1</span>
+                                                       <div>
+                                                            <h5>Thông tin Cửa hàng</h5>
+                                                            <p>
+                                                                 Cung cấp thông tin cơ bản về cửa
+                                                                 hàng của bạn
+                                                            </p>
+                                                       </div>
+                                                  </div>
+
+                                                  <div class="form-group-modern">
+                                                       <label for="storeName">
+                                                            <i class="fas fa-store me-2"></i>Tên cửa
+                                                            hàng
+                                                            <span class="required">*</span>
+                                                       </label>
+                                                       <input
+                                                            type="text"
+                                                            class="form-control-modern"
+                                                            id="storeName"
+                                                            th:field="*{storeName}"
+                                                            placeholder="VD: Cửa hàng Cầu lông ABC"
+                                                            required
+                                                       />
+                                                       <small class="form-hint">
+                                                            <i class="fas fa-info-circle me-1"></i
+                                                            >Tên này sẽ hiển thị công khai trên
+                                                            marketplace
+                                                       </small>
+                                                  </div>
+
+                                                  <div class="form-group-modern">
+                                                       <label for="description">
+                                                            <i class="fas fa-align-left me-2"></i>Mô
+                                                            tả cửa hàng
+                                                            <span class="required">*</span>
+                                                       </label>
+                                                       <textarea
+                                                            class="form-control-modern"
+                                                            id="description"
+                                                            rows="4"
+                                                            th:field="*{description}"
+                                                            placeholder="Giới thiệu về cửa hàng, sản phẩm kinh doanh, điểm mạnh của bạn..."
+                                                            required
+                                                       ></textarea>
+                                                       <small class="form-hint">
+                                                            <i class="fas fa-pencil-alt me-1"></i
+                                                            >Viết mô tả chi tiết để thu hút khách
+                                                            hàng
+                                                       </small>
+                                                  </div>
+
+                                                  <div class="row">
+                                                       <div class="col-md-6">
+                                                            <div class="form-group-modern">
+                                                                 <label for="phone">
+                                                                      <i
+                                                                           class="fas fa-phone me-2"
+                                                                      ></i
+                                                                      >Số điện thoại
+                                                                      <span class="required"
+                                                                           >*</span
+                                                                      >
+                                                                 </label>
+                                                                 <input
+                                                                      type="tel"
+                                                                      class="form-control-modern"
+                                                                      id="phone"
+                                                                      th:field="*{phone}"
+                                                                      placeholder="0123456789"
+                                                                      pattern="[0-9]{10,11}"
+                                                                      required
+                                                                 />
+                                                            </div>
+                                                       </div>
+                                                       <div class="col-md-6">
+                                                            <div class="form-group-modern">
+                                                                 <label for="email">
+                                                                      <i
+                                                                           class="fas fa-envelope me-2"
+                                                                      ></i
+                                                                      >Email liên hệ
+                                                                      <span class="required"
+                                                                           >*</span
+                                                                      >
+                                                                 </label>
+                                                                 <input
+                                                                      type="email"
+                                                                      class="form-control-modern"
+                                                                      id="email"
+                                                                      th:field="*{email}"
+                                                                      placeholder="shop@example.com"
+                                                                      required
+                                                                 />
+                                                            </div>
+                                                       </div>
+                                                  </div>
+                                             </div>
+
+                                             <!-- Section 2: Location -->
+                                             <div class="form-section">
+                                                  <div class="section-header">
+                                                       <span class="section-number">2</span>
+                                                       <div>
+                                                            <h5>Địa chỉ cửa hàng</h5>
+                                                            <p>
+                                                                 Xác định vị trí chính xác của cửa
+                                                                 hàng
+                                                            </p>
+                                                       </div>
+                                                  </div>
+
+                                                  <!-- Address Search -->
+                                                  <div
+                                                       class="form-group-modern address-search-container"
+                                                  >
+                                                       <label for="addressSearch">
+                                                            <i class="fas fa-search me-2"></i>Tìm
+                                                            kiếm địa chỉ
+                                                       </label>
+                                                       <div class="search-input-wrapper">
+                                                            <input
+                                                                 type="text"
+                                                                 id="addressSearch"
+                                                                 class="form-control-modern"
+                                                                 placeholder="Nhập địa chỉ, tên đường, quận... để tìm kiếm"
+                                                                 autocomplete="off"
+                                                            />
+                                                            <i
+                                                                 class="fas fa-location-arrow search-icon"
+                                                            ></i>
+                                                       </div>
+                                                       <div
+                                                            id="addressSuggestions"
+                                                            style="display: none"
+                                                       ></div>
+                                                       <small class="form-hint">
+                                                            <i class="fas fa-lightbulb me-1"></i
+                                                            >Nhập ít nhất 3 ký tự để tìm kiếm
+                                                       </small>
+                                                  </div>
+
+                                                  <!-- Current Location Button -->
+                                                  <div class="form-group-modern">
+                                                       <button
+                                                            type="button"
+                                                            id="useCurrentLocation"
+                                                            class="btn-current-location"
+                                                       >
+                                                            <i class="fas fa-crosshairs me-2"></i>
+                                                            <span
+                                                                 >Sử dụng vị trí hiện tại của
+                                                                 tôi</span
+                                                            >
+                                                            <i
+                                                                 class="fas fa-spinner fa-spin ms-2 d-none"
+                                                                 id="locationSpinner"
+                                                            ></i>
+                                                       </button>
+                                                  </div>
+
+                                                  <!-- Map -->
+                                                  <div class="map-wrapper">
+                                                       <label class="map-label">
+                                                            <i
+                                                                 class="fas fa-map-marked-alt me-2"
+                                                            ></i
+                                                            >Chọn vị trí trên bản đồ
+                                                            <span class="required">*</span>
+                                                       </label>
+                                                       <div id="map"></div>
+                                                       <div class="map-hint">
+                                                            <i class="fas fa-hand-pointer me-2"></i>
+                                                            Nhấp vào bản đồ để chọn vị trí chính xác
+                                                       </div>
+                                                  </div>
+
+                                                  <!-- Selected Address Display -->
+                                                  <div class="selected-address-box">
+                                                       <label class="selected-label">
+                                                            <i class="fas fa-check-circle me-2"></i
+                                                            >Địa chỉ đã chọn
+                                                       </label>
+                                                       <input
+                                                            type="text"
+                                                            id="fullAddress"
+                                                            class="form-control-modern"
+                                                            placeholder="Chưa chọn vị trí..."
+                                                            readonly
+                                                       />
+                                                  </div>
+
+                                                  <!-- Detailed Address -->
+                                                  <div class="form-group-modern">
+                                                       <label for="address">
+                                                            <i class="fas fa-home me-2"></i>Địa chỉ
+                                                            cụ thể
+                                                            <span class="required">*</span>
+                                                       </label>
+                                                       <input
+                                                            type="text"
+                                                            class="form-control-modern"
+                                                            id="address"
+                                                            th:field="*{address}"
+                                                            placeholder="VD: Tầng 5, Tòa nhà ABC, 123 Đường XYZ"
+                                                            required
+                                                       />
+                                                       <small class="form-hint">
+                                                            <i class="fas fa-edit me-1"></i>Bạn có
+                                                            thể chỉnh sửa để thêm chi tiết
+                                                       </small>
+                                                  </div>
+
+                                                  <!-- Hidden fields for city, district, ward -->
+                                                  <input
+                                                       type="hidden"
+                                                       id="city"
+                                                       th:field="*{city}"
+                                                  />
+                                                  <input
+                                                       type="hidden"
+                                                       id="district"
+                                                       th:field="*{district}"
+                                                  />
+                                                  <input
+                                                       type="hidden"
+                                                       id="ward"
+                                                       th:field="*{ward}"
+                                                  />
+                                                  <input
+                                                       type="hidden"
+                                                       id="latitude"
+                                                       th:field="*{latitude}"
+                                                  />
+                                                  <input
+                                                       type="hidden"
+                                                       id="longitude"
+                                                       th:field="*{longitude}"
+                                                  />
+                                             </div>
+
+                                             <!-- Section 3: Logo & Terms -->
+                                             <div class="form-section">
+                                                  <div class="section-header">
+                                                       <span class="section-number">3</span>
+                                                       <div>
+                                                            <h5>Logo & Xác nhận</h5>
+                                                            <p>Tải logo và đồng ý với điều khoản</p>
+                                                       </div>
+                                                  </div>
+
+                                                  <div class="form-group-modern">
+                                                       <label for="logo">
+                                                            <i class="fas fa-image me-2"></i>Logo
+                                                            cửa hàng
+                                                            <span class="optional-badge"
+                                                                 >Tùy chọn</span
+                                                            >
+                                                       </label>
+                                                       <div class="file-upload-wrapper">
+                                                            <input
+                                                                 type="file"
+                                                                 class="file-input-modern"
+                                                                 id="logo"
+                                                                 name="logoFile"
+                                                                 accept="image/*"
+                                                            />
+                                                            <label for="logo" class="file-label">
+                                                                 <i
+                                                                      class="fas fa-cloud-upload-alt me-2"
+                                                                 ></i>
+                                                                 <span id="file-label-text"
+                                                                      >Chọn ảnh</span
+                                                                 >
+                                                            </label>
+                                                       </div>
+                                                       <div
+                                                            id="logo-preview"
+                                                            class="logo-preview"
+                                                            style="display: none"
+                                                       >
+                                                            <img
+                                                                 id="preview-image"
+                                                                 src=""
+                                                                 alt="Logo preview"
+                                                            />
+                                                            <button
+                                                                 type="button"
+                                                                 class="btn-remove-image"
+                                                                 id="remove-logo"
+                                                            >
+                                                                 <i class="fas fa-times"></i>
+                                                            </button>
+                                                       </div>
+                                                       <small class="form-hint">
+                                                            <i class="fas fa-info-circle me-1"></i
+                                                            >JPG, PNG. Tối đa 2MB. Logo giúp tăng uy
+                                                            tín cho cửa hàng
+                                                       </small>
+                                                  </div>
+
+                                                  <div class="terms-box">
+                                                       <div class="custom-checkbox">
+                                                            <input
+                                                                 type="checkbox"
+                                                                 id="agreeTerms"
+                                                                 required
+                                                            />
+                                                            <label for="agreeTerms">
+                                                                 <div>
+                                                                      Tôi đã đọc và đồng ý với
+                                                                      <a href="#" target="_blank"
+                                                                           >Điều khoản dịch vụ</a
+                                                                      >
+                                                                      và
+                                                                      <a href="#" target="_blank"
+                                                                           >Chính sách bán hàng</a
+                                                                      >
+                                                                      của Badminton Marketplace
+                                                                      <span class="required"
+                                                                           >*</span
+                                                                      >
+                                                                 </div>
+                                                            </label>
+                                                       </div>
+                                                  </div>
+                                             </div>
+
+                                             <!-- Submit Actions -->
+                                             <div class="form-actions">
+                                                  <button type="submit" class="btn-submit-modern">
+                                                       <i class="fas fa-check-circle me-2"></i>
+                                                       Đăng ký ngay
+                                                       <i class="fas fa-arrow-right ms-2"></i>
+                                                  </button>
+                                                  <a th:href="@{/}" class="btn-cancel-modern">
+                                                       <i class="fas fa-times me-2"></i>Hủy bỏ
+                                                  </a>
+                                             </div>
+                                        </form>
+                                   </div>
+                              </div>
+                         </div>
+
+                         <!-- Help Section -->
+                         <div class="help-section">
+                              <div class="help-icon">
+                                   <i class="fas fa-question-circle"></i>
+                              </div>
+                              <div class="help-content">
+                                   <h5>Cần hỗ trợ?</h5>
+                                   <p>Đội ngũ hỗ trợ của chúng tôi luôn sẵn sàng giúp bạn</p>
+                                   <div class="contact-methods">
+                                        <a href="tel:1900xxxx" class="contact-item">
+                                             <i class="fas fa-phone-alt"></i>
+                                             <span>1900-xxxx</span>
+                                        </a>
+                                        <a
+                                             href="mailto:support@badmintonmarket.com"
+                                             class="contact-item"
+                                        >
+                                             <i class="fas fa-envelope"></i>
+                                             <span>support@badmintonmarket.com</span>
+                                        </a>
+                                        <a href="#" class="contact-item">
+                                             <i class="fab fa-facebook-messenger"></i>
+                                             <span>Live Chat</span>
+                                        </a>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </div>
+
+          <div th:replace="~{fragments/footer-vendor :: footer-vendor}"></div>
+
+          <!-- Leaflet JS - Load sau khi DOM ready -->
+          <script src="/js/vendor-register.js"></script>
      </body>
 </html>

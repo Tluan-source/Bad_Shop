@@ -62,6 +62,13 @@
                         </a>
                     </li>
                     <li class="nav-item" role="presentation">
+                        <a class="nav-link order-status-tab" th:classappend="${currentStatus == 'AWAITING_CONFIRMATION' ? 'active' : ''}"
+                           th:href="@{/vendor/orders(status='AWAITING_CONFIRMATION')}" data-status="AWAITING_CONFIRMATION">
+                            <i class="fas fa-clock"></i> Chờ xác nhận
+                            <span class="badge bg-warning ms-1" data-count="awaiting">0</span>
+                        </a>
+                    </li>
+                    <li class="nav-item" role="presentation">
                         <a class="nav-link order-status-tab" th:classappend="${currentStatus == 'DELIVERED' ? 'active' : ''}"
                            th:href="@{/vendor/orders(status='DELIVERED')}" data-status="DELIVERED">
                             <i class="fas fa-check-double"></i> Đã giao
@@ -243,6 +250,7 @@
                             <span th:if="${currentStatus == 'NOT_PROCESSED'}">Đơn hàng mới - Chờ xác nhận</span>
                             <span th:if="${currentStatus == 'PROCESSING'}">Đơn hàng đã xác nhận - Đang xử lý</span>
                             <span th:if="${currentStatus == 'SHIPPED'}">Đơn hàng đang giao</span>
+                            <span th:if="${currentStatus == 'AWAITING_CONFIRMATION'}">Đơn hàng chờ khách hàng xác nhận</span>
                             <span th:if="${currentStatus == 'DELIVERED'}">Đơn hàng đã giao</span>
                             <span th:if="${currentStatus == 'CANCELLED'}">Đơn hàng đã hủy</span>
                             <span th:if="${currentStatus == 'RETURNED'}">Đơn hàng trả hàng</span>
@@ -284,6 +292,7 @@
                                             <span th:if="${order.status.name() == 'NOT_PROCESSED'}" class="badge bg-warning">Chờ xác nhận</span>
                                             <span th:if="${order.status.name() == 'PROCESSING'}" class="badge bg-info">Đang xử lý</span>
                                             <span th:if="${order.status.name() == 'SHIPPED'}" class="badge bg-primary">Đang giao</span>
+                                            <span th:if="${order.status.name() == 'AWAITING_CONFIRMATION'}" class="badge bg-warning">Chờ xác nhận KH</span>
                                             <span th:if="${order.status.name() == 'DELIVERED'}" class="badge bg-success">Đã giao</span>
                                             <span th:if="${order.status.name() == 'CANCELLED'}" class="badge bg-danger">Đã hủy</span>
                                             <span th:if="${order.status.name() == 'RETURNED'}" class="badge bg-secondary">Trả hàng</span>

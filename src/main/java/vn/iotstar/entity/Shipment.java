@@ -63,6 +63,9 @@ public class Shipment {
     private LocalDateTime updatedAt;
     
     public enum ShipmentStatus {
-        DELIVERING, DELIVERED, FAILED
+        ASSIGNED,        // shipper nhận giao
+    DELIVERING,      // đang giao
+    DELIVERED,       // giao thành công (kèm ảnh)
+    FAILED 
     }
 }

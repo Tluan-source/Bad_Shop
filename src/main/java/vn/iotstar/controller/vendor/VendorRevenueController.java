@@ -169,13 +169,13 @@ public class VendorRevenueController {
                         if ("PENDING".equals(status)) {
                             // Pending = orders being processed (not yet delivered)
                             return order.getStatus() == Order.OrderStatus.PROCESSING ||
-                                   order.getStatus() == Order.OrderStatus.SHIPPED;
+                                   order.getStatus() == Order.OrderStatus.DELIVERING;
                         } else if ("PAID".equals(status)) {
                             // Paid = all delivered orders (auto-paid)
                             return order.getStatus() == Order.OrderStatus.DELIVERED;
                         } else if ("PROCESSING".equals(status)) {
                             return order.getStatus() == Order.OrderStatus.PROCESSING ||
-                                   order.getStatus() == Order.OrderStatus.SHIPPED;
+                                   order.getStatus() == Order.OrderStatus.DELIVERING;
                         }
                     }
                     
@@ -202,7 +202,7 @@ public class VendorRevenueController {
     private BigDecimal calculatePendingRevenue(List<Order> orders) {
         return orders.stream()
                 .filter(o -> o.getStatus() == Order.OrderStatus.PROCESSING || 
-                            o.getStatus() == Order.OrderStatus.SHIPPED)
+                            o.getStatus() == Order.OrderStatus.DELIVERING)
                 .map(Order::getAmountToStore)
                 .filter(Objects::nonNull)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
@@ -227,7 +227,7 @@ public class VendorRevenueController {
         return orders.stream()
                 .filter(o -> o.getStatus() == Order.OrderStatus.DELIVERED || 
                             o.getStatus() == Order.OrderStatus.PROCESSING ||
-                            o.getStatus() == Order.OrderStatus.SHIPPED)
+                            o.getStatus() == Order.OrderStatus.DELIVERING)
                 .map(order -> {
                     Map<String, Object> transaction = new HashMap<>();
                     transaction.put("id", order.getId());
@@ -269,7 +269,7 @@ public class VendorRevenueController {
         if (order.getStatus() == Order.OrderStatus.DELIVERED) {
             return "PAID";
         } else if (order.getStatus() == Order.OrderStatus.PROCESSING || 
-                   order.getStatus() == Order.OrderStatus.SHIPPED) {
+                   order.getStatus() == Order.OrderStatus.DELIVERING) {
             return "PROCESSING";
         } else {
             return "PENDING";

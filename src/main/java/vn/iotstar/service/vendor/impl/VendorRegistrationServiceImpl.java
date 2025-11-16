@@ -1,5 +1,10 @@
 package vn.iotstar.service.vendor.impl;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -12,11 +17,6 @@ import vn.iotstar.repository.StoreRepository;
 import vn.iotstar.service.CloudinaryService;
 import vn.iotstar.service.MailService;
 import vn.iotstar.service.vendor.VendorRegistrationService;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.UUID;
 
 /**
  * Implementation of VendorRegistrationService
@@ -35,18 +35,17 @@ public class VendorRegistrationServiceImpl implements VendorRegistrationService 
     
     @Override
     @Transactional
-    public String registerVendor(User user, StoreRegistrationDTO dto, 
-                                 MultipartFile logoFile, MultipartFile licenseFile) {
-        
-        // Check if user already has a store - findByOwnerId returns List
+    public String registerVendor(User user, StoreRegistrationDTO dto,
+                                MultipartFile logoFile, MultipartFile licenseFile) {
+
+        // Check if user already has a store
         List<Store> existingStores = storeRepository.findByOwnerId(user.getId());
         if (!existingStores.isEmpty()) {
             throw new RuntimeException("Bạn đã đăng ký cửa hàng rồi!");
         }
-        
-        // Upload files if provided
+
+        // Upload logo (optional)
         String logoUrl = null;
-        
         try {
             if (logoFile != null && !logoFile.isEmpty()) {
                 logoUrl = cloudinaryService.uploadFile(logoFile);
@@ -54,54 +53,68 @@ public class VendorRegistrationServiceImpl implements VendorRegistrationService 
         } catch (Exception e) {
             throw new RuntimeException("Lỗi khi upload file: " + e.getMessage());
         }
-        
-        // Create store with PENDING status
+
+        // Create store
         Store store = new Store();
         store.setId(UUID.randomUUID().toString());
         store.setName(dto.getStoreName());
-        
-        // Store uses featuredImages instead of avatar
+
+        // Featured images (JSON array)
         if (logoUrl != null) {
-            store.setFeaturedImages("[\"" + logoUrl + "\"]"); // Store as JSON array
+            store.setFeaturedImages("[\"" + logoUrl + "\"]");
         }
-        
-        // Set email and phone for store
+
+        // New fields (UI mới)
+        store.setAddress(dto.getAddress());
+        store.setWard(dto.getWard());
+        store.setDistrict(dto.getDistrict());
+        store.setCity(dto.getCity());
+        store.setLatitude(dto.getLatitude());
+        store.setLongitude(dto.getLongitude());
+
         store.setEmail(dto.getEmail());
         store.setPhone(dto.getPhone());
-        
         store.setOwner(user);
-        store.setIsActive(false); // Waiting for admin approval
+
+        store.setIsActive(false);        // pending approval
         store.setPoint(0);
         store.setRating(BigDecimal.ZERO);
         store.setEWallet(BigDecimal.ZERO);
         store.setCreatedAt(LocalDateTime.now());
         store.setUpdatedAt(LocalDateTime.now());
-        
-        // Build bio with description and contact info only
-        StringBuilder bio = new StringBuilder(dto.getDescription());
+
+        // Build bio with full address
+        StringBuilder bio = new StringBuilder();
+        bio.append(dto.getDescription());
         bio.append("\n\n--- Thông tin liên hệ ---");
         bio.append("\nĐiện thoại: ").append(dto.getPhone());
         bio.append("\nEmail: ").append(dto.getEmail());
-        bio.append("\nĐịa chỉ: ").append(dto.getAddress())
-           .append(", ").append(dto.getWard())
-           .append(", ").append(dto.getDistrict())
-           .append(", ").append(dto.getCity());
-        
+        bio.append("\nĐịa chỉ: ").append(dto.getAddress());
+        if (dto.getWard() != null && !dto.getWard().isEmpty()) {
+            bio.append(", ").append(dto.getWard());
+        }
+        if (dto.getDistrict() != null && !dto.getDistrict().isEmpty()) {
+            bio.append(", ").append(dto.getDistrict());
+        }
+        if (dto.getCity() != null && !dto.getCity().isEmpty()) {
+            bio.append(", ").append(dto.getCity());
+        }
+
         store.setBio(bio.toString());
-        
+
         // Save store
         storeRepository.save(store);
-        
-        // Send notification email to admin
+
+        // Notify admin
         try {
             sendAdminNotification(user, store);
         } catch (Exception e) {
-            // Log error but don't fail the registration
             System.err.println("Failed to send admin notification: " + e.getMessage());
         }
-        
+
         return store.getId();
     }
+
     
     @Override
     public boolean hasPendingRegistration(String userId) {

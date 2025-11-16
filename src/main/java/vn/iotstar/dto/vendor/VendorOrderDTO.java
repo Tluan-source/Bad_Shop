@@ -45,6 +45,7 @@ public class VendorOrderDTO {
     private String userFullName;
     private String userEmail;
     private String userPhone;
+    private String userAvatar;
     
     // Store info
     private String storeId;
@@ -58,8 +59,16 @@ public class VendorOrderDTO {
     // Shipment info
     private String shipmentStatus;
     private String shipperName;
+    private String shipperPhone;
+    private String shipperAvatar;
     private String shippingProviderName;
     private String shipmentId;
+    private String deliveryImageUrl;
+    private LocalDateTime assignedAt;
+    private LocalDateTime deliveredAt;
+    
+    // Confirmation info
+    private LocalDateTime confirmedByUserAt;
 
     // Convenience fields for templates
     private String orderId;

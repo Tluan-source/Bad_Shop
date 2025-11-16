@@ -1,41 +1,64 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head>
-    <title>Vendor Footer</title>
-</head>
-<body>
-<footer th:fragment="footer-vendor" class="bg-dark text-light mt-5 py-4">
-    <div class="container-fluid">
-        <div class="row">
-            <div class="col-md-4">
-                <h5><i class="fas fa-store text-success"></i> Vendor Dashboard</h5>
-                <p>Quản lý cửa hàng và kinh doanh hiệu quả</p>
-                <p class="small text-muted">Nền tảng bán hàng chuyên nghiệp</p>
-            </div>
-            <div class="col-md-4">
-                <h5>Công cụ bán hàng</h5>
-                <ul class="list-unstyled">
-                    <li><a href="#" th:href="@{/vendor/products}" class="text-light"><i class="fas fa-box-open me-2"></i>Quản lý sản phẩm</a></li>
-                    <li><a href="#" th:href="@{/vendor/orders}" class="text-light"><i class="fas fa-shopping-bag me-2"></i>Quản lý đơn hàng</a></li>
-                    <li><a href="#" th:href="@{/vendor/revenue}" class="text-light"><i class="fas fa-dollar-sign me-2"></i>Doanh thu</a></li>
-                    <li><a href="#" th:href="@{/vendor/support}" class="text-light"><i class="fas fa-headset me-2"></i>Hỗ trợ bán hàng</a></li>
-                </ul>
-            </div>
-            <div class="col-md-4">
-                <h5>Liên hệ hỗ trợ</h5>
-                <p><i class="fas fa-envelope me-2"></i>vendor@badminton.com</p>
-                <p><i class="fas fa-phone me-2"></i>Hotline: 1900 5678</p>
-                <p><i class="fas fa-book me-2"></i><a href="#" class="text-light">Hướng dẫn bán hàng</a></p>
-            </div>
-        </div>
-        <hr class="bg-light">
-        <div class="text-center">
-            <p class="mb-0">&copy; 2024 Badminton Marketplace - Vendor Portal | Phí hoa hồng: 3-5%</p>
-        </div>
-    </div>
-</footer>
+     <head>
+          <title>Vendor Footer</title>
+     </head>
+     <body>
+          <footer th:fragment="footer-vendor" class="bg-dark text-light mt-5 py-4">
+               <div class="container-fluid">
+                    <div class="row">
+                         <div class="col-md-4">
+                              <h5><i class="fas fa-store text-success"></i> Vendor Dashboard</h5>
+                              <p>Quản lý cửa hàng và kinh doanh hiệu quả</p>
+                              <p class="small text-muted">Nền tảng bán hàng chuyên nghiệp</p>
+                         </div>
+                         <div class="col-md-4">
+                              <h5>Công cụ bán hàng</h5>
+                              <ul class="list-unstyled">
+                                   <li>
+                                        <a href="#" th:href="@{/vendor/products}" class="text-light"
+                                             ><i class="fas fa-box-open me-2"></i>Quản lý sản
+                                             phẩm</a
+                                        >
+                                   </li>
+                                   <li>
+                                        <a href="#" th:href="@{/vendor/orders}" class="text-light"
+                                             ><i class="fas fa-shopping-bag me-2"></i>Quản lý đơn
+                                             hàng</a
+                                        >
+                                   </li>
+                                   <li>
+                                        <a href="#" th:href="@{/vendor/revenue}" class="text-light"
+                                             ><i class="fas fa-dollar-sign me-2"></i>Doanh thu</a
+                                        >
+                                   </li>
+                                   <li>
+                                        <a href="#" th:href="@{/vendor/support}" class="text-light"
+                                             ><i class="fas fa-headset me-2"></i>Hỗ trợ bán hàng</a
+                                        >
+                                   </li>
+                              </ul>
+                         </div>
+                         <div class="col-md-4">
+                              <h5>Liên hệ hỗ trợ</h5>
+                              <p><i class="fas fa-envelope me-2"></i>vendor@badminton.com</p>
+                              <p><i class="fas fa-phone me-2"></i>Hotline: 1900 5678</p>
+                              <p>
+                                   <i class="fas fa-book me-2"></i
+                                   ><a href="#" class="text-light">Hướng dẫn bán hàng</a>
+                              </p>
+                         </div>
+                    </div>
+                    <hr class="bg-light" />
+                    <div class="text-center">
+                         <p class="mb-0">
+                              &copy; 2024 Badminton Marketplace - Vendor Portal | Phí hoa hồng: 3-5%
+                         </p>
+                    </div>
+               </div>
+          </footer>
 
-<!-- Custom JS -->
-<script th:src="@{/js/main.js}"></script>
-</body>
+          <!-- Custom JS -->
+          <script th:src="@{/js/main.js}"></script>
+     </body>
 </html>

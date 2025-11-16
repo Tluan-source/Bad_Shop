@@ -156,12 +156,10 @@
                                    <tr th:each="item : ${orderItems}">
                                         <td th:text="${item.product.name}"></td>
                                         <td th:text="${item.quantity}"></td>
-                                        <td
-                                             th:text="${#numbers.formatDecimal(item.price,0,'POINT',0,'COMMA')} + ' VND'"
-                                        ></td>
-                                        <td
-                                             th:text="${#numbers.formatDecimal(item.total,0,'POINT',0,'COMMA')} + ' VND'"
-                                        ></td>
+                                        <td th:text="${#numbers.formatDecimal(order.amountFromUser,0,'POINT',0,'COMMA')} + ' ₫'"></td>
+                                        <td class="fw-bold text-danger"
+                                        th:text="${#numbers.formatDecimal((order.amountFromUser ?: 0) + (order.shippingFee ?: 0), 0, 'COMMA', 0, 'POINT')} + ' ₫'">
+                                        </td>
                                    </tr>
                                    <tr th:if="${#lists.isEmpty(orderItems)}">
                                         <td colspan="4" class="text-center text-muted">

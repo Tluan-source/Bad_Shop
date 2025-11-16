@@ -241,77 +241,75 @@ public class ShipperController {
     /** ✅ Nhận đơn (tạo shipment mới hoặc cập nhật shipment có sẵn & đổi trạng thái) */
     @PostMapping("/accept/{id}")
     public String acceptOrder(@PathVariable String id, Authentication auth) {
-        // ID ở đây là Order ID
         Order order = orderRepository.findById(id).orElse(null);
         if (order != null && order.getStatus() == Order.OrderStatus.PROCESSING) {
-            // Lấy user ID thực sự từ database
             String email = auth.getName();
             User shipper = userRepository.findByEmail(email).orElseThrow();
-            
+
             Shipment shipment = order.getShipment();
-            
-            // Nếu chưa có Shipment, tạo mới
             if (shipment == null) {
                 shipment = new Shipment();
                 shipment.setId(java.util.UUID.randomUUID().toString());
                 shipment.setOrder(order);
                 shipment.setShippingFee(order.getShippingFee());
             }
-            
-            // Cập nhật thông tin shipper và status
+
             shipment.setShipper(shipper);
             shipment.setStatus(ShipmentStatus.DELIVERING);
             shipment.setAssignedAt(LocalDateTime.now());
             shipmentRepository.save(shipment);
 
-            // Order -> SHIPPED
-            order.setStatus(Order.OrderStatus.SHIPPED);
+            // ✅ Order -> DELIVERING (đang giao)
+            order.setStatus(Order.OrderStatus.DELIVERING);
             orderRepository.save(order);
         }
         return "redirect:/shipper/dashboard";
     }
 
+
     /** 🟢 Giao hàng thành công */
     @PostMapping("/delivered/{id}")
-public String delivered(
-        @PathVariable String id,
-        @RequestParam("image") MultipartFile image,
-        Authentication auth) 
-{
-    Shipment shipment = shipmentRepository.findById(id).orElse(null);
-    if (shipment != null) {
-
-        // 🔐 Check đúng shipper không
-        String email = auth.getName();
-        User currentUser = userRepository.findByEmail(email).orElseThrow();
-        if (!shipment.getShipper().getId().equals(currentUser.getId())) {
-            return "redirect:/shipper/dashboard?error=not_allowed";
+    public String delivered(@PathVariable String id,
+                            @RequestParam("image") MultipartFile image,
+                            Authentication auth) {
+    
+        Shipment shipment = shipmentRepository.findById(id).orElse(null);
+        if (shipment != null) {
+            String email = auth.getName();
+            User currentUser = userRepository.findByEmail(email).orElseThrow();
+            if (!shipment.getShipper().getId().equals(currentUser.getId())) {
+                return "redirect:/shipper/dashboard?error=not_allowed";
+            }
+    
+            try {
+                Map uploadResult = cloudinary.uploader().upload(image.getBytes(), ObjectUtils.emptyMap());
+                String imageUrl = uploadResult.get("secure_url").toString();
+    
+                shipment.setDeliveryImageUrl(imageUrl);
+                shipment.setStatus(ShipmentStatus.DELIVERED);
+                shipment.setDeliveredAt(LocalDateTime.now());
+                shipmentRepository.save(shipment);
+    
+                Order order = shipment.getOrder();
+    
+                if (Boolean.TRUE.equals(order.getIsPaidBefore())) {
+                    // ✅ Thanh toán trước → hoàn tất luôn
+                    order.setStatus(Order.OrderStatus.DELIVERED);
+                    order.setConfirmedByUserAt(LocalDateTime.now());
+                } else {
+                    // ✅ COD → user cần xác nhận
+                    order.setStatus(Order.OrderStatus.AWAITING_CONFIRMATION);
+                }
+    
+                orderRepository.save(order);
+    
+            } catch (Exception e) {
+                System.out.println("Upload ảnh lỗi: " + e.getMessage());
+            }
         }
-
-        try {
-            // ✅ Upload ảnh lên Cloudinary
-            Map uploadResult = cloudinary.uploader().upload(image.getBytes(), ObjectUtils.emptyMap());
-            String imageUrl = uploadResult.get("secure_url").toString();
-
-            // ✅ Lưu vào bảng shipment
-            shipment.setDeliveryImageUrl(imageUrl);
-            shipment.setStatus(ShipmentStatus.DELIVERED);
-            shipment.setDeliveredAt(LocalDateTime.now());
-            shipmentRepository.save(shipment);
-
-            // ✅ Update trạng thái Order
-            Order order = shipment.getOrder();
-            order.setStatus(Order.OrderStatus.DELIVERED);
-            // order.setDeliveredAt(LocalDateTime.now());
-            orderRepository.save(order);
-
-        } catch (Exception e) {
-            System.out.println("Upload ảnh lỗi: " + e.getMessage());
-        }
+        return "redirect:/shipper/dashboard";
     }
-
-    return "redirect:/shipper/dashboard";
-}
+    
 
 
     /** 🔴 Giao hàng thất bại (ghi chú nguyên nhân) */

@@ -95,6 +95,9 @@ public class Order {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
+    @Column(name = "confirmed_by_user_at")
+    private LocalDateTime confirmedByUserAt;
+    
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems;
     
@@ -105,6 +108,12 @@ public class Order {
     private Payment payment;
     
     public enum OrderStatus {
-        NOT_PROCESSED, PROCESSING, SHIPPED, DELIVERED, CANCELLED, RETURNED
+        NOT_PROCESSED,        // user đặt -> chờ shop duyệt
+        PROCESSING,           // shop xác nhận
+        DELIVERING,           // shipper nhận hàng
+        AWAITING_CONFIRMATION,// shipper giao xong -> chờ user xác nhận COD
+        DELIVERED,            // user bấm đã nhận or auto confirm
+        CANCELLED,           
+        RETURNED     
     }
 }

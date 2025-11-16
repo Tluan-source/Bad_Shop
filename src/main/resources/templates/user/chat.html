@@ -6,6 +6,8 @@
      <head>
           <meta charset="UTF-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <meta name="_csrf" th:content="${_csrf.token}" />
+          <meta name="_csrf_header" th:content="${_csrf.headerName}" />
           <title>Chat - User</title>
           <link
                href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
@@ -234,6 +236,8 @@
                let currentStoreId = null;
                let subscriptions = {};
                const currentUserId = /*[[${currentUser.id}]]*/ "";
+               const targetStoreId = /*[[${targetStoreId}]]*/ null;
+               const autoMessage = /*[[${autoMessage}]]*/ null;
 
                // Connect to WebSocket
                function connect() {
@@ -425,21 +429,133 @@
                          });
                     });
 
-                    // Auto-open conversation from URL or first conversation
+                    // Handle auto-message from order page
+                    const autoMessageValue = /*[[${autoMessage}]]*/ null;
+                    const targetStoreIdValue = /*[[${targetStoreId}]]*/ null;
+
+                    // Ưu tiên conversationId trước để tránh loop
                     if (conversationIdFromUrl) {
                          // Find and click the conversation with matching ID
                          const targetConversation = document.querySelector(
                               `.conversation-item[data-conversation-id="${conversationIdFromUrl}"]`
                          );
                          if (targetConversation) {
+                              // Reset reload counter khi tìm thấy conversation
+                              sessionStorage.removeItem("chatReloadCount");
+
                               targetConversation.click();
+
+                              // Check if there's an auto-message (từ order page sau khi reload)
+                              if (autoMessageValue) {
+                                   setTimeout(() => {
+                                        const messageInput =
+                                             document.getElementById("messageInput");
+                                        if (
+                                             messageInput &&
+                                             messageInput.value.trim().length === 0
+                                        ) {
+                                             messageInput.value = autoMessageValue;
+                                             messageInput.focus();
+
+                                             // Scroll to input
+                                             messageInput.scrollIntoView({
+                                                  behavior: "smooth",
+                                                  block: "center",
+                                             });
+
+                                             // Remove URL params
+                                             const cleanUrl = `/user/chat?conversationId=${conversationIdFromUrl}`;
+                                             window.history.replaceState({}, "", cleanUrl);
+                                        }
+                                   }, 800);
+                              }
                          } else {
-                              // Conversation might be newly created, reload page after short delay
-                              console.log("Conversation not found in list, reloading...");
-                              setTimeout(() => {
-                                   window.location.href = "/user/chat";
-                              }, 500);
+                              // Conversation chưa có trong list
+                              // Check xem đã reload chưa để tránh loop vô hạn
+                              const reloadCount = sessionStorage.getItem("chatReloadCount") || "0";
+                              if (parseInt(reloadCount) < 2) {
+                                   sessionStorage.setItem(
+                                        "chatReloadCount",
+                                        (parseInt(reloadCount) + 1).toString()
+                                   );
+                                   // Reload lại để conversation xuất hiện trong list
+                                   setTimeout(() => {
+                                        window.location.href =
+                                             `/user/chat?conversationId=${conversationIdFromUrl}` +
+                                             (targetStoreIdValue
+                                                  ? `&storeId=${targetStoreIdValue}`
+                                                  : "") +
+                                             (urlParams.get("orderId")
+                                                  ? `&orderId=${urlParams.get("orderId")}`
+                                                  : "");
+                                   }, 500);
+                              } else {
+                                   // Đã reload quá 2 lần, dừng lại
+                                   sessionStorage.removeItem("chatReloadCount");
+                                   console.error("Conversation not found after multiple reloads");
+                                   alert(
+                                        "Không thể tìm thấy cuộc trò chuyện. Vui lòng thử lại sau."
+                                   );
+                              }
                          }
+                    } else if (targetStoreIdValue) {
+                         // Trường hợp chưa có conversationId - tạo conversation mới
+                         // Get CSRF token
+                         const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
+                         const csrfHeader = document.querySelector(
+                              'meta[name="_csrf_header"]'
+                         )?.content;
+
+                         const headers = {
+                              "Content-Type": "application/x-www-form-urlencoded",
+                         };
+
+                         if (csrfToken && csrfHeader) {
+                              headers[csrfHeader] = csrfToken;
+                         }
+
+                         fetch("/api/chat/conversation", {
+                              method: "POST",
+                              headers: headers,
+                              credentials: "same-origin",
+                              body: `storeId=${targetStoreIdValue}`,
+                         })
+                              .then((response) => {
+                                   if (!response.ok) {
+                                        // Try to get error message from response
+                                        return response
+                                             .json()
+                                             .then((errorData) => {
+                                                  throw new Error(
+                                                       errorData.error ||
+                                                            "Không thể tạo cuộc trò chuyện"
+                                                  );
+                                             })
+                                             .catch(() => {
+                                                  throw new Error("Không thể tạo cuộc trò chuyện");
+                                             });
+                                   }
+                                   return response.json();
+                              })
+                              .then((conversation) => {
+                                   // Lưu storeId và orderId để dùng lại sau khi reload
+                                   const orderId = urlParams.get("orderId");
+
+                                   // Reload với conversationId + giữ lại storeId và orderId
+                                   let redirectUrl = `/user/chat?conversationId=${conversation.id}`;
+                                   if (targetStoreIdValue)
+                                        redirectUrl += `&storeId=${targetStoreIdValue}`;
+                                   if (orderId) redirectUrl += `&orderId=${orderId}`;
+
+                                   window.location.href = redirectUrl;
+                              })
+                              .catch((error) => {
+                                   console.error("Error creating conversation:", error);
+                                   alert(
+                                        error.message ||
+                                             "Không thể tạo cuộc trò chuyện. Vui lòng thử lại sau."
+                                   );
+                              });
                     } else {
                          // Auto-open first conversation if exists
                          const firstConversation = document.querySelector(".conversation-item");

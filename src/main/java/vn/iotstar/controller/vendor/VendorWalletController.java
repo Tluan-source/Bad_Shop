@@ -78,7 +78,7 @@ public class VendorWalletController {
     private BigDecimal calculatePendingBalance(String storeId) {
         List<Order> processingOrders = orderRepository.findByStoreIdAndStatusIn(
                 storeId, 
-                List.of(Order.OrderStatus.PROCESSING, Order.OrderStatus.SHIPPED));
+                List.of(Order.OrderStatus.PROCESSING, Order.OrderStatus.DELIVERING));
         
         return processingOrders.stream()
                 .map(Order::getAmountToStore)

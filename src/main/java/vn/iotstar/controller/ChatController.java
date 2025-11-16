@@ -1,14 +1,22 @@
 package vn.iotstar.controller;
 
+import java.math.BigDecimal;
 import java.security.Principal;
+import java.text.DecimalFormat;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,7 +29,9 @@ import vn.iotstar.dto.ConversationDTO;
 import vn.iotstar.dto.MessageDTO;
 import vn.iotstar.entity.Conversation;
 import vn.iotstar.entity.Message;
+import vn.iotstar.entity.Order;
 import vn.iotstar.entity.User;
+import vn.iotstar.repository.OrderRepository;
 import vn.iotstar.repository.UserRepository;
 import vn.iotstar.service.ChatService;
 
@@ -32,6 +42,7 @@ public class ChatController {
     private final ChatService chatService;
     private final UserRepository userRepository;
     private final SimpMessagingTemplate messagingTemplate;
+    private final OrderRepository orderRepository;
     
     // WebSocket message handler
     @MessageMapping("/chat.send")
@@ -96,13 +107,80 @@ public class ChatController {
     
     // User chat page
     @GetMapping("/user/chat")
-    public String userChatPage(Authentication authentication, Model model) {
+    public String userChatPage(
+            @RequestParam(required = false) String storeId,
+            @RequestParam(required = false) String orderId,
+            Authentication authentication, 
+            Model model) {
         User user = userRepository.findByEmail(authentication.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         
         List<ConversationDTO> conversations = chatService.getUserConversations(user.getId());
         model.addAttribute("conversations", conversations);
         model.addAttribute("currentUser", user);
+        
+        // Handle auto-message when coming from order page
+        if (storeId != null && orderId != null) {
+            Order order = orderRepository.findById(orderId).orElse(null);
+            if (order != null && order.getUser().getId().equals(user.getId())) {
+                // Format order info message
+                DecimalFormat df = new DecimalFormat("#,###");
+                
+                String productList = order.getOrderItems().stream()
+                    .map(item -> "• " + item.getProduct().getName() + " (x" + item.getQuantity() + ")")
+                    .collect(Collectors.joining("\n"));
+                
+                BigDecimal totalAmount = order.getAmountFromUser();
+                if (order.getShippingFee() != null) {
+                    totalAmount = totalAmount.add(order.getShippingFee());
+                }
+                
+                String orderStatus = "";
+                switch (order.getStatus()) {
+                    case NOT_PROCESSED:
+                        orderStatus = "Chờ xác nhận";
+                        break;
+                    case PROCESSING:
+                        orderStatus = "Đã xác nhận";
+                        break;
+                    case DELIVERING:
+                        orderStatus = "Đang giao";
+                        break;
+                    case AWAITING_CONFIRMATION:
+                        orderStatus = "Đã giao - Chờ xác nhận";
+                        break;
+                    case DELIVERED:
+                        orderStatus = "Đã giao";
+                        break;
+                    case CANCELLED:
+                        orderStatus = "Đã hủy";
+                        break;
+                    case RETURNED:
+                        orderStatus = "Trả hàng";
+                        break;
+                    default:
+                        orderStatus = order.getStatus().toString();
+                }
+                
+                String autoMessage = String.format(
+                    "Xin chào shop, tôi muốn hỏi về đơn hàng này:%n%n" +
+                    "Mã đơn hàng: #%s%n" +
+                    "Trạng thái: %s%n" +
+                    "Sản phẩm:%n%s%n%n" +
+                    "Tổng tiền: %s đ%n%n" +
+                    "Tôi muốn biết thêm thông tin về ",
+                    order.getId(),
+                    orderStatus,
+                    productList,
+                    df.format(totalAmount)
+                );
+                
+                model.addAttribute("autoMessage", autoMessage);
+                model.addAttribute("targetStoreId", storeId);
+            }
+        } else if (storeId != null) {
+            model.addAttribute("targetStoreId", storeId);
+        }
         
         return "user/chat";
     }
@@ -124,15 +202,11 @@ public class ChatController {
     @PostMapping("/api/chat/conversation")
     @ResponseBody
     public ConversationDTO getOrCreateConversation(@RequestParam String storeId, Authentication authentication) {
-        try {
-            User user = userRepository.findByEmail(authentication.getName())
-                    .orElseThrow(() -> new RuntimeException("User not found"));
-            
-            Conversation conversation = chatService.getOrCreateConversation(user.getId(), storeId);
-            return chatService.getConversationDTO(conversation.getId(), user.getId());
-        } catch (IllegalArgumentException e) {
-            throw new IllegalArgumentException(e.getMessage());
-        }
+        User user = userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        
+        Conversation conversation = chatService.getOrCreateConversation(user.getId(), storeId);
+        return chatService.getConversationDTO(conversation.getId(), user.getId());
     }
     
     // Get conversation messages
@@ -165,5 +239,22 @@ public class ChatController {
         } else {
             return chatService.getUserConversations(user.getId());
         }
+    }
+    
+    // Exception handler for chat-related errors
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException e) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+    
+    @ExceptionHandler(RuntimeException.class)
+    @ResponseBody
+    public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException e) {
+        Map<String, String> error = new HashMap<>();
+        error.put("error", "Đã xảy ra lỗi: " + e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }

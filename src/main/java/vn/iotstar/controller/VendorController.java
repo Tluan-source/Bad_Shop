@@ -608,7 +608,7 @@ public class VendorController {
         // Order counts by status
         model.addAttribute("newCount", orderService.countOrdersByStatus(storeId, Order.OrderStatus.NOT_PROCESSED));
         model.addAttribute("processingCount", orderService.countOrdersByStatus(storeId, Order.OrderStatus.PROCESSING));
-        model.addAttribute("shippingCount", orderService.countOrdersByStatus(storeId, Order.OrderStatus.SHIPPED));
+        model.addAttribute("shippingCount", orderService.countOrdersByStatus(storeId, Order.OrderStatus.DELIVERING));
         model.addAttribute("deliveredCount", orderService.countOrdersByStatus(storeId, Order.OrderStatus.DELIVERED));
         model.addAttribute("cancelledCount", orderService.countOrdersByStatus(storeId, Order.OrderStatus.CANCELLED));
         

@@ -1,148 +1,192 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org"
-      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+     <head th:replace="~{fragments/head :: head}">
+          <title>Chi tiết cửa hàng - Badminton Marketplace</title>
+     </head>
 
-<head th:replace="~{fragments/head :: head}">
-    <title>Chi tiết cửa hàng - Badminton Marketplace</title>
-</head>
+     <body>
+          <th:block th:replace="~{fragments/header :: header}"></th:block>
 
-<body>
-<th:block th:replace="~{fragments/header :: header}"></th:block>
+          <section class="py-5 bg-light">
+               <div class="container">
+                    <div class="card mb-4">
+                         <div class="card-body">
+                              <div class="row">
+                                   <!-- Left: Store Info -->
+                                   <div class="col-md-8">
+                                        <h2 class="mb-3">
+                                             <i class="fas fa-store text-primary me-2"></i>
+                                             <span th:text="${store.name}"></span>
+                                        </h2>
+                                        <p class="text-muted" th:text="${store.bio}"></p>
+                                   </div>
 
-<section class="py-5 bg-light">
-    <div class="container">
-        <div class="card mb-4">
-            <div class="card-body">
-                <div class="row">
-                    <!-- Left: Store Info -->
-                    <div class="col-md-8">
-                        <h2 class="mb-3">
-                            <i class="fas fa-store text-primary me-2"></i>
-                            <span th:text="${store.name}"></span>
-                        </h2>
-                        <p class="text-muted" th:text="${store.bio}"></p>
+                                   <!-- Right: Rating / Chat -->
+                                   <div class="col-md-4 text-end">
+                                        <!-- Nếu có đánh giá -->
+                                        <div
+                                             class="mb-2"
+                                             th:if="${store.rating != null and store.rating > 0}"
+                                        >
+                                             <span class="badge bg-warning text-dark fs-5">
+                                                  <i class="fas fa-star"></i>
+                                                  <span th:text="${store.rating}"></span>
+                                             </span>
+                                        </div>
+
+                                        <!-- Nếu chưa có đánh giá -->
+                                        <div
+                                             class="mb-2"
+                                             th:if="${store.rating == null or store.rating == 0}"
+                                        >
+                                             <span class="text-muted small">Chưa có đánh giá</span>
+                                        </div>
+
+                                        <!-- Product Count -->
+                                        <div class="text-muted mb-3">
+                                             <i class="fas fa-box me-1"></i>
+                                             <span
+                                                  th:text="${products != null ? products.size() : 0}"
+                                             ></span>
+                                             sản phẩm
+                                        </div>
+
+                                        <!-- Chat Button -->
+                                        <div sec:authorize="isAuthenticated()">
+                                             <button
+                                                  class="btn btn-primary btn-lg"
+                                                  onclick="startChat()"
+                                                  th:data-store-id="${store.id}"
+                                             >
+                                                  <i class="fas fa-comment-dots me-2"></i>Nhắn tin
+                                                  với Shop
+                                             </button>
+                                        </div>
+
+                                        <!-- Login prompt -->
+                                        <div sec:authorize="!isAuthenticated()">
+                                             <a
+                                                  th:href="@{/login}"
+                                                  class="btn btn-outline-primary btn-lg"
+                                             >
+                                                  <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập
+                                                  để nhắn tin
+                                             </a>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </section>
+
+          <section class="py-5">
+               <div class="container">
+                    <h3 class="mb-4">Sản phẩm của cửa hàng</h3>
+
+                    <div th:if="${#lists.isEmpty(products)}" class="col-12">
+                         <div class="alert alert-info">
+                              <i class="fas fa-info-circle me-2"></i>Cửa hàng chưa có sản phẩm nào.
+                         </div>
                     </div>
 
-                    <!-- Right: Rating / Chat -->
-                    <div class="col-md-4 text-end">
+                    <div class="row">
+                         <div th:each="product : ${products}" class="col-md-3 mb-4">
+                              <div class="card h-100">
+                                   <img
+                                        th:src="${product.firstImage}"
+                                        class="card-img-top"
+                                        style="height: 200px; object-fit: cover"
+                                   />
 
-                        <!-- Nếu có đánh giá -->
-                        <div class="mb-2" th:if="${store.rating != null and store.rating > 0}">
-                            <span class="badge bg-warning text-dark fs-5">
-                                <i class="fas fa-star"></i>
-                                <span th:text="${store.rating}"></span>
-                            </span>
-                        </div>
+                                   <div class="card-body">
+                                        <h5 class="card-title" th:text="${product.name}"></h5>
 
-                        <!-- Nếu chưa có đánh giá -->
-                        <div class="mb-2" th:if="${store.rating == null or store.rating == 0}">
-                            <span class="text-muted small">Chưa có đánh giá</span>
-                        </div>
-
-                        <!-- Product Count -->
-                        <div class="text-muted mb-3">
-                            <i class="fas fa-box me-1"></i>
-                            <span th:text="${products != null ? products.size() : 0}"></span> sản phẩm
-                        </div>
-
-                        <!-- Chat Button -->
-                        <div sec:authorize="isAuthenticated()">
-                            <button class="btn btn-primary btn-lg"
-                                    onclick="startChat()"
-                                    th:data-store-id="${store.id}">
-                                <i class="fas fa-comment-dots me-2"></i>Nhắn tin với Shop
-                            </button>
-                        </div>
-
-                        <!-- Login prompt -->
-                        <div sec:authorize="!isAuthenticated()">
-                            <a th:href="@{/login}" class="btn btn-outline-primary btn-lg">
-                                <i class="fas fa-sign-in-alt me-2"></i>Đăng nhập để nhắn tin
-                            </a>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-        </div>
-    </div>
-</section>
-
-<section class="py-5">
-    <div class="container">
-        <h3 class="mb-4">Sản phẩm của cửa hàng</h3>
-
-        <div th:if="${#lists.isEmpty(products)}" class="col-12">
-            <div class="alert alert-info">
-                <i class="fas fa-info-circle me-2"></i>Cửa hàng chưa có sản phẩm nào.
-            </div>
-        </div>
-
-        <div class="row">
-            <div th:each="product : ${products}" class="col-md-3 mb-4">
-                <div class="card h-100">
-                    <img th:src="${product.firstImage}" class="card-img-top"
-                         style="height: 200px; object-fit: cover"/>
-
-                    <div class="card-body">
-                        <h5 class="card-title" th:text="${product.name}"></h5>
-
-                        <!-- ⭐ Rating -->
-                        <div class="product-rating mb-2">
-                            <span th:each="i : ${#numbers.sequence(1,5)}">
-                                <i th:classappend="
+                                        <!-- ⭐ Rating -->
+                                        <div class="product-rating mb-2">
+                                             <span th:each="i : ${#numbers.sequence(1,5)}">
+                                                  <i
+                                                       th:classappend="
                                     ${i <= product.rating} ? 'fas fa-star text-warning' :
                                     (${i - product.rating <= 0.5} ? 'fas fa-star-half-alt text-warning' : 'far fa-star text-warning')
-                                "></i>
-                            </span>
-                            <span class="text-muted ms-2">(<span th:text="${product.rating}"></span>)</span>
-                        </div>
+                                "
+                                                  ></i>
+                                             </span>
+                                             <span class="text-muted ms-2"
+                                                  >(<span th:text="${product.rating}"></span>)</span
+                                             >
+                                        </div>
 
-                        <!-- 💰 Price -->
-                        <p class="card-text">
-                            <span class="text-danger fw-bold"
-                                  th:text="${#numbers.formatDecimal(product.promotionalPrice ?: product.price, 0, 'POINT', 0, 'COMMA')} + ' đ'">
-                            </span>
+                                        <!-- 💰 Price -->
+                                        <p class="card-text">
+                                             <span
+                                                  class="text-danger fw-bold"
+                                                  th:text="${#numbers.formatDecimal(product.promotionalPrice ?: product.price, 0, 'POINT', 0, 'COMMA')} + ' đ'"
+                                             >
+                                             </span>
 
-                            <span th:if="${product.promotionalPrice}"
-                                  class="text-muted text-decoration-line-through ms-2"
-                                  th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'COMMA')} + ' đ'">
-                            </span>
-                        </p>
+                                             <span
+                                                  th:if="${product.promotionalPrice}"
+                                                  class="text-muted text-decoration-line-through ms-2"
+                                                  th:text="${#numbers.formatDecimal(product.price, 0, 'POINT', 0, 'COMMA')} + ' đ'"
+                                             >
+                                             </span>
+                                        </p>
 
-                        <a th:href="@{/products/{id}(id=${product.id})}"
-                           class="btn btn-outline-primary w-100">Xem chi tiết</a>
+                                        <a
+                                             th:href="@{/products/{id}(id=${product.id})}"
+                                             class="btn btn-outline-primary w-100"
+                                             >Xem chi tiết</a
+                                        >
+                                   </div>
+                              </div>
+                         </div>
                     </div>
+               </div>
+          </section>
 
-                </div>
-            </div>
-        </div>
+          <th:block th:replace="~{fragments/footer-user :: footer-user}"></th:block>
 
-    </div>
-</section>
+          <!-- Chat Script -->
+          <script th:inline="javascript">
+               function startChat() {
+                    const storeId = /*[[${store.id}]]*/ "";
+                    const csrfToken = document.querySelector('meta[name="_csrf"]');
+                    const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
 
-<th:block th:replace="~{fragments/footer-user :: footer-user}"></th:block>
+                    const headers = { "Content-Type": "application/x-www-form-urlencoded" };
+                    if (csrfToken && csrfHeader) {
+                         headers[csrfHeader.content] = csrfToken.content;
+                    }
 
-<!-- Chat Script -->
-<script th:inline="javascript">
-function startChat() {
-    const storeId = /*[[${store.id}]]*/ '';
-    const csrfToken = document.querySelector('meta[name="_csrf"]');
-    const csrfHeader = document.querySelector('meta[name="_csrf_header"]');
-
-    const headers = {'Content-Type': 'application/x-www-form-urlencoded'};
-    if (csrfToken && csrfHeader) {
-        headers[csrfHeader.content] = csrfToken.content;
-    }
-
-    fetch('/api/chat/conversation?storeId=' + storeId, {
-        method: 'POST', headers: headers, credentials: 'same-origin'
-    })
-    .then(r => r.json())
-    .then(c => window.location.href = '/user/chat?conversationId=' + c.id)
-    .catch(() => alert('Có lỗi xảy ra khi tạo cuộc trò chuyện'));
-}
-</script>
-
-</body>
+                    fetch("/api/chat/conversation?storeId=" + storeId, {
+                         method: "POST",
+                         headers: headers,
+                         credentials: "same-origin",
+                    })
+                         .then((response) => {
+                              if (!response.ok) {
+                                   return response.json().then((errorData) => {
+                                        throw new Error(
+                                             errorData.error || "Không thể tạo cuộc trò chuyện"
+                                        );
+                                   });
+                              }
+                              return response.json();
+                         })
+                         .then(
+                              (conversation) =>
+                                   (window.location.href =
+                                        "/user/chat?conversationId=" + conversation.id)
+                         )
+                         .catch((error) => {
+                              console.error("Error creating conversation:", error);
+                              alert(error.message || "Có lỗi xảy ra khi tạo cuộc trò chuyện");
+                         });
+               }
+          </script>
+     </body>
 </html>

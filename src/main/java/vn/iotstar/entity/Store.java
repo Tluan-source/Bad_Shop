@@ -42,6 +42,23 @@ public class Store {
     @Column(columnDefinition = "NVARCHAR(255)")
     private String slug;
     
+    @Column(columnDefinition = "NVARCHAR(255)")
+    private String address;
+
+    @Column(columnDefinition = "NVARCHAR(255)")
+    private String ward;
+
+    @Column(columnDefinition = "NVARCHAR(255)")
+    private String district;
+
+    @Column(columnDefinition = "NVARCHAR(255)")
+    private String city;
+
+    @Column
+    private Double latitude;
+
+    @Column
+    private Double longitude;
     
     @ManyToOne
     @JoinColumn(name = "commission_id")
@@ -65,7 +82,6 @@ public class Store {
     @JoinColumn(name = "owner_id")
     private User owner;
 
-    
     @CreationTimestamp
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -85,4 +101,5 @@ public class Store {
     @OneToMany(mappedBy = "store")
     @JsonIgnore
     private List<Promotion> promotions;
+    
 }
