@@ -697,7 +697,7 @@
 
                                              <!-- Reply Button and Form (if no reply yet) -->
                                              <div
-                                                  th:if="${review.vendorReply == null or review.vendorReply == ''}" 
+                                                  th:if="${review.vendorReply == null or review.vendorReply == ''}"
                                                   class="mt-2"
                                              >
                                                   <button
@@ -776,18 +776,27 @@
                }
 
                // Debug: Log reviews and reply buttons count
-               document.addEventListener('DOMContentLoaded', function() {
-                    const reviewCount = document.querySelectorAll(".border-bottom.pb-3.mb-3").length;
+               document.addEventListener("DOMContentLoaded", function () {
+                    const reviewCount = document.querySelectorAll(
+                         ".border-bottom.pb-3.mb-3"
+                    ).length;
                     const replyBtnCount = document.querySelectorAll(".reply-btn").length;
                     console.log("Total reviews loaded:", reviewCount);
                     console.log("Reply buttons visible:", replyBtnCount);
-                    
+
                     // Log each review's vendorReply status
-                    document.querySelectorAll(".border-bottom.pb-3.mb-3").forEach((review, index) => {
-                         const hasReply = review.querySelector('.bg-light.p-3.rounded') !== null;
-                         const hasButton = review.querySelector('.reply-btn') !== null;
-                         console.log(`Review ${index + 1}: hasVendorReply=${hasReply}, hasReplyButton=${hasButton}`);
-                    });
+                    document
+                         .querySelectorAll(".border-bottom.pb-3.mb-3")
+                         .forEach((review, index) => {
+                              const hasReply =
+                                   review.querySelector(".bg-light.p-3.rounded") !== null;
+                              const hasButton = review.querySelector(".reply-btn") !== null;
+                              console.log(
+                                   `Review ${
+                                        index + 1
+                                   }: hasVendorReply=${hasReply}, hasReplyButton=${hasButton}`
+                              );
+                         });
                });
           </script>
      </body>

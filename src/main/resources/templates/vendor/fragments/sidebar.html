@@ -10,8 +10,32 @@
           <div th:fragment="sidebar(activeMenu)" class="col-md-2 bg-light sidebar">
                <style>
                     .sidebar {
-                         min-height: calc(100vh - 150px);
+                         min-height: 100vh;
                          padding: 0;
+                         position: sticky;
+                         top: 0;
+                         height: 100vh;
+                         overflow-y: auto;
+                         scrollbar-width: thin;
+                         scrollbar-color: #28a745 #f8f9fa;
+                    }
+
+                    /* Custom scrollbar cho webkit browsers */
+                    .sidebar::-webkit-scrollbar {
+                         width: 6px;
+                    }
+
+                    .sidebar::-webkit-scrollbar-track {
+                         background: #f8f9fa;
+                    }
+
+                    .sidebar::-webkit-scrollbar-thumb {
+                         background: #28a745;
+                         border-radius: 3px;
+                    }
+
+                    .sidebar::-webkit-scrollbar-thumb:hover {
+                         background: #218838;
                     }
                     .sidebar .nav {
                          padding: 15px 0;

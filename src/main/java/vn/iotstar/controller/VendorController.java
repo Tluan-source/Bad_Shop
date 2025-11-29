@@ -614,7 +614,7 @@ public class VendorController {
     
     @GetMapping("/orders")
     public String orderList(@RequestParam(defaultValue = "0") int page,
-                           @RequestParam(defaultValue = "20") int size,
+                           @RequestParam(defaultValue = "5") int size,
                            @RequestParam(required = false) String status,
                            Model model,
                            Authentication auth) {
