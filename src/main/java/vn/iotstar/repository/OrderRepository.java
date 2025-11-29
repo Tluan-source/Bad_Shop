@@ -27,9 +27,15 @@ public interface OrderRepository extends JpaRepository<Order, String> {
     Page<Order> findByStoreId(String storeId, Pageable pageable);
     
     // Find orders by store and status
+    List<Order> findByStoreIdAndStatusOrderByCreatedAtDesc(String storeId, Order.OrderStatus status);
+    
+    // Find orders by store and status (without sorting - for calculation only)
     List<Order> findByStoreIdAndStatus(String storeId, Order.OrderStatus status);
     
     // Find orders by store and multiple statuses
+    List<Order> findByStoreIdAndStatusInOrderByCreatedAtDesc(String storeId, List<Order.OrderStatus> statuses);
+    
+    // Find orders by store and multiple statuses (without sorting - for calculation only)
     List<Order> findByStoreIdAndStatusIn(String storeId, List<Order.OrderStatus> statuses);
     
     Page<Order> findByStoreIdAndStatus(String storeId, Order.OrderStatus status, Pageable pageable);

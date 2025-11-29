@@ -264,22 +264,24 @@ function buyNow() {
                styleValueIds,
           }),
      })
-          .then((res) => {
-               if (res.redirected) {
-                    window.location.href = res.url;
+          .then((res) => res.json())
+          .then((data) => {
+               if (data.success && data.redirect) {
+                    window.location.href = data.redirect;
+               } else if (data.error) {
+                    showToast(data.error, "error");
+                    if (data.redirect) {
+                         setTimeout(() => {
+                              window.location.href = data.redirect;
+                         }, 1500);
+                    }
                } else {
-                    return res.text();
-               }
-          })
-          .then((html) => {
-               if (html) {
-                    // If not redirected, show error
                     showToast("Có lỗi xảy ra", "error");
                }
           })
           .catch((err) => {
                console.error("Buy now error:", err);
-               showToast("Không thể mua ngay", "error");
+               showToast("Không thể mua ngay. Vui lòng thử lại!", "error");
           });
 }
 

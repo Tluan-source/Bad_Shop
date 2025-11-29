@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -44,6 +45,7 @@ import vn.iotstar.repository.ShipmentRepository;
 import vn.iotstar.repository.StyleRepository;
 import vn.iotstar.repository.StyleValueRepository;
 import vn.iotstar.service.CloudinaryService;
+import vn.iotstar.service.ReviewService;
 import vn.iotstar.service.UserService;
 import vn.iotstar.service.vendor.VendorAnalyticsService;
 import vn.iotstar.service.vendor.VendorOrderService;
@@ -104,6 +106,9 @@ public class VendorController {
     
     @Autowired
     private vn.iotstar.service.ChatService chatService;
+    
+    @Autowired
+    private ReviewService reviewService;
     
     @Autowired
     private ShipmentRepository shipmentRepository;
@@ -436,6 +441,21 @@ public class VendorController {
         
         VendorProductDTO product = productService.getMyProduct(id, storeId);
         
+        // Get product reviews
+        List<vn.iotstar.entity.Review> reviews = reviewService.getReviewsByProductId(id);
+        System.out.println("=== DEBUG REVIEWS for product " + id + " ===");
+        System.out.println("Total reviews fetched: " + (reviews != null ? reviews.size() : 0));
+        if (reviews != null) {
+            for (int i = 0; i < reviews.size(); i++) {
+                vn.iotstar.entity.Review r = reviews.get(i);
+                System.out.println("Review " + (i+1) + ": ID=" + r.getId() + 
+                    ", User=" + (r.getUser() != null ? r.getUser().getFullName() : "null") +
+                    ", Rating=" + r.getRating() + 
+                    ", VendorReply=" + (r.getVendorReply() != null ? "YES" : "NO"));
+            }
+        }
+        model.addAttribute("reviews", reviews);
+        
         // Parse styleValueIds JSON and get names
         if (product.getStyleValueIds() != null && !product.getStyleValueIds().equals("[]")) {
             try {
@@ -567,6 +587,27 @@ public class VendorController {
         return "redirect:/vendor/products";
     }
     
+    @PostMapping("/products/reviews/{reviewId}/reply")
+    public String replyToReview(@PathVariable String reviewId,
+                                @RequestParam String vendorReply,
+                                Authentication auth,
+                                RedirectAttributes redirectAttributes) {
+        User user = userService.findByEmail(auth.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String storeId = securityService.getCurrentVendorStoreId(user.getId());
+        
+        try {
+            reviewService.addVendorReply(reviewId, vendorReply, storeId);
+            redirectAttributes.addFlashAttribute("success", "Đã gửi phản hồi thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("error", "Không thể gửi phản hồi: " + e.getMessage());
+        }
+        
+        // Get productId from review to redirect back
+        vn.iotstar.entity.Review review = reviewService.getReviewById(reviewId);
+        return "redirect:/vendor/products/" + review.getProduct().getId();
+    }
+    
     // ========================================
     // ORDER MANAGEMENT
     // ========================================
@@ -581,7 +622,7 @@ public class VendorController {
                 .orElseThrow(() -> new RuntimeException("User not found"));
         String storeId = securityService.getCurrentVendorStoreId(user.getId());
         
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         Page<VendorOrderDTO> orders;
         
         if (status != null && !status.isEmpty()) {

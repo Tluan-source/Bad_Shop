@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.http.ResponseEntity;
 import vn.iotstar.dto.BuyNowRequest;
 import vn.iotstar.dto.CheckoutFromCartRequest;
 import vn.iotstar.dto.CheckoutItemDTO;
@@ -52,12 +53,12 @@ public class CheckoutController {
     private final vn.iotstar.repository.ShippingProviderRepository shippingProviderRepository;
     
     @PostMapping("/buy-now")
-    public String buyNow(@RequestBody BuyNowRequest request, 
-                        Authentication auth,
-                        RedirectAttributes redirectAttributes) {
+    @ResponseBody
+    public ResponseEntity<?> buyNow(@RequestBody BuyNowRequest request, 
+                        Authentication auth) {
         
         if (auth == null || !auth.isAuthenticated()) {
-            return "redirect:/login";
+            return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập", "redirect", "/login"));
         }
         
         try {
@@ -65,13 +66,11 @@ public class CheckoutController {
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
             
             if (!product.getIsSelling()) {
-                redirectAttributes.addFlashAttribute("error", "Sản phẩm hiện không bán");
-                return "redirect:/products/" + request.getProductId();
+                return ResponseEntity.badRequest().body(Map.of("error", "Sản phẩm hiện không bán"));
             }
             
             if (product.getQuantity() < request.getQuantity()) {
-                redirectAttributes.addFlashAttribute("error", "Số lượng sản phẩm không đủ");
-                return "redirect:/products/" + request.getProductId();
+                return ResponseEntity.badRequest().body(Map.of("error", "Số lượng sản phẩm không đủ"));
             }
             
             CheckoutItemDTO item = new CheckoutItemDTO();
@@ -92,21 +91,22 @@ public class CheckoutController {
             items.add(item);
             checkoutService.setCheckoutItems(items);
             
-            return "redirect:/checkout";
+            return ResponseEntity.ok(Map.of("success", true, "redirect", "/checkout"));
             
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
-            return "redirect:/products/" + request.getProductId();
+            System.err.println("Buy now error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Có lỗi xảy ra: " + e.getMessage()));
         }
     }
     
     @PostMapping("/from-cart")
-    public String checkoutFromCart(@RequestBody CheckoutFromCartRequest request,
-                                   Authentication auth,
-                                   RedirectAttributes redirectAttributes) {
+    @ResponseBody
+    public ResponseEntity<?> checkoutFromCart(@RequestBody CheckoutFromCartRequest request,
+                                   Authentication auth) {
         
         if (auth == null || !auth.isAuthenticated()) {
-            return "redirect:/login";
+            return ResponseEntity.status(401).body(Map.of("error", "Vui lòng đăng nhập", "redirect", "/login"));
         }
         
         try {
@@ -115,8 +115,7 @@ public class CheckoutController {
             System.out.println("Cart item IDs: " + cartItemIds);
             
             if (cartItemIds == null || cartItemIds.isEmpty()) {
-                redirectAttributes.addFlashAttribute("error", "Vui lòng chọn ít nhất một sản phẩm");
-                return "redirect:/cart";
+                return ResponseEntity.badRequest().body(Map.of("error", "Vui lòng chọn ít nhất một sản phẩm"));
             }
             
             // Get cart items
@@ -124,8 +123,7 @@ public class CheckoutController {
             System.out.println("Found cart items: " + cartItems.size());
             
             if (cartItems.isEmpty()) {
-                redirectAttributes.addFlashAttribute("error", "Không tìm thấy sản phẩm trong giỏ hàng");
-                return "redirect:/cart";
+                return ResponseEntity.badRequest().body(Map.of("error", "Không tìm thấy sản phẩm trong giỏ hàng"));
             }
             
             // Convert cart items to checkout items
@@ -156,11 +154,12 @@ public class CheckoutController {
             // Save to checkout session
             checkoutService.setCheckoutItems(checkoutItems);
             
-            return "redirect:/checkout";
+            return ResponseEntity.ok(Map.of("success", true, "redirect", "/checkout"));
             
         } catch (Exception e) {
-            redirectAttributes.addFlashAttribute("error", "Có lỗi xảy ra: " + e.getMessage());
-            return "redirect:/cart";
+            System.err.println("Checkout from cart error: " + e.getMessage());
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("error", "Có lỗi xảy ra: " + e.getMessage()));
         }
     }
     

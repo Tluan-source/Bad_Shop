@@ -196,7 +196,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
                               if (marker) map.removeLayer(marker);
                               marker = L.marker([item.lat, item.lon]).addTo(map);
-                              map.setView([item.lat, item.lon], 16);
+
+                              // Move map smoothly
+                              map.flyTo([item.lat, item.lon], 17, {
+                                   duration: 1.2,
+                              });
 
                               suggestionBox.style.display = "none";
                          });

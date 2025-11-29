@@ -13,6 +13,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -1009,6 +1010,7 @@ public class AdminController {
     /**
      * Approve vendor registration - activate store and grant VENDOR role
      */
+    @Transactional
     @PostMapping("/stores/{id}/approve")
     public String approveVendorRegistration(@PathVariable String id,
                                            RedirectAttributes redirectAttributes,
@@ -1029,9 +1031,13 @@ public class AdminController {
             store.setUpdatedAt(LocalDateTime.now());
             storeRepository.save(store);
             
-            // Grant VENDOR role to owner
+            // Grant VENDOR role to owner - CRITICAL: Update role and save explicitly
             owner.setRole(User.UserRole.VENDOR);
+            owner.setUpdatedAt(LocalDateTime.now());
             userRepository.save(owner);
+            userRepository.flush(); // Force immediate database update
+            
+            System.out.println("✅ User role updated to VENDOR for user: " + owner.getEmail());
             
             // Send approval email
             try {
@@ -1041,6 +1047,8 @@ public class AdminController {
                 body.append("Xin chào ").append(owner.getFullName()).append(",\n\n");
                 body.append("Cửa hàng ").append(store.getName()).append(" của bạn đã được phê duyệt.\n");
                 body.append("Bạn có thể bắt đầu quản lý cửa hàng và đăng bán sản phẩm ngay bây giờ!\n\n");
+                body.append("⚠️ LƯU Ý QUAN TRỌNG:\n");
+                body.append("Để quyền VENDOR có hiệu lực, vui lòng ĐĂNG XUẤT và ĐĂNG NHẬP LẠI.\n\n");
                 body.append("Vào trang quản lý: http://localhost:8080/vendor/dashboard\n\n");
                 body.append("Chúc bạn kinh doanh thành công!");
                 
@@ -1061,7 +1069,9 @@ public class AdminController {
             }
             
             redirectAttributes.addFlashAttribute("message", 
-                "Đã phê duyệt cửa hàng " + store.getName() + " thành công! User đã được cấp quyền VENDOR.");
+                "✅ Đã phê duyệt cửa hàng " + store.getName() + " thành công! " +
+                "User " + owner.getEmail() + " đã được cấp quyền VENDOR. " +
+                "⚠️ User cần đăng xuất và đăng nhập lại để quyền có hiệu lực.");
             redirectAttributes.addFlashAttribute("messageType", "success");
             
         } catch (Exception e) {

@@ -74,7 +74,7 @@ public class VendorOrderServiceImpl implements VendorOrderService {
     @Override
     @Transactional(readOnly = true)
     public List<VendorOrderDTO> getMyOrdersByStatus(String storeId, Order.OrderStatus status) {
-        List<Order> orders = orderRepository.findByStoreIdAndStatus(storeId, status);
+        List<Order> orders = orderRepository.findByStoreIdAndStatusOrderByCreatedAtDesc(storeId, status);
         return orders.stream()
             .map(this::convertToDTO)
             .collect(Collectors.toList());

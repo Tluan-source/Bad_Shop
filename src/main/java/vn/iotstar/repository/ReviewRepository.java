@@ -4,12 +4,22 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import vn.iotstar.entity.Review;
 
 public interface ReviewRepository extends JpaRepository<Review, String> {
    
     List<Review> findByProduct_Id(String productId);
+    
+    @Query("SELECT DISTINCT r FROM Review r " +
+           "LEFT JOIN FETCH r.reviewImages " +
+           "LEFT JOIN FETCH r.user " +
+           "LEFT JOIN FETCH r.orderItem " +
+           "WHERE r.product.id = :productId " +
+           "ORDER BY r.createdAt DESC")
+    List<Review> findByProductIdWithImages(@Param("productId") String productId);
 
     List<Review> findByOrderItem_Id(String orderItemId);
 

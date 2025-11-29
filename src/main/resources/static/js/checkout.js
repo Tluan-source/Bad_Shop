@@ -6,6 +6,69 @@ let selectedVoucher = null;
 let selectedPromotions = {}; // { storeId: promotionData }
 let originalTotal = 0;
 let storeSubtotals = {}; // { storeId: amount }
+let shippingFee = 0; // Global shipping fee
+
+async function requestLocationPermission() {
+     if (!navigator.permissions) {
+          console.warn("Trình duyệt không hỗ trợ navigator.permissions");
+          useGeolocation();
+          return;
+     }
+
+     try {
+          const result = await navigator.permissions.query({ name: "geolocation" });
+
+          if (result.state === "granted") {
+               console.log("Quyền geolocation: granted ✔️");
+               useGeolocation();
+          } else if (result.state === "prompt") {
+               console.log("Quyền geolocation: prompt ❔");
+               useGeolocation();
+          } else if (result.state === "denied") {
+               console.log("Quyền geolocation: denied ❌");
+               showToast(
+                    "Bạn đã từ chối quyền định vị! Vui lòng bật trong cài đặt trình duyệt.",
+                    "warning"
+               );
+          }
+
+          result.onchange = () => {
+               console.log("Trạng thái quyền thay đổi:", result.state);
+          };
+     } catch (error) {
+          console.error("Không kiểm tra được quyền:", error);
+          useGeolocation();
+     }
+}
+
+function useGeolocation() {
+     navigator.geolocation.getCurrentPosition(
+          (pos) => {
+               const lat = pos.coords.latitude;
+               const lng = pos.coords.longitude;
+               console.log("LẤY ĐƯỢC VỊ TRÍ:", lat, lng);
+          },
+          (err) => {
+               console.warn("Không lấy được vị trí:", err);
+
+               if (err.code === err.PERMISSION_DENIED) {
+                    showToast(
+                         "Bạn đã từ chối quyền định vị. Vui lòng cho phép truy cập vị trí!",
+                         "error"
+                    );
+               }
+          },
+          {
+               enableHighAccuracy: true,
+               timeout: 15000,
+               maximumAge: 0,
+          }
+     );
+}
+
+document.getElementById("useCurrentLocationCheckout").addEventListener("click", function () {
+     requestLocationPermission();
+});
 
 // Initialize on page load
 document.addEventListener("DOMContentLoaded", function () {
@@ -18,18 +81,18 @@ document.addEventListener("DOMContentLoaded", function () {
      // Get original total from data attribute or text
      const subtotalElement = document.getElementById("subtotalAmount");
      if (subtotalElement) {
-          // Get text and remove all non-numeric characters except dot/comma
           let text = subtotalElement.textContent || subtotalElement.innerText;
-          // Remove currency symbol and whitespace
-          text = text.replace(/[^\d,\.]/g, "");
-          // Remove dots (thousand separators) and replace comma with dot if needed
-          text = text.replace(/\./g, "").replace(/,/g, ".");
-          originalTotal = parseFloat(text);
+          console.log("Raw text:", text);
 
-          // Fallback: if still NaN, try to parse from the element
-          if (isNaN(originalTotal)) {
-               originalTotal = 0;
-          }
+          // Bỏ tất cả ký tự không phải số
+          text = text.replace(/[^\d]/g, "");
+          console.log("After cleanup:", text);
+
+          originalTotal = parseInt(text, 10);
+
+          if (isNaN(originalTotal)) originalTotal = 0;
+
+          console.log("Original Total parsed:", originalTotal);
      }
 
      // Get store subtotals from promotion selects
@@ -334,14 +397,8 @@ function calculateTotal() {
           }
      }
 
-     // ✅ Hiển thị phí ship ra UI nếu có element
-     const shippingFeeElement = document.getElementById("shippingFeeAmount");
-     if (shippingFeeElement) {
-          shippingFeeElement.textContent = formatCurrency(shippingFee);
-     }
-
-     // Tổng cuối cùng
-     const finalAmount = afterPromotion - totalVoucherDiscount + shippingFee;
+     // Tổng cuối cùng - ĐẢM BẢO CỘNG SỐ KHÔNG PHẢI STRING
+     const finalAmount = Math.round(afterPromotion - totalVoucherDiscount + shippingFee);
 
      // Update UI - Total promotion row
      const totalPromotionRow = document.getElementById("totalPromotionDiscountRow");
@@ -381,14 +438,13 @@ function calculateTotal() {
           finalAmountElement.textContent = formatCurrency(finalAmount);
      }
 
-     console.log("=== CALCULATION RESULT (NEW LOGIC) ===");
-     console.log("Original Total:", formatCurrency(originalTotal));
-     console.log("Promotion Discount:", formatCurrency(totalPromotionDiscount));
-     console.log("After Promotion:", formatCurrency(afterPromotion));
-     console.log("Voucher applied to each store separately");
-     console.log("Voucher Discount (Total):", formatCurrency(totalVoucherDiscount));
-     console.log("Voucher Discount:", formatCurrency(totalVoucherDiscount));
-     console.log("Final Amount:", formatCurrency(finalAmount));
+     console.log("=== CALCULATION RESULT ===");
+     console.log("Original Total:", originalTotal);
+     console.log("Promotion Discount:", totalPromotionDiscount);
+     console.log("After Promotion:", afterPromotion);
+     console.log("Voucher Discount:", totalVoucherDiscount);
+     console.log("Shipping Fee:", shippingFee);
+     console.log("Final Amount:", finalAmount);
      console.log("========================");
 }
 
@@ -490,10 +546,13 @@ function placeOrder(event) {
 // ============================================
 
 function formatCurrency(amount) {
-     return new Intl.NumberFormat("vi-VN", {
-          style: "currency",
-          currency: "VND",
-     }).format(amount);
+     const num = parseFloat(amount) || 0;
+     return (
+          num.toLocaleString("vi-VN", {
+               minimumFractionDigits: 0,
+               maximumFractionDigits: 0,
+          }) + "đ"
+     );
 }
 
 /* ===================== SHOW TOAST ===================== */
@@ -552,6 +611,157 @@ map.on("click", function (e) {
           );
 });
 
+/* ===================== ADDRESS AUTOCOMPLETE ===================== */
+const searchInput = document.getElementById("addressSearch");
+const suggestionBox = document.getElementById("addressSuggestions");
+let searchTimeout;
+
+if (searchInput) {
+     searchInput.addEventListener("input", () => {
+          const query = searchInput.value.trim();
+
+          if (query.length < 3) {
+               suggestionBox.style.display = "none";
+               suggestionBox.innerHTML = "";
+               return;
+          }
+
+          clearTimeout(searchTimeout);
+
+          searchTimeout = setTimeout(async () => {
+               try {
+                    fetch(
+                         `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+                              query + " Vietnam"
+                         )}&format=json&addressdetails=1&limit=5&accept-language=vi`,
+                         {
+                              headers: {
+                                   "User-Agent": "BadmintonMarketplace/1.0",
+                              },
+                         }
+                    )
+                         .then((res) => res.json())
+                         .then((data) => {
+                              suggestionBox.innerHTML = "";
+                              suggestionBox.style.display = "block";
+
+                              data.forEach((item) => {
+                                   const div = document.createElement("div");
+                                   div.className = "suggestion-item";
+                                   div.innerHTML = `
+                    <i class="fas fa-map-marker-alt me-2"></i> ${item.display_name}
+               `;
+
+                                   div.onclick = () => {
+                                        const lat = parseFloat(item.lat);
+                                        const lon = parseFloat(item.lon);
+
+                                        // fill input
+                                        document.getElementById("address").value =
+                                             item.display_name;
+                                        document.getElementById("latitude").value = lat;
+                                        document.getElementById("longitude").value = lon;
+
+                                        // di chuyển map
+                                        map.flyTo([lat, lon], 17, { duration: 1.2 });
+
+                                        // đặt marker
+                                        if (marker) map.removeLayer(marker);
+                                        marker = L.marker([lat, lon]).addTo(map);
+
+                                        suggestionBox.style.display = "none";
+                                   };
+
+                                   suggestionBox.appendChild(div);
+                              });
+                         });
+               } catch (error) {
+                    console.error("Error fetching addresses:", error);
+                    suggestionBox.innerHTML =
+                         '<div class="suggestion-item error"><i class="fas fa-exclamation-triangle me-2"></i>Lỗi tìm kiếm, vui lòng thử lại</div>';
+                    suggestionBox.style.display = "block";
+               }
+          }, 400); // debounce 400ms
+     });
+
+     // Close suggestions when clicking outside
+     document.addEventListener("mousedown", (e) => {
+          if (!suggestionBox.contains(e.target) && e.target !== searchInput) {
+               suggestionBox.style.display = "none";
+          }
+     });
+}
+
+// ===================== CURRENT LOCATION (checkout) =====================
+const currentLocationBtn = document.getElementById("useCurrentLocationCheckout");
+const locationSpinner = document.getElementById("locationSpinnerCheckout");
+
+async function setAddressCheckout(lat, lng) {
+     const res = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json&accept-language=vi`
+     );
+     const data = await res.json();
+     const display = data.display_name || "";
+
+     document.getElementById("address").value = display;
+}
+
+if (currentLocationBtn) {
+     currentLocationBtn.addEventListener("click", () => {
+          if (!navigator.geolocation) {
+               alert("Trình duyệt không hỗ trợ GPS!");
+               return;
+          }
+
+          // loading UI
+          currentLocationBtn.disabled = true;
+          locationSpinner.classList.remove("d-none");
+          currentLocationBtn.querySelector("span").textContent = "Đang xác định vị trí...";
+
+          navigator.geolocation.getCurrentPosition(
+               (pos) => {
+                    const lat = pos.coords.latitude;
+                    const lng = pos.coords.longitude;
+
+                    // set marker
+                    if (marker) map.removeLayer(marker);
+                    marker = L.marker([lat, lng]).addTo(map);
+
+                    // move map
+                    map.flyTo([lat, lng], 17, {
+                         duration: 1.2,
+                    });
+
+                    // update hidden inputs
+                    document.getElementById("latitude").value = lat;
+                    document.getElementById("longitude").value = lng;
+
+                    // reverse geocode
+                    setAddressCheckout(lat, lng);
+
+                    // reset UI
+                    currentLocationBtn.disabled = false;
+                    locationSpinner.classList.add("d-none");
+                    currentLocationBtn.querySelector("span").textContent =
+                         "Sử dụng vị trí hiện tại của tôi";
+               },
+               (error) => {
+                    alert("Không thể lấy vị trí GPS!");
+
+                    currentLocationBtn.disabled = false;
+                    locationSpinner.classList.add("d-none");
+                    currentLocationBtn.querySelector("span").textContent =
+                         "Sử dụng vị trí hiện tại của tôi";
+               },
+               {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0,
+               }
+          );
+     });
+}
+
 /* ===================== AUTO FILL SAVED ADDRESS ===================== */
 document.addEventListener("DOMContentLoaded", () => {
      const savedAddressSelect = document.getElementById("savedAddress");
@@ -600,4 +810,4 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // // Attach event listener to the checkout button
 // document.getElementById("checkoutButton").addEventListener("click", submitCheckout);
-document.getElementById("checkoutButton").addEventListener("click", placeOrder);
+// Note: Button already has onclick="placeOrder(event)" in HTML, no need to attach here

@@ -1,14 +1,25 @@
 package vn.iotstar.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import jakarta.persistence.*;
-import lombok.Data;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
+
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
+import lombok.Data;
 
 @Entity
 @Table(name = "reviews")
@@ -34,6 +45,12 @@ public class Review {
 
     @Column(columnDefinition = "NVARCHAR(1000)")
     private String comment;
+    
+    @Column(columnDefinition = "NVARCHAR(1000)")
+    private String vendorReply;
+    
+    @Column(name = "vendor_reply_at")
+    private LocalDateTime vendorReplyAt;
     
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore

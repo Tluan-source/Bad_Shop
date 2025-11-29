@@ -26,14 +26,14 @@ public class ReviewService {
      * để hiển thị "Màu sắc: Đỏ", "Size: L", ...
      */
     public List<Review> getReviewsByProductId(String productId) {
-        List<Review> reviews = reviewRepository.findByProduct_Id(productId);
+        List<Review> reviews = reviewRepository.findByProductIdWithImages(productId);
 
         for (Review rv : reviews) {
-            OrderItem oi = rv.getOrderItem();
-            if (oi == null || oi.getStyleValueIds() == null || oi.getStyleValueIds().isBlank())
-                continue;
-
             try {
+                OrderItem oi = rv.getOrderItem();
+                if (oi == null || oi.getStyleValueIds() == null || oi.getStyleValueIds().isBlank())
+                    continue;
+
                 // Parse JSON: ["SV_1","SV_2"]
                 List<String> styleIds = mapper.readValue(
                         oi.getStyleValueIds(),
@@ -53,10 +53,36 @@ public class ReviewService {
                 }
 
             } catch (Exception e) {
-                e.printStackTrace();
+                // Log but don't break the loop - continue to next review
+                System.err.println("Error parsing styleValueIds for review " + rv.getId() + ": " + e.getMessage());
             }
         }
 
         return reviews;
+    }
+    
+    /**
+     * Get review by ID
+     */
+    public Review getReviewById(String reviewId) {
+        return reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Review not found"));
+    }
+    
+    /**
+     * Add vendor reply to review
+     */
+    public void addVendorReply(String reviewId, String vendorReply, String storeId) {
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new RuntimeException("Review not found"));
+        
+        // Verify that this review belongs to a product in this store
+        if (!review.getProduct().getStore().getId().equals(storeId)) {
+            throw new RuntimeException("Bạn không có quyền trả lời đánh giá này");
+        }
+        
+        review.setVendorReply(vendorReply);
+        review.setVendorReplyAt(java.time.LocalDateTime.now());
+        reviewRepository.save(review);
     }
 }

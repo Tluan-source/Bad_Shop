@@ -650,7 +650,7 @@
                          <!-- Ảnh review -->
                          <div
                               th:if="${!#lists.isEmpty(review.reviewImages)}"
-                              class="d-flex flex-wrap gap-2"
+                              class="d-flex flex-wrap gap-2 mb-3"
                          >
                               <a
                                    th:each="img : ${review.reviewImages}"
@@ -664,6 +664,27 @@
                                         style="width: 100px; height: 100px; object-fit: cover"
                                    />
                               </a>
+                         </div>
+
+                         <!-- Phản hồi từ người bán -->
+                         <div
+                              th:if="${review.vendorReply != null and review.vendorReply != ''}"
+                              class="bg-light p-3 rounded-3 mt-3"
+                         >
+                              <div class="d-flex justify-content-between align-items-start mb-2">
+                                   <div class="d-flex align-items-center">
+                                        <i class="fas fa-store text-primary me-2"></i>
+                                        <strong class="text-primary">Phản hồi từ người bán</strong>
+                                   </div>
+                                   <small
+                                        class="text-muted"
+                                        th:text="${#temporals.format(review.vendorReplyAt, 'dd/MM/yyyy HH:mm')}"
+                                        >01/01/2024 10:00</small
+                                   >
+                              </div>
+                              <p class="mb-0 text-dark" th:text="${review.vendorReply}">
+                                   Cảm ơn bạn đã tin tưởng và sử dụng sản phẩm của shop!
+                              </p>
                          </div>
                     </div>
                </div>

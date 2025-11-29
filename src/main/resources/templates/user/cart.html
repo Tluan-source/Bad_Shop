@@ -153,9 +153,9 @@
                                                        <p
                                                             class="mb-0 fw-bold text-danger item-price"
                                                             th:data-item-id="${item.id}"
-                                                            th:text="${#numbers.formatCurrency(item.product.promotionalPrice != null ? item.product.promotionalPrice : item.product.price)}"
+                                                            th:text="${#numbers.formatDecimal(item.product.promotionalPrice != null ? item.product.promotionalPrice : item.product.price, 0, 'COMMA', 0, 'POINT')} + 'đ'"
                                                        >
-                                                            500,000₫
+                                                            500.000đ
                                                        </p>
                                                   </div>
                                                   <div class="col-auto">
@@ -307,10 +307,13 @@
                }
 
                function formatCurrency(amount) {
-                    return new Intl.NumberFormat("vi-VN", {
-                         style: "currency",
-                         currency: "VND",
-                    }).format(amount);
+                    const num = parseFloat(amount) || 0;
+                    return (
+                         num.toLocaleString("vi-VN", {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 0,
+                         }) + "đ"
+                    );
                }
 
                function updateOrderSummary() {
@@ -509,25 +512,19 @@
                          },
                          body: JSON.stringify({ cartItemIds: selectedIds }),
                     })
-                         .then((response) => {
-                              if (response.redirected) {
-                                   window.location.href = response.url;
-                              } else if (response.ok) {
-                                   return response.text().then((text) => {
-                                        // Check if response is redirect HTML or JSON
-                                        if (text.includes("<!DOCTYPE") || text.includes("<html")) {
-                                             window.location.href = "/checkout";
-                                        } else {
-                                             return JSON.parse(text);
-                                        }
-                                   });
-                              } else {
-                                   throw new Error("Lỗi kết nối");
-                              }
-                         })
+                         .then((response) => response.json())
                          .then((data) => {
-                              if (data && !data.success) {
-                                   showToast(data.message || "Có lỗi xảy ra", false);
+                              if (data.success && data.redirect) {
+                                   window.location.href = data.redirect;
+                              } else if (data.error) {
+                                   showToast(data.error, false);
+                                   if (data.redirect) {
+                                        setTimeout(() => {
+                                             window.location.href = data.redirect;
+                                        }, 1500);
+                                   }
+                              } else {
+                                   showToast("Có lỗi xảy ra", false);
                               }
                          })
                          .catch((error) => {
