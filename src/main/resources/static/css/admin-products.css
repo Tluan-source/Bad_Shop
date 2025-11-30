@@ -1,0 +1,241 @@
+﻿/* Admin Products Page Styles */
+
+/* Layout */
+.admin-products-container {
+     background: #f8f9fa;
+     min-height: 100vh;
+     padding-bottom: 40px;
+}
+
+/* Table Styles */
+.table-responsive {
+     border-radius: 8px;
+     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+     overflow-x: auto;
+     background: white;
+}
+
+.table {
+     margin-bottom: 0;
+     width: 100%;
+}
+
+.table thead {
+     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+     color: white;
+}
+
+.table thead th {
+     border: none;
+     padding: 14px 12px;
+     font-weight: 600;
+     text-transform: uppercase;
+     font-size: 0.85rem;
+     letter-spacing: 0.5px;
+     white-space: nowrap;
+}
+
+.table tbody tr {
+     transition: all 0.2s;
+     border-bottom: 1px solid #dee2e6;
+}
+
+.table tbody tr:hover {
+     background-color: #f8f9fa;
+     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.table tbody td {
+     padding: 12px;
+     vertical-align: middle;
+}
+
+/* Product Thumbnail */
+.product-thumbnail {
+     width: 60px;
+     height: 60px;
+     object-fit: cover;
+     border-radius: 8px;
+     border: 2px solid #dee2e6;
+     display: block;
+}
+
+/* Product Info */
+.product-name {
+     font-weight: 600;
+     color: #212529;
+     margin-bottom: 4px;
+     display: block;
+}
+
+.product-id {
+     font-size: 0.85rem;
+     color: #6c757d;
+     display: block;
+}
+
+/* Status Badge */
+.status-badge {
+     padding: 6px 12px;
+     border-radius: 20px;
+     font-size: 0.875rem;
+     font-weight: 500;
+     white-space: nowrap;
+     display: inline-block;
+}
+
+/* Price Display */
+.price-display {
+     font-size: 1rem;
+     font-weight: 700;
+     color: #0d6efd;
+     display: block;
+     white-space: nowrap;
+}
+
+.promo-price {
+     font-size: 0.85rem;
+     color: #dc3545;
+     font-weight: 600;
+     display: block;
+     margin-top: 2px;
+}
+
+/* Stock Badge */
+.stock-badge {
+     display: inline-block;
+     padding: 4px 10px;
+     border-radius: 12px;
+     font-weight: 600;
+     font-size: 0.9rem;
+}
+
+.stock-high {
+     background-color: #d1e7dd;
+     color: #0f5132;
+}
+
+.stock-medium {
+     background-color: #fff3cd;
+     color: #664d03;
+}
+
+.stock-low {
+     background-color: #f8d7da;
+     color: #842029;
+}
+
+/* Action Buttons */
+.btn-action {
+     padding: 6px 10px;
+     border-radius: 6px;
+     transition: all 0.2s;
+     font-size: 0.875rem;
+}
+
+.btn-action:hover {
+     transform: translateY(-2px);
+     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Stats Cards */
+.stats-card {
+     border-radius: 12px;
+     transition: transform 0.2s;
+     border: none;
+}
+
+.stats-card:hover {
+     transform: translateY(-4px);
+     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.stats-card .card-body {
+     padding: 20px;
+}
+
+.stats-icon {
+     font-size: 2.5rem;
+     opacity: 0.9;
+}
+
+/* Filter Card */
+.filter-card {
+     border: none;
+     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+     border-radius: 8px;
+     background: white;
+}
+
+/* Empty State */
+.empty-state {
+     padding: 60px 20px;
+     text-align: center;
+}
+
+.empty-state i {
+     color: #adb5bd;
+     margin-bottom: 16px;
+}
+
+.empty-state p {
+     font-size: 1.1rem;
+     color: #6c757d;
+}
+
+/* Modal Styles */
+.modal-header.bg-danger {
+     background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+}
+
+.btn-close-white {
+     filter: brightness(0) invert(1);
+}
+
+/* Pagination */
+.pagination .page-link {
+     border-radius: 6px;
+     margin: 0 4px;
+     border: 1px solid #dee2e6;
+     color: #495057;
+}
+
+.pagination .page-item.active .page-link {
+     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+     border-color: #667eea;
+}
+
+.pagination .page-link:hover {
+     background-color: #e9ecef;
+     color: #212529;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+     .product-thumbnail {
+          width: 50px;
+          height: 50px;
+     }
+
+     .product-name {
+          font-size: 0.9rem;
+     }
+
+     .stats-card {
+          margin-bottom: 12px;
+     }
+
+     .btn-action {
+          padding: 4px 8px;
+          font-size: 0.85rem;
+     }
+
+     .table {
+          font-size: 0.85rem;
+     }
+
+     .table thead th,
+     .table tbody td {
+          padding: 8px 6px;
+     }
+}

@@ -104,4 +104,23 @@ public interface ProductRepository extends JpaRepository<Product, String> {
     @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.isSelling = true ORDER BY p.sold DESC")
     List<Product> findTop20ByOrderBySoldDesc(Pageable pageable);
 
+    // ===== ADMIN METHODS - Product Management =====
+    
+    // Count by approval status
+    Long countByApprovalStatus(Product.ApprovalStatus approvalStatus);
+    
+    // Find by approval status
+    Page<Product> findByApprovalStatus(Product.ApprovalStatus approvalStatus, Pageable pageable);
+    
+    // Search with filters for admin
+    @Query("SELECT p FROM Product p WHERE " +
+           "(:search IS NULL OR :search = '' OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "AND (:approvalStatus IS NULL OR p.approvalStatus = :approvalStatus) " +
+           "AND (:storeId IS NULL OR :storeId = '' OR p.store.id = :storeId) " +
+           "ORDER BY p.createdAt DESC")
+    Page<Product> adminSearchProducts(@Param("search") String search,
+                                       @Param("approvalStatus") Product.ApprovalStatus approvalStatus,
+                                       @Param("storeId") String storeId,
+                                       Pageable pageable);
+
 }

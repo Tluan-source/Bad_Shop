@@ -1,0 +1,582 @@
+﻿<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
+<head th:replace="~{fragments/head :: head}">
+    <title>Chi tiết Sản phẩm - Admin</title>
+</head>
+<body class="product-detail-page">
+    <!-- Custom CSS must be loaded after head fragment -->
+    <link rel="stylesheet" th:href="@{/css/admin-products.css}">
+    <style>
+        .product-detail-page {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px 0;
+        }
+        
+        .detail-card {
+            border: none;
+            border-radius: 12px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .detail-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+        
+        .detail-card .card-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 1rem 1.5rem;
+        }
+        
+        .detail-card .card-header.bg-info {
+            background: linear-gradient(135deg, #36d1dc 0%, #5b86e5 100%) !important;
+        }
+        
+        .detail-card .card-header.bg-warning {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%) !important;
+        }
+        
+        .detail-card .card-header.bg-secondary {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%) !important;
+        }
+        
+        .info-row {
+            padding: 15px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+        }
+        
+        .info-row:hover {
+            background: #f8f9fa;
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .info-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6c757d;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .info-value {
+            font-size: 1rem;
+            color: #2d3748;
+            font-weight: 500;
+        }
+        
+        .product-title {
+            color: #2d3748;
+            font-weight: 700;
+            font-size: 1.75rem;
+            margin: 10px 0 20px 0;
+        }
+        
+        .price-box {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin: 15px 0;
+        }
+        
+        .price-box .original-price {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 5px;
+        }
+        
+        .price-box .promo-price {
+            font-size: 2rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .price-box .discount-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 5px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            display: inline-block;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .stat-item {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            border: 2px solid #e9ecef;
+            transition: all 0.3s;
+        }
+        
+        .stat-item:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102,126,234,0.2);
+        }
+        
+        .stat-item .stat-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .stat-item .stat-label {
+            font-size: 0.875rem;
+            color: #6c757d;
+            font-weight: 600;
+        }
+        
+        .image-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            padding: 20px;
+        }
+        
+        .gallery-item {
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .gallery-item:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            cursor: pointer;
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+        
+        .status-badge-large {
+            font-size: 1.1rem;
+            padding: 12px 24px;
+            border-radius: 8px;
+            display: inline-block;
+            font-weight: 600;
+        }
+        
+        .moderation-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+        
+        .moderation-box h6 {
+            color: #2d3748;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .btn-action-large {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .btn-action-large:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .violation-alert {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .violation-alert h5 {
+            color: white;
+            font-weight: 700;
+            margin-bottom: 15px;
+        }
+        
+        .violation-item {
+            background: rgba(255,255,255,0.15);
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        
+        .page-header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 25px;
+        }
+        
+        .description-box {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            margin: 15px 0;
+        }
+    </style>
+    
+    <div th:replace="~{fragments/header-admin :: header-admin}"></div>
+
+    <div class="container-fluid px-4 mt-4">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="d-flex justify-content-between align-items-center">
+                <h2 class="mb-0">
+                    <i class="fas fa-box-open text-primary"></i> Chi tiết Sản phẩm
+                </h2>
+                <a th:href="@{/admin/products}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Quay lại danh sách
+                </a>
+            </div>
+        </div>
+
+        <!-- Alert Messages -->
+        <div th:if="${message}" th:class="'alert alert-' + ${messageType} + ' alert-dismissible fade show'" role="alert">
+            <i class="fas fa-info-circle"></i> <span th:text="${message}"></span>
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+
+        <!-- Content Violations Warning -->
+        <div th:if="${violations != null && !violations.isEmpty()}" class="violation-alert">
+            <h5><i class="fas fa-exclamation-triangle"></i> Phát hiện vi phạm nội dung</h5>
+            <div th:each="violation : ${violations}" class="violation-item">
+                <i class="fas fa-times-circle"></i> <span th:text="${violation}"></span>
+            </div>
+        </div>
+
+                <div class="row">
+                    <!-- Left Column: Product Info -->
+                    <div class="col-lg-8">
+                        <!-- Main Product Info -->
+                        <div class="card detail-card mb-4">
+                            <div class="card-header">
+                                <h5 class="mb-0 text-white">
+                                    <i class="fas fa-info-circle"></i> Thông tin sản phẩm
+                                </h5>
+                            </div>
+                            <div class="card-body p-0">
+                                <div class="info-row">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <div class="info-label"><i class="fas fa-hashtag"></i> ID Sản phẩm</div>
+                                            <div class="info-value">
+                                                <h3 class="text-info mb-0" th:text="${product.id}">P123</h3>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            <div th:if="${!product.parsedImages.isEmpty()}">
+                                                <div th:each="image, iterStat : ${product.parsedImages}" th:if="${iterStat.index < 3}" style="display: inline-block; margin-left: 8px;">
+                                                    <img th:src="${image}" alt="Product Image" 
+                                                         style="width: 120px; height: 120px; object-fit: contain; border-radius: 8px; cursor: pointer; border: 1px solid #dee2e6;"
+                                                         onclick="window.open(this.src, '_blank')">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="info-row">
+                                    <div class="info-label"><i class="fas fa-tag"></i> Tên sản phẩm</div>
+                                    <h4 class="product-title" th:text="${product.name}">Product Name</h4>
+                                </div>
+
+                                <div class="info-row">
+                                    <div class="info-label"><i class="fas fa-align-left"></i> Mô tả chi tiết</div>
+                                    <div class="description-box" th:utext="${product.description}">Description</div>
+                                </div>
+
+                                <!-- Price Section -->
+                                <div class="info-row">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="info-label"><i class="fas fa-dollar-sign"></i> Giá gốc</div>
+                                            <div class="info-value">
+                                                <h5 class="text-primary mb-0" th:text="${#numbers.formatDecimal(product.price, 0, 0) + ' đ'}">0 đ</h5>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6" th:if="${product.promotionalPrice != null && product.promotionalPrice < product.price}">
+                                            <div class="info-label"><i class="fas fa-tag"></i> Giá khuyến mãi</div>
+                                            <div class="info-value">
+                                                <h5 class="text-danger mb-0" th:text="${#numbers.formatDecimal(product.promotionalPrice, 0, 0) + ' đ'}">0 đ</h5>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Stats Grid -->
+                                <div class="info-row">
+                                    <div class="stats-grid">
+                                        <div class="stat-item">
+                                            <div class="stat-value">
+                                                <i class="fas fa-boxes"></i>
+                                                <span th:text="${product.quantity}">0</span>
+                                            </div>
+                                            <div class="stat-label">Tồn kho</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-value">
+                                                <i class="fas fa-shopping-cart"></i>
+                                                <span th:text="${product.sold}">0</span>
+                                            </div>
+                                            <div class="stat-label">Đã bán</div>
+                                        </div>
+                                        <div class="stat-item">
+                                            <div class="stat-value">
+                                                <i class="fas fa-star text-warning"></i>
+                                                <span th:text="${product.rating}">0</span>
+                                            </div>
+                                            <div class="stat-label">Đánh giá</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="info-row">
+                                    <div class="info-label"><i class="fas fa-store"></i> Cửa hàng</div>
+                                    <div class="info-value">
+                                        <a th:href="@{/admin/stores/{id}/details(id=${product.store.id})}" 
+                                           class="text-decoration-none">
+                                            <i class="fas fa-external-link-alt"></i>
+                                            <strong th:text="${product.store.name}">Store Name</strong>
+                                        </a>
+                                    </div>
+                                </div>
+
+                                <div class="info-row">
+                                    <div class="info-label"><i class="fas fa-list"></i> Danh mục</div>
+                                    <div class="info-value">
+                                        <span class="badge bg-primary" th:text="${product.category != null ? product.category.name : 'Chưa có'}">Category</span>
+                                    </div>
+                                </div>
+
+                                <div class="info-row">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="info-label"><i class="far fa-calendar-plus"></i> Ngày tạo</div>
+                                            <div class="info-value" th:text="${#temporals.format(product.createdAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="info-label"><i class="far fa-calendar-check"></i> Cập nhật lần cuối</div>
+                                            <div class="info-value" th:text="${#temporals.format(product.updatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Moderation -->
+                    <div class="col-lg-4">
+                        <!-- Status Card -->
+                        <div class="card detail-card mb-4">
+                            <div class="card-header bg-warning">
+                                <h5 class="mb-0 text-white">
+                                    <i class="fas fa-shield-alt"></i> Trạng thái kiểm duyệt
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="text-center mb-4">
+                                    <div class="info-label mb-3">Trạng thái hiện tại</div>
+                                    <div>
+                                        <span th:if="${product.approvalStatus?.name() == 'PENDING'}" 
+                                              class="badge status-badge-large bg-warning text-dark">
+                                            <i class="fas fa-clock"></i> Chờ duyệt
+                                        </span>
+                                        <span th:if="${product.approvalStatus?.name() == 'APPROVED'}" 
+                                              class="badge status-badge-large bg-success">
+                                            <i class="fas fa-check-circle"></i> Đã duyệt
+                                        </span>
+                                        <span th:if="${product.approvalStatus?.name() == 'REJECTED'}" 
+                                              class="badge status-badge-large bg-danger">
+                                            <i class="fas fa-ban"></i> Bị từ chối
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div th:if="${product.moderatedBy != null}" class="border-top pt-3 mt-3">
+                                    <div class="info-label">
+                                        <i class="fas fa-user-shield"></i> Người kiểm duyệt
+                                    </div>
+                                    <div class="info-value mb-3">
+                                        <strong th:text="${product.moderatedBy}">Admin</strong>
+                                    </div>
+                                    
+                                    <div class="info-label">
+                                        <i class="far fa-clock"></i> Thời gian kiểm duyệt
+                                    </div>
+                                    <div class="info-value">
+                                        <span th:text="${#temporals.format(product.moderatedAt, 'dd/MM/yyyy HH:mm')}">01/01/2024</span>
+                                    </div>
+                                </div>
+
+                                <div th:if="${product.rejectionReason != null}" 
+                                     class="alert alert-danger border-0 mt-3" 
+                                     style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); color: white;">
+                                    <div class="info-label text-white">
+                                        <i class="fas fa-exclamation-triangle"></i> Lý do từ chối
+                                    </div>
+                                    <div class="mt-2" th:text="${product.rejectionReason}">Rejection reason</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Actions Card -->
+                        <div class="card detail-card mb-4">
+                            <div class="card-body">
+                                <div class="moderation-box">
+                                    <h6 class="mb-3">
+                                        <i class="fas fa-tasks"></i> Thao tác kiểm duyệt
+                                    </h6>
+                                    
+                                    <form th:if="${product.approvalStatus?.name() == 'PENDING'}" 
+                                          th:action="@{/admin/products/{id}/approve(id=${product.id})}" 
+                                          method="post" 
+                                          class="mb-3"
+                                          onsubmit="return confirm('Bạn có chắc muốn duyệt sản phẩm này?')">
+                                        <button type="submit" class="btn btn-success w-100 btn-action-large">
+                                            <i class="fas fa-check-circle"></i> Duyệt sản phẩm
+                                        </button>
+                                    </form>
+
+                                    <button type="button" 
+                                            class="btn btn-danger w-100 btn-action-large mb-3" 
+                                            data-bs-toggle="modal" 
+                                            data-bs-target="#rejectModal">
+                                        <i class="fas fa-times-circle"></i> Từ chối sản phẩm
+                                    </button>
+
+                                    <form th:action="@{/admin/products/{id}/delete(id=${product.id})}" 
+                                          method="post"
+                                          onsubmit="return confirm('Bạn có chắc muốn xóa sản phẩm này? Hành động này không thể hoàn tác!')">
+                                        <button type="submit" class="btn btn-dark w-100 btn-action-large">
+                                            <i class="fas fa-trash-alt"></i> Xóa vĩnh viễn
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Configuration Card -->
+                        <div class="card detail-card">
+                            <div class="card-header bg-secondary">
+                                <h5 class="mb-0 text-white">
+                                    <i class="fas fa-cog"></i> Thông tin bổ sung
+                                </h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="info-label">
+                                        <i class="fas fa-power-off"></i> Trạng thái hoạt động
+                                    </div>
+                                    <div class="info-value">
+                                        <span th:if="${product.isActive}" class="badge bg-success px-3 py-2">
+                                            <i class="fas fa-check-circle"></i> Đang hoạt động
+                                        </span>
+                                        <span th:unless="${product.isActive}" class="badge bg-secondary px-3 py-2">
+                                            <i class="fas fa-times-circle"></i> Không hoạt động
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="info-label">
+                                        <i class="fas fa-store-alt"></i> Trạng thái bán hàng
+                                    </div>
+                                    <div class="info-value">
+                                        <span th:if="${product.isSelling}" class="badge bg-success px-3 py-2">
+                                            <i class="fas fa-shopping-cart"></i> Đang bán
+                                        </span>
+                                        <span th:unless="${product.isSelling}" class="badge bg-secondary px-3 py-2">
+                                            <i class="fas fa-pause-circle"></i> Ngừng bán
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="info-label">
+                                        <i class="fas fa-eye"></i> Lượt xem
+                                    </div>
+                                    <div class="info-value">
+                                        <h4 class="mb-0 text-primary">
+                                            <i class="fas fa-chart-line"></i>
+                                            <span th:text="${#numbers.formatDecimal(product.viewCount, 0, 0)}">0</span>
+                                        </h4>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:replace="~{fragments/footer :: footer}"></div>
+
+    <!-- Reject Modal -->
+    <div class="modal fade" id="rejectModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title">Từ chối sản phẩm</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <form th:action="@{/admin/products/{id}/reject(id=${product.id})}" method="post">
+                    <div class="modal-body">
+                        <p>Bạn có chắc muốn từ chối sản phẩm: <strong th:text="${product.name}"></strong>?</p>
+                        <div class="mb-3">
+                            <label class="form-label">Lý do từ chối: <span class="text-danger">*</span></label>
+                            <textarea name="reason" class="form-control" rows="4" 
+                                      placeholder="Nhập lý do từ chối chi tiết..." required></textarea>
+                            <small class="text-muted">Vendor sẽ nhận được thông báo này</small>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-ban"></i> Xác nhận từ chối
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Bootstrap tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+    </script>
+</body>
+</html>

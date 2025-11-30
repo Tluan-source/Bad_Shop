@@ -2,6 +2,7 @@ package vn.iotstar.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.hibernate.annotations.CreationTimestamp;
@@ -11,6 +12,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToMany;
@@ -23,6 +26,14 @@ import lombok.Data;
 @Table(name = "products")
 @Data
 public class Product {
+    
+    // Approval status enum for admin moderation
+    public enum ApprovalStatus {
+        PENDING,    // Chờ duyệt
+        APPROVED,   // Đã duyệt
+        REJECTED    // Bị từ chối
+    }
+    
     @Id
     private String id;
     
@@ -50,6 +61,20 @@ public class Product {
     
     @Column(name = "is_selling")
     private Boolean isSelling = true;
+    
+    // Admin moderation fields
+    @Column(name = "approval_status")
+    @Enumerated(EnumType.ORDINAL)
+    private ApprovalStatus approvalStatus = ApprovalStatus.PENDING;
+    
+    @Column(name = "rejection_reason", columnDefinition = "NVARCHAR(1000)")
+    private String rejectionReason;
+    
+    @Column(name = "moderated_by")
+    private String moderatedBy; // Admin user ID who approved/rejected
+    
+    @Column(name = "moderated_at")
+    private LocalDateTime moderatedAt;
     
     @Column(name = "list_images", columnDefinition = "NVARCHAR(MAX)")
     private String listImages; // JSON array
@@ -123,5 +148,30 @@ public class Product {
             // Return default image if parsing fails
         }
         return "https://via.placeholder.com/500x500/CCCCCC/666666?text=No+Image";
+    }
+    
+    // Helper method to parse all images from JSON array
+    public List<String> getParsedImages() {
+        List<String> images = new ArrayList<>();
+        if (listImages == null || listImages.isEmpty() || listImages.equals("[]")) {
+            return images;
+        }
+        try {
+            // Parse JSON array: ["url1", "url2", "url3"]
+            String trimmed = listImages.trim();
+            if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+                String content = trimmed.substring(1, trimmed.length() - 1);
+                String[] parts = content.split("\",\"");
+                for (String part : parts) {
+                    String url = part.replace("\"", "").trim();
+                    if (!url.isEmpty()) {
+                        images.add(url);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            // Return empty list if parsing fails
+        }
+        return images;
     }
 }

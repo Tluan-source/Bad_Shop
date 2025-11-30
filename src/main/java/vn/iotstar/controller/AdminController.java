@@ -229,6 +229,133 @@ public class AdminController {
         return "redirect:/admin/users";
     }
     
+    @GetMapping("/products")
+    public String products(@RequestParam(required = false) String search,
+                          @RequestParam(required = false) String status,
+                          @RequestParam(required = false) String storeId,
+                          @RequestParam(defaultValue = "0") int page,
+                          @RequestParam(defaultValue = "10") int size,
+                          Model model,
+                          Authentication authentication) {
+        model.addAttribute("username", authentication.getName());
+        
+        // Get product statistics
+        Map<String, Long> stats = adminService.getProductStats();
+        model.addAttribute("totalProducts", stats.get("total"));
+        model.addAttribute("pendingProducts", stats.get("pending"));
+        model.addAttribute("approvedProducts", stats.get("approved"));
+        model.addAttribute("rejectedProducts", stats.get("rejected"));
+        
+        // Parse approval status
+        Product.ApprovalStatus approvalStatus = null;
+        if (status != null && !status.isEmpty()) {
+            try {
+                approvalStatus = switch (status.toLowerCase()) {
+                    case "pending" -> Product.ApprovalStatus.PENDING;
+                    case "approved" -> Product.ApprovalStatus.APPROVED;
+                    case "rejected" -> Product.ApprovalStatus.REJECTED;
+                    default -> null;
+                };
+            } catch (Exception e) {
+                approvalStatus = null;
+            }
+        }
+        
+        // Search products with filters
+        org.springframework.data.domain.Pageable pageable = 
+            org.springframework.data.domain.PageRequest.of(page, size);
+        org.springframework.data.domain.Page<Product> productPage = 
+            productRepository.adminSearchProducts(search, approvalStatus, storeId, pageable);
+        
+        model.addAttribute("products", productPage.getContent());
+        model.addAttribute("currentPage", page);
+        model.addAttribute("totalPages", productPage.getTotalPages());
+        model.addAttribute("search", search);
+        model.addAttribute("status", status);
+        model.addAttribute("storeId", storeId);
+        
+        // Get all stores for filter dropdown
+        List<Store> stores = storeRepository.findAll();
+        model.addAttribute("stores", stores);
+        
+        return "admin/products";
+    }
+    
+    @GetMapping("/products/{id}/details")
+    public String productDetails(@PathVariable String id, Model model, Authentication authentication) {
+        model.addAttribute("username", authentication.getName());
+        
+        Product product = productRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+        
+        model.addAttribute("product", product);
+        
+        // Check for content violations
+        List<String> violations = adminService.checkContentViolations(product);
+        model.addAttribute("violations", violations);
+        
+        return "admin/product-details";
+    }
+    
+    @PostMapping("/products/{id}/approve")
+    public String approveProduct(@PathVariable String id,
+                                 RedirectAttributes redirectAttributes,
+                                 Authentication authentication) {
+        try {
+            String adminUserId = authentication.getName();
+            adminService.approveProduct(id, adminUserId);
+            
+            redirectAttributes.addFlashAttribute("messageType", "success");
+            redirectAttributes.addFlashAttribute("message", "Đã duyệt sản phẩm thành công!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/products";
+    }
+    
+    @PostMapping("/products/{id}/reject")
+    public String rejectProduct(@PathVariable String id,
+                               @RequestParam(required = false) String reason,
+                               RedirectAttributes redirectAttributes,
+                               Authentication authentication) {
+        try {
+            String adminUserId = authentication.getName();
+            String rejectionReason = (reason != null && !reason.trim().isEmpty()) 
+                ? reason.trim() 
+                : "Không đáp ứng tiêu chuẩn của hệ thống";
+            
+            adminService.rejectProduct(id, adminUserId, rejectionReason);
+            
+            redirectAttributes.addFlashAttribute("messageType", "warning");
+            redirectAttributes.addFlashAttribute("message", "Đã từ chối sản phẩm!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/products";
+    }
+    
+    @PostMapping("/products/{id}/delete")
+    public String deleteProduct(@PathVariable String id,
+                               RedirectAttributes redirectAttributes,
+                               Authentication authentication) {
+        try {
+            String adminUserId = authentication.getName();
+            adminService.deleteProduct(id, adminUserId);
+            
+            redirectAttributes.addFlashAttribute("messageType", "success");
+            redirectAttributes.addFlashAttribute("message", "Đã xóa sản phẩm!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
+        }
+        
+        return "redirect:/admin/products";
+    }
+    
     @GetMapping("/stores")
     public String stores(@RequestParam(required = false) String search, 
                         Model model, 

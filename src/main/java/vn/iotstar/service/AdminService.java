@@ -1,23 +1,27 @@
 package vn.iotstar.service;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import vn.iotstar.entity.Category;
 import vn.iotstar.entity.Order;
 import vn.iotstar.entity.OrderItem;
 import vn.iotstar.entity.Product;
 import vn.iotstar.entity.Store;
-import vn.iotstar.entity.Category;
-import vn.iotstar.repository.OrderRepository;
+import vn.iotstar.repository.CategoryRepository;
 import vn.iotstar.repository.OrderItemRepository;
+import vn.iotstar.repository.OrderRepository;
 import vn.iotstar.repository.ProductRepository;
 import vn.iotstar.repository.StoreRepository;
 import vn.iotstar.repository.UserRepository;
-import vn.iotstar.repository.CategoryRepository;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 public class AdminService {
@@ -547,5 +551,127 @@ public class AdminService {
                 return item;
             })
             .collect(Collectors.toList());
+    }
+    
+    // ===== PRODUCT MANAGEMENT METHODS =====
+    
+    /**
+     * Get product statistics for admin dashboard
+     */
+    public Map<String, Long> getProductStats() {
+        Map<String, Long> stats = new HashMap<>();
+        
+        stats.put("total", productRepository.count());
+        stats.put("pending", productRepository.countByApprovalStatus(Product.ApprovalStatus.PENDING));
+        stats.put("approved", productRepository.countByApprovalStatus(Product.ApprovalStatus.APPROVED));
+        stats.put("rejected", productRepository.countByApprovalStatus(Product.ApprovalStatus.REJECTED));
+        
+        return stats;
+    }
+    
+    /**
+     * Approve a product
+     */
+    public void approveProduct(String productId, String adminUserId) {
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+        
+        product.setApprovalStatus(Product.ApprovalStatus.APPROVED);
+        product.setIsActive(true);
+        product.setModeratedBy(adminUserId);
+        product.setModeratedAt(LocalDateTime.now());
+        product.setRejectionReason(null); // Clear rejection reason if any
+        
+        productRepository.save(product);
+    }
+    
+    /**
+     * Reject a product with reason
+     */
+    public void rejectProduct(String productId, String adminUserId, String reason) {
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+        
+        product.setApprovalStatus(Product.ApprovalStatus.REJECTED);
+        product.setIsActive(false);
+        product.setIsSelling(false);
+        product.setModeratedBy(adminUserId);
+        product.setModeratedAt(LocalDateTime.now());
+        product.setRejectionReason(reason);
+        
+        productRepository.save(product);
+    }
+    
+    /**
+     * Delete a product (soft delete by setting inactive)
+     */
+    public void deleteProduct(String productId, String adminUserId) {
+        Product product = productRepository.findById(productId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy sản phẩm"));
+        
+        product.setIsActive(false);
+        product.setIsSelling(false);
+        product.setApprovalStatus(Product.ApprovalStatus.REJECTED);
+        product.setModeratedBy(adminUserId);
+        product.setModeratedAt(LocalDateTime.now());
+        product.setRejectionReason("Sản phẩm đã bị xóa bởi Admin");
+        
+        productRepository.save(product);
+    }
+    
+    /**
+     * Check for content violations in product
+     * Returns list of violations found
+     */
+    public List<String> checkContentViolations(Product product) {
+        List<String> violations = new ArrayList<>();
+        
+        // Prohibited keywords list
+        String[] prohibitedKeywords = {
+            "fake", "giả", "nhái", "hàng nhái", "hàng giả",
+            "lừa đảo", "scam", "cheat", "hack",
+            "sex", "porn", "xxx", "18+",
+            "ma túy", "thuốc lá", "thuốc lào",
+            "vũ khí", "súng", "dao", "kiếm"
+        };
+        
+        // Check product name
+        String name = product.getName() != null ? product.getName().toLowerCase() : "";
+        for (String keyword : prohibitedKeywords) {
+            if (name.contains(keyword.toLowerCase())) {
+                violations.add("Tên sản phẩm chứa từ khóa vi phạm: " + keyword);
+            }
+        }
+        
+        // Check description
+        String description = product.getDescription() != null ? product.getDescription().toLowerCase() : "";
+        for (String keyword : prohibitedKeywords) {
+            if (description.contains(keyword.toLowerCase())) {
+                violations.add("Mô tả sản phẩm chứa từ khóa vi phạm: " + keyword);
+            }
+        }
+        
+        // Check if price is too low (possible scam)
+        if (product.getPrice() != null && product.getPrice().compareTo(new BigDecimal("1000")) < 0) {
+            violations.add("Giá sản phẩm quá thấp (dưới 1,000đ)");
+        }
+        
+        // Check if price is unreasonably high
+        if (product.getPrice() != null && product.getPrice().compareTo(new BigDecimal("100000000")) > 0) {
+            violations.add("Giá sản phẩm quá cao (trên 100 triệu đồng)");
+        }
+        
+        // Check if product has images
+        if (product.getListImages() == null || product.getListImages().trim().isEmpty() 
+            || product.getListImages().equals("[]")) {
+            violations.add("Sản phẩm chưa có hình ảnh");
+        }
+        
+        // Check if description is too short
+        if (description.trim().length() < 20) {
+            violations.add("Mô tả sản phẩm quá ngắn (dưới 20 ký tự)");
+        }
+        
+        return violations;
     }
 }

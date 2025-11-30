@@ -4,41 +4,17 @@
     <title>Quản lý Sản phẩm - Admin</title>
 </head>
 <body>
-    <div th:replace="~{fragments/header :: header}"></div>
+    <!-- Custom CSS must be loaded after head fragment -->
+    <link rel="stylesheet" th:href="@{/css/admin-products.css}">
+    
+    <div th:replace="~{fragments/header-admin :: header-admin}"></div>
 
-    <div class="container-fluid mt-4">
-        <div class="row">
-            <div class="col-md-2">
-                <div class="list-group">
-                    <a th:href="@{/admin/dashboard}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-tachometer-alt"></i> Dashboard
-                    </a>
-                    <a th:href="@{/admin/users}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-users"></i> Quản lý User
-                    </a>
-                    <a th:href="@{/admin/stores}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-store"></i> Quản lý Shop
-                    </a>
-                    <a th:href="@{/admin/products}" class="list-group-item list-group-item-action active">
-                        <i class="fas fa-box"></i> Quản lý Sản phẩm
-                    </a>
-                    <a th:href="@{/admin/categories}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-tags"></i> Danh mục
-                    </a>
-                    <a th:href="@{/admin/orders}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-shopping-cart"></i> Đơn hàng
-                    </a>
-                    <a th:href="@{/admin/vouchers}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-ticket-alt"></i> Voucher
-                    </a>
-                    <a th:href="@{/admin/reports}" class="list-group-item list-group-item-action">
-                        <i class="fas fa-chart-bar"></i> Báo cáo
-                    </a>
-                </div>
-            </div>
-
-            <div class="col-md-10">
-                <h2 class="mb-4"><i class="fas fa-box"></i> Quản lý Sản phẩm</h2>
+    <div class="container-fluid mt-4 px-4">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="mb-0">
+                <i class="fas fa-box text-primary"></i> Quản lý Sản phẩm
+            </h2>
+        </div>
 
                 <!-- Alert Messages -->
                 <div th:if="${message}" th:class="'alert alert-' + ${messageType} + ' alert-dismissible fade show'" role="alert">
@@ -47,60 +23,89 @@
                 </div>
 
                 <!-- Statistics Cards -->
-                <div class="row mb-4">
+                <div class="row g-3 mb-4">
                     <div class="col-md-3">
-                        <div class="card bg-primary text-white">
-                            <div class="card-body">
-                                <h6 class="card-title">Tổng sản phẩm</h6>
-                                <h3 th:text="${totalProducts}">0</h3>
+                        <div class="card stats-card border-0 shadow-sm">
+                            <div class="card-body bg-primary bg-gradient text-white rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 text-white-50">Tổng sản phẩm</h6>
+                                        <h2 class="mb-0 fw-bold" th:text="${totalProducts}">0</h2>
+                                    </div>
+                                    <i class="fas fa-boxes stats-icon"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card bg-warning text-dark">
-                            <div class="card-body">
-                                <h6 class="card-title">Chờ duyệt</h6>
-                                <h3 th:text="${pendingProducts}">0</h3>
+                        <div class="card stats-card border-0 shadow-sm">
+                            <div class="card-body bg-warning bg-gradient text-white rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 text-white-50">Chờ duyệt</h6>
+                                        <h2 class="mb-0 fw-bold" th:text="${pendingProducts}">0</h2>
+                                    </div>
+                                    <i class="fas fa-clock stats-icon"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card bg-success text-white">
-                            <div class="card-body">
-                                <h6 class="card-title">Đã duyệt</h6>
-                                <h3 th:text="${approvedProducts}">0</h3>
+                        <div class="card stats-card border-0 shadow-sm">
+                            <div class="card-body bg-success bg-gradient text-white rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 text-white-50">Đã duyệt</h6>
+                                        <h2 class="mb-0 fw-bold" th:text="${approvedProducts}">0</h2>
+                                    </div>
+                                    <i class="fas fa-check-circle stats-icon"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <div class="card bg-danger text-white">
-                            <div class="card-body">
-                                <h6 class="card-title">Bị từ chối</h6>
-                                <h3 th:text="${rejectedProducts}">0</h3>
+                        <div class="card stats-card border-0 shadow-sm">
+                            <div class="card-body bg-danger bg-gradient text-white rounded">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1 text-white-50">Bị từ chối</h6>
+                                        <h2 class="mb-0 fw-bold" th:text="${rejectedProducts}">0</h2>
+                                    </div>
+                                    <i class="fas fa-ban stats-icon"></i>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Filter & Search -->
-                <div class="card mb-4">
+                <div class="card filter-card mb-4">
                     <div class="card-body">
-                        <form method="get" th:action="@{/admin/products}" class="row g-3">
+                        <form method="get" th:action="@{/admin/products}" class="row g-3 align-items-end">
                             <div class="col-md-4">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-search text-primary"></i> Tìm kiếm
+                                </label>
                                 <input type="text" name="search" class="form-control" 
-                                       th:value="${search}" placeholder="Tìm tên sản phẩm...">
+                                       th:value="${search}" placeholder="Nhập tên sản phẩm...">
                             </div>
                             <div class="col-md-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-filter text-success"></i> Trạng thái
+                                </label>
                                 <select name="status" class="form-select">
-                                    <option value="">-- Tất cả trạng thái --</option>
+                                    <option value="">Tất cả</option>
                                     <option value="pending" th:selected="${status == 'pending'}">Chờ duyệt</option>
                                     <option value="approved" th:selected="${status == 'approved'}">Đã duyệt</option>
                                     <option value="rejected" th:selected="${status == 'rejected'}">Bị từ chối</option>
                                 </select>
                             </div>
                             <div class="col-md-3">
+                                <label class="form-label fw-semibold">
+                                    <i class="fas fa-store text-info"></i> Cửa hàng
+                                </label>
                                 <select name="storeId" class="form-select">
-                                    <option value="">-- Tất cả shop --</option>
+                                    <option value="">Tất cả shop</option>
                                     <option th:each="store : ${stores}" 
                                             th:value="${store.id}" 
                                             th:text="${store.name}"
@@ -111,7 +116,7 @@
                             </div>
                             <div class="col-md-2">
                                 <button type="submit" class="btn btn-primary w-100">
-                                    <i class="fas fa-search"></i> Tìm kiếm
+                                    <i class="fas fa-search"></i> Tìm
                                 </button>
                             </div>
                         </form>
@@ -119,83 +124,99 @@
                 </div>
 
                 <!-- Products Table -->
-                <div class="card">
-                    <div class="card-body">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-body p-0">
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table class="table table-hover align-middle mb-0">
                                 <thead>
                                     <tr>
-                                        <th>Ảnh</th>
-                                        <th>Tên sản phẩm</th>
-                                        <th>Cửa hàng</th>
-                                        <th>Danh mục</th>
-                                        <th class="text-end">Giá</th>
-                                        <th class="text-center">Tồn kho</th>
-                                        <th class="text-center">Trạng thái</th>
-                                        <th class="text-center">Thao tác</th>
+                                        <th style="width: 8%;">Ảnh</th>
+                                        <th style="width: 25%;">Sản phẩm</th>
+                                        <th style="width: 15%;">Cửa hàng</th>
+                                        <th style="width: 12%;">Danh mục</th>
+                                        <th class="text-end" style="width: 12%;">Giá</th>
+                                        <th class="text-center" style="width: 8%;">Tồn kho</th>
+                                        <th class="text-center" style="width: 12%;">Trạng thái</th>
+                                        <th class="text-center" style="width: 8%;">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr th:if="${#lists.isEmpty(products)}">
-                                        <td colspan="8" class="text-center text-muted py-4">
-                                            <i class="fas fa-box-open fa-3x mb-2"></i>
-                                            <p>Không có sản phẩm nào</p>
+                                        <td colspan="8">
+                                            <div class="empty-state">
+                                                <i class="fas fa-box-open fa-4x"></i>
+                                                <p class="mb-0">Không có sản phẩm nào</p>
+                                            </div>
                                         </td>
                                     </tr>
                                     <tr th:each="product : ${products}">
                                         <td>
-                                            <img th:src="${product.listImages != null && !product.listImages.isEmpty() ? product.listImages.get(0) : '/images/default-product.png'}" 
-                                                 alt="Product" style="width: 60px; height: 60px; object-fit: cover; border-radius: 5px;">
+                                            <img th:src="${product.firstImage}" 
+                                                 alt="Product" class="product-thumbnail">
                                         </td>
                                         <td>
-                                            <strong th:text="${product.name}">Product Name</strong>
-                                            <br>
-                                            <small class="text-muted">ID: <span th:text="${product.id}">P123</span></small>
+                                            <div class="product-info">
+                                                <div>
+                                                    <div class="product-name" th:text="${product.name}">Product Name</div>
+                                                    <small class="product-id">ID: <span th:text="${product.id}">P123</span></small>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td>
-                                            <span th:text="${product.store != null ? product.store.name : 'N/A'}">Store Name</span>
+                                            <span class="fw-semibold" th:text="${product.store != null ? product.store.name : 'N/A'}">Store Name</span>
                                         </td>
                                         <td>
-                                            <span th:text="${product.category != null ? product.category.name : 'N/A'}">Category</span>
+                                            <span class="badge bg-light text-dark border" th:text="${product.category != null ? product.category.name : 'N/A'}">Category</span>
                                         </td>
                                         <td class="text-end">
-                                            <strong th:text="${#numbers.formatDecimal(product.price, 0, 0) + ' VNĐ'}">0 VNĐ</strong>
-                                            <br>
-                                            <small class="text-muted" th:if="${product.promotionalPrice != null && product.promotionalPrice.compareTo(product.price) < 0}">
-                                                KM: <span th:text="${#numbers.formatDecimal(product.promotionalPrice, 0, 0)}">0</span> VNĐ
+                                            <div class="price-display" th:text="${#numbers.formatDecimal(product.price, 0, 0) + ' đ'}">0 đ</div>
+                                            <small class="promo-price" th:if="${product.promotionalPrice != null && product.promotionalPrice.compareTo(product.price) < 0}">
+                                                <i class="fas fa-tag"></i> <span th:text="${#numbers.formatDecimal(product.promotionalPrice, 0, 0)}">0</span> đ
                                             </small>
                                         </td>
                                         <td class="text-center">
-                                            <span th:text="${product.quantity}">0</span>
+                                            <span class="stock-badge" 
+                                                  th:classappend="${product.quantity > 50 ? 'stock-high' : (product.quantity > 10 ? 'stock-medium' : 'stock-low')}"
+                                                  th:text="${product.quantity}">0</span>
                                         </td>
                                         <td class="text-center">
-                                            <span th:if="${!product.isActive}" class="badge bg-warning">
+                                            <span th:if="${product.approvalStatus?.name() == 'PENDING'}" class="badge bg-warning status-badge">
                                                 <i class="fas fa-clock"></i> Chờ duyệt
                                             </span>
-                                            <span th:if="${product.isActive && product.isSelling}" class="badge bg-success">
+                                            <span th:if="${product.approvalStatus?.name() == 'APPROVED' && product.isSelling}" class="badge bg-success status-badge">
                                                 <i class="fas fa-check"></i> Đang bán
                                             </span>
-                                            <span th:if="${product.isActive && !product.isSelling}" class="badge bg-secondary">
+                                            <span th:if="${product.approvalStatus?.name() == 'APPROVED' && !product.isSelling}" class="badge bg-secondary status-badge">
                                                 <i class="fas fa-pause"></i> Ngừng bán
+                                            </span>
+                                            <span th:if="${product.approvalStatus?.name() == 'REJECTED'}" class="badge bg-danger status-badge">
+                                                <i class="fas fa-ban"></i> Bị từ chối
                                             </span>
                                         </td>
                                         <td class="text-center">
-                                            <div class="btn-group" role="group">
+                                            <div class="btn-group btn-group-sm" role="group">
                                                 <a th:href="@{/admin/products/{id}/details(id=${product.id})}" 
-                                                   class="btn btn-sm btn-info" title="Xem chi tiết">
+                                                   class="btn btn-info btn-action" 
+                                                   data-bs-toggle="tooltip"
+                                                   title="Xem chi tiết">
                                                     <i class="fas fa-eye"></i>
                                                 </a>
-                                                <button th:if="${!product.isActive}" 
+                                                <button th:if="${product.approvalStatus?.name() == 'PENDING'}" 
                                                         type="button" 
-                                                        class="btn btn-sm btn-success" 
-                                                        title="Duyệt sản phẩm"
-                                                        th:onclick="|approveProduct('${product.id}')|">
+                                                        class="btn btn-success btn-action" 
+                                                        data-bs-toggle="tooltip"
+                                                        title="Duyệt"
+                                                        th:data-product-id="${product.id}"
+                                                        onclick="approveProduct(this.getAttribute('data-product-id'))">
                                                     <i class="fas fa-check"></i>
                                                 </button>
                                                 <button type="button" 
-                                                        class="btn btn-sm btn-danger" 
-                                                        title="Từ chối/Xóa"
-                                                        th:onclick="|rejectProduct('${product.id}', '${product.name}')|">
+                                                        class="btn btn-danger btn-action" 
+                                                        data-bs-toggle="tooltip"
+                                                        title="Từ chối"
+                                                        th:data-product-id="${product.id}"
+                                                        th:data-product-name="${product.name}"
+                                                        onclick="rejectProduct(this.getAttribute('data-product-id'), this.getAttribute('data-product-name'))">
                                                     <i class="fas fa-times"></i>
                                                 </button>
                                             </div>
@@ -206,25 +227,27 @@
                         </div>
 
                         <!-- Pagination -->
-                        <nav th:if="${totalPages > 1}">
-                            <ul class="pagination justify-content-center">
-                                <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
-                                    <a class="page-link" th:href="@{/admin/products(page=${currentPage - 1}, search=${search}, status=${status}, storeId=${storeId})}">
-                                        Trước
-                                    </a>
-                                </li>
-                                <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
-                                    th:classappend="${i == currentPage ? 'active' : ''}">
-                                    <a class="page-link" th:href="@{/admin/products(page=${i}, search=${search}, status=${status}, storeId=${storeId})}"
-                                       th:text="${i + 1}">1</a>
-                                </li>
-                                <li class="page-item" th:classappend="${currentPage == totalPages - 1 ? 'disabled' : ''}">
-                                    <a class="page-link" th:href="@{/admin/products(page=${currentPage + 1}, search=${search}, status=${status}, storeId=${storeId})}">
-                                        Sau
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
+                        <div th:if="${totalPages > 1}" class="p-3 border-top">
+                            <nav>
+                                <ul class="pagination justify-content-center mb-0">
+                                    <li class="page-item" th:classappend="${currentPage == 0 ? 'disabled' : ''}">
+                                        <a class="page-link" th:href="@{/admin/products(page=${currentPage - 1}, search=${search}, status=${status}, storeId=${storeId})}">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    </li>
+                                    <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                                        th:classappend="${i == currentPage ? 'active' : ''}">
+                                        <a class="page-link" th:href="@{/admin/products(page=${i}, search=${search}, status=${status}, storeId=${storeId})}"
+                                           th:text="${i + 1}">1</a>
+                                    </li>
+                                    <li class="page-item" th:classappend="${currentPage == totalPages - 1 ? 'disabled' : ''}">
+                                        <a class="page-link" th:href="@{/admin/products(page=${currentPage + 1}, search=${search}, status=${status}, storeId=${storeId})}">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -259,6 +282,12 @@
     </div>
 
     <script>
+        // Initialize Bootstrap tooltips
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl)
+        });
+
         function approveProduct(id) {
             if (confirm('Bạn có chắc muốn duyệt sản phẩm này?')) {
                 const form = document.createElement('form');
