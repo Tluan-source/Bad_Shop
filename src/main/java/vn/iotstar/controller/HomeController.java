@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import jakarta.persistence.Transient;
-
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -18,16 +18,17 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import jakarta.persistence.Transient;
 import vn.iotstar.entity.Category;
 import vn.iotstar.entity.Product;
 import vn.iotstar.entity.Review;
 import vn.iotstar.entity.Style;
 import vn.iotstar.entity.StyleValue;
+import vn.iotstar.repository.ProductRepository;
+import vn.iotstar.repository.ReviewRepository;
 import vn.iotstar.repository.StyleRepository;
 import vn.iotstar.repository.StyleValueRepository;
 import vn.iotstar.service.CartService;
@@ -35,8 +36,6 @@ import vn.iotstar.service.CategoryService;
 import vn.iotstar.service.FavoriteService;
 import vn.iotstar.service.ProductService;
 import vn.iotstar.service.StyleService;
-import vn.iotstar.repository.ReviewRepository;
-import vn.iotstar.repository.ProductRepository;
 
 @Controller
 public class HomeController {
@@ -77,9 +76,9 @@ public class HomeController {
     @GetMapping("/")
     public String home(Model model) {
 
-        // ✅ Top 20 sản phẩm bán chạy
+        // ✅ Top 20 sản phẩm bán chạy (chỉ approved)
         Pageable pageable = PageRequest.of(0, 20);
-        List<Product> topProducts = productRepository.findTop20ByOrderBySoldDesc(pageable);
+        List<Product> topProducts = productRepository.findTopSellingApprovedProducts(pageable);
         model.addAttribute("topProducts", topProducts);
 
         // ✅ Lấy danh mục từ DB
@@ -199,6 +198,11 @@ public class HomeController {
 
         if (productOpt.isPresent()) {
             Product product = productOpt.get();
+            
+            // Kiểm tra sản phẩm có được duyệt và đang bán không
+            if (product.getApprovalStatus() != Product.ApprovalStatus.APPROVED || !product.getIsSelling()) {
+                return "redirect:/products?error=unavailable";
+            }
 
             // 3️⃣ Sản phẩm liên quan
             List<Product> relatedProducts = productService.getProductsByCategory(product.getCategory().getId());

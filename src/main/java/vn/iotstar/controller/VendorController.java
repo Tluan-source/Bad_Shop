@@ -171,17 +171,24 @@ public class VendorController {
     // ========================================
     
     @GetMapping("/dashboard")
-    public String dashboard(Model model, Authentication auth) {
+    public String dashboard(Model model, Authentication auth, RedirectAttributes redirectAttributes) {
         User user = userService.findByEmail(auth.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
         String storeId = securityService.getCurrentVendorStoreId(user.getId());
+        
+        // Get store info để check active status
+        VendorStoreDTO store = storeService.getMyStore(storeId, user.getId());
+        
+        // Kiểm tra nếu store bị khóa, redirect về trang chủ
+        if (store != null && !store.getIsActive()) {
+            redirectAttributes.addFlashAttribute("error", "Cửa hàng của bạn đã bị khóa. Vui lòng liên hệ admin để biết thêm chi tiết.");
+            return "redirect:/";
+        }
         
         // Get dashboard statistics
         VendorDashboardStatsDTO stats = analyticsService.getDashboardStats(storeId);
         model.addAttribute("stats", stats);
         
-        // Get store info
-        VendorStoreDTO store = storeService.getMyStore(storeId, user.getId());
         model.addAttribute("store", store);
         
         // Get recent orders (top 5)

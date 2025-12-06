@@ -24,17 +24,17 @@ public class ProductService {
     }
 
     public List<Product> getAllActiveProducts() {
-        return productRepository.findByIsActiveTrueAndIsSellingTrue();
+        return productRepository.findApprovedAndSellingProducts();
     }
 
     // additional helpers
     public List<Product> findByCategory(String categoryId) {
-        return productRepository.findByCategoryIdAndIsActiveTrueAndIsSellingTrue(categoryId);
+        return productRepository.findByCategoryAndApprovedAndSelling(categoryId);
     }
 
     public List<Product> filterProducts(String categoryId, Double minPrice, Double maxPrice, String brand) {
-    // Bắt đầu với tất cả sản phẩm active
-    List<Product> products = productRepository.findByIsActiveTrueAndIsSellingTrue();
+    // Bắt đầu với tất cả sản phẩm approved và đang bán
+    List<Product> products = productRepository.findApprovedAndSellingProducts();
     
     // Filter theo category
     if (categoryId != null && !categoryId.isEmpty()) {
@@ -72,23 +72,24 @@ public class ProductService {
     }
 
     public List<Product> getProductsByCategory(String categoryId) {
-        return productRepository.findByCategoryIdAndIsActiveTrueAndIsSellingTrue(categoryId);
+        return productRepository.findByCategoryAndApprovedAndSelling(categoryId);
     }
     
     public List<Product> findByCategoryId(String categoryId, Pageable pageable) {
-        return productRepository.findByCategoryIdAndIsActiveTrueAndIsSellingTrue(categoryId)
+        return productRepository.findByCategoryAndApprovedAndSelling(categoryId)
                 .stream()
                 .skip(pageable.getOffset())
                 .limit(pageable.getPageSize())
                 .collect(Collectors.toList());
     }
     public List<Product> searchProductsByName(String keyword) {
-        return productRepository.findByNameContainingIgnoreCaseAndIsActiveTrue(keyword);
+        return productRepository.searchApprovedAndSellingByName(keyword);
     }
     public List<Product> searchByKeyword(String keyword) {
         if (keyword == null || keyword.trim().isEmpty()) {
             return List.of();
         }
-        return productRepository.findByNameContainingIgnoreCase(keyword);
+        // Lọc chỉ lấy sản phẩm approved và đang bán
+        return productRepository.searchApprovedAndSellingByName(keyword);
     }
 }

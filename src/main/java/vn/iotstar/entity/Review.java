@@ -52,6 +52,18 @@ public class Review {
     @Column(name = "vendor_reply_at")
     private LocalDateTime vendorReplyAt;
     
+    @Column(name = "is_removed")
+    private Boolean isRemoved = false;
+    
+    @Column(name = "removed_reason", columnDefinition = "NVARCHAR(500)")
+    private String removedReason;
+    
+    @Column(name = "removed_by")
+    private String removedBy;
+    
+    @Column(name = "removed_at")
+    private LocalDateTime removedAt;
+    
     @OneToMany(mappedBy = "review", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JsonIgnore
     private List<ReviewImage> reviewImages;

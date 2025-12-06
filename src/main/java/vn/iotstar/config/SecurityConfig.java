@@ -35,6 +35,7 @@ public class SecurityConfig {
                 .requestMatchers("/vendor/register").hasAnyRole("USER", "ADMIN")
                 .requestMatchers("/vendor/**").hasAnyRole("VENDOR", "ADMIN")
                 .requestMatchers("/shipper/**").hasRole("SHIPPER")
+                .requestMatchers("/notifications/**").hasAnyRole("USER", "ADMIN", "VENDOR", "SHIPPER")
                 .requestMatchers("/user/**", "/cart/**", "/favorites/**", "/api/chat/**", "/ws-chat/**").hasAnyRole("USER", "ADMIN", "VENDOR", "SHIPPER")
                 .anyRequest().authenticated()
             

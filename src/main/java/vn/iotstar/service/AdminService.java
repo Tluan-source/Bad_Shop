@@ -15,11 +15,14 @@ import vn.iotstar.entity.Category;
 import vn.iotstar.entity.Order;
 import vn.iotstar.entity.OrderItem;
 import vn.iotstar.entity.Product;
+import vn.iotstar.entity.Review;
 import vn.iotstar.entity.Store;
+import vn.iotstar.entity.User;
 import vn.iotstar.repository.CategoryRepository;
 import vn.iotstar.repository.OrderItemRepository;
 import vn.iotstar.repository.OrderRepository;
 import vn.iotstar.repository.ProductRepository;
+import vn.iotstar.repository.ReviewRepository;
 import vn.iotstar.repository.StoreRepository;
 import vn.iotstar.repository.UserRepository;
 
@@ -43,6 +46,12 @@ public class AdminService {
     
     @Autowired
     private CategoryRepository categoryRepository;
+    
+    @Autowired
+    private NotificationService notificationService;
+    
+    @Autowired
+    private ReviewRepository reviewRepository;
     
     /**
      * Get dashboard statistics
@@ -600,6 +609,17 @@ public class AdminService {
         product.setRejectionReason(reason);
         
         productRepository.save(product);
+        
+        // Send notification to vendor
+        if (product.getStore() != null && product.getStore().getOwner() != null) {
+            notificationService.notifyProductRejected(
+                product.getStore().getOwner(),
+                product.getName(),
+                product.getId(),
+                reason,
+                adminUserId
+            );
+        }
     }
     
     /**
@@ -617,6 +637,39 @@ public class AdminService {
         product.setRejectionReason("Sản phẩm đã bị xóa bởi Admin");
         
         productRepository.save(product);
+    }
+    
+    /**
+     * Remove a review/comment with reason and notify user
+     */
+    public void removeReview(String reviewId, String adminUserId, String reason) {
+        Review review = reviewRepository.findById(reviewId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy bình luận"));
+        
+        review.setIsRemoved(true);
+        review.setRemovedReason(reason);
+        review.setRemovedBy(adminUserId);
+        review.setRemovedAt(LocalDateTime.now());
+        
+        reviewRepository.save(review);
+        
+        // Send notification to user
+        if (review.getUser() != null && review.getProduct() != null) {
+            notificationService.notifyCommentRemoved(
+                review.getUser(),
+                review.getProduct().getName(),
+                reason,
+                adminUserId
+            );
+        }
+    }
+    
+    /**
+     * Notify store owner when store is locked
+     */
+    public void notifyStoreLocked(User vendor, String storeName, String storeId, 
+                                 String reason, String lockedBy) {
+        notificationService.notifyStoreLocked(vendor, storeName, storeId, reason, lockedBy);
     }
     
     /**
@@ -673,5 +726,72 @@ public class AdminService {
         }
         
         return violations;
+    }
+    
+    /**
+     * Get all reviews with user and product details
+     */
+    public List<Review> getAllReviews() {
+        return reviewRepository.findAllWithDetails();
+    }
+    
+    /**
+     * Get only removed reviews
+     */
+    public List<Review> getRemovedReviews() {
+        return reviewRepository.findAllRemoved();
+    }
+    
+    /**
+     * Get only active (not removed) reviews
+     */
+    public List<Review> getActiveReviews() {
+        return reviewRepository.findAllActive();
+    }
+    
+    /**
+     * Search reviews by user name, product name, or comment content
+     */
+    public List<Review> searchReviews(String search) {
+        if (search == null || search.trim().isEmpty()) {
+            return getAllReviews();
+        }
+        return reviewRepository.searchReviews(search.trim());
+    }
+    
+    /**
+     * Get review statistics for admin dashboard
+     */
+    public Map<String, Object> getReviewStatistics() {
+        Map<String, Object> stats = new HashMap<>();
+        
+        List<Review> allReviews = reviewRepository.findAllWithDetails();
+        long totalReviews = allReviews.size();
+        long removedReviews = allReviews.stream()
+            .filter(r -> r.getIsRemoved() != null && r.getIsRemoved())
+            .count();
+        long activeReviews = totalReviews - removedReviews;
+        
+        stats.put("totalReviews", totalReviews);
+        stats.put("activeReviews", activeReviews);
+        stats.put("removedReviews", removedReviews);
+        stats.put("removalRate", totalReviews > 0 ? (removedReviews * 100.0 / totalReviews) : 0);
+        
+        return stats;
+    }
+    
+    /**
+     * Restore a removed review
+     */
+    public void restoreReview(String reviewId) {
+        Review review = reviewRepository.findById(reviewId)
+            .orElseThrow(() -> new RuntimeException("Không tìm thấy bình luận"));
+        
+        review.setIsRemoved(false);
+        review.setRemovedReason(null);
+        review.setRemovedBy(null);
+        review.setRemovedAt(null);
+        
+        reviewRepository.save(review);
     }
 }

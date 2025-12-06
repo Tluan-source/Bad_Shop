@@ -29,4 +29,34 @@ public interface ReviewRepository extends JpaRepository<Review, String> {
 
     boolean existsByOrderItemIdAndUserId(String orderItemId, String userId);
 
+
+    // Admin management queries
+    @Query("SELECT r FROM Review r " +
+           "LEFT JOIN FETCH r.user " +
+           "LEFT JOIN FETCH r.product " +
+           "ORDER BY r.createdAt DESC")
+    List<Review> findAllWithDetails();
+    
+    @Query("SELECT r FROM Review r " +
+           "LEFT JOIN FETCH r.user " +
+           "LEFT JOIN FETCH r.product " +
+           "WHERE r.isRemoved = true " +
+           "ORDER BY r.removedAt DESC")
+    List<Review> findAllRemoved();
+    
+    @Query("SELECT r FROM Review r " +
+           "LEFT JOIN FETCH r.user " +
+           "LEFT JOIN FETCH r.product " +
+           "WHERE r.isRemoved = false OR r.isRemoved IS NULL " +
+           "ORDER BY r.createdAt DESC")
+    List<Review> findAllActive();
+    
+    @Query("SELECT r FROM Review r " +
+           "LEFT JOIN FETCH r.user u " +
+           "LEFT JOIN FETCH r.product p " +
+           "WHERE (LOWER(u.fullName) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(p.name) LIKE LOWER(CONCAT('%', :search, '%')) " +
+           "OR LOWER(r.comment) LIKE LOWER(CONCAT('%', :search, '%'))) " +
+           "ORDER BY r.createdAt DESC")
+    List<Review> searchReviews(@Param("search") String search);
 }

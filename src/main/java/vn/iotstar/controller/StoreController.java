@@ -1,18 +1,19 @@
 package vn.iotstar.controller;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
+
 import vn.iotstar.entity.Product;
 import vn.iotstar.entity.Store;
 import vn.iotstar.repository.ProductRepository;
 import vn.iotstar.repository.StoreRepository;
-
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Controller for public store views (guest access)
@@ -56,7 +57,8 @@ public class StoreController {
         }
         
         Store store = storeOpt.get();
-        List<Product> products = productRepository.findByStoreIdAndIsActiveTrue(id);
+        // Chỉ lấy sản phẩm đã duyệt và đang bán
+        List<Product> products = productRepository.findByStoreIdAndApprovedAndSelling(id);
         
         model.addAttribute("store", store);
         model.addAttribute("products", products);

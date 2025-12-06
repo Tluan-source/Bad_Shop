@@ -1,0 +1,112 @@
+﻿<!DOCTYPE html>
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+     lang="vi"
+>
+     <head>
+          <th:block th:replace="~{fragments/head :: head}"></th:block>
+          <title>Thông báo - Badminton Store</title>
+          <link rel="stylesheet" th:href="@{/css/notifications.css}" />
+     </head>
+     <body>
+          <th:block th:replace="~{fragments/header :: header}"></th:block>
+
+          <div class="container my-5">
+               <div class="notifications-container">
+                    <!-- Header -->
+                    <div class="notifications-header">
+                         <h2 class="mb-0"><i class="fas fa-bell me-2"></i>Thông báo</h2>
+                         <div class="header-actions">
+                              <span class="unread-badge" th:if="${unreadCount > 0}">
+                                   <span th:text="${unreadCount}">0</span> chưa đọc
+                              </span>
+                              <button
+                                   class="btn btn-sm btn-outline-primary"
+                                   id="markAllReadBtn"
+                                   th:if="${unreadCount > 0}"
+                              >
+                                   <i class="fas fa-check-double me-1"></i>Đánh dấu tất cả đã đọc
+                              </button>
+                         </div>
+                    </div>
+
+                    <!-- Notifications List -->
+                    <div class="notifications-list">
+                         <!-- Empty State -->
+                         <div class="empty-state" th:if="${#lists.isEmpty(notifications)}">
+                              <i class="fas fa-bell-slash"></i>
+                              <h4>Chưa có thông báo nào</h4>
+                              <p>
+                                   Bạn sẽ nhận được thông báo về đơn hàng, ưu đãi và các hoạt động
+                                   của cửa hàng tại đây
+                              </p>
+                         </div>
+
+                         <!-- Notification Items -->
+                         <div th:unless="${#lists.isEmpty(notifications)}">
+                              <div
+                                   class="notification-item"
+                                   th:each="notification : ${notifications}"
+                                   th:classappend="${!notification.isRead} ? 'unread' : ''"
+                                   th:attr="data-id=${notification.id}, data-type=${notification.type}, data-related-id=${notification.relatedId}"
+                              >
+                                   <div
+                                        class="notification-icon"
+                                        th:classappend="${notification.type}"
+                                   >
+                                        <i
+                                             th:class="${notification.type == 'ORDER' ? 'fas fa-shopping-bag' : 
+                                                       notification.type == 'PRODUCT' ? 'fas fa-box' :
+                                                       notification.type == 'STORE' ? 'fas fa-store' :
+                                                       notification.type == 'REVIEW' ? 'fas fa-star' :
+                                                       notification.type == 'VOUCHER' ? 'fas fa-ticket-alt' :
+                                                       notification.type == 'SYSTEM' ? 'fas fa-info-circle' :
+                                                       'fas fa-bell'}"
+                                        ></i>
+                                   </div>
+                                   <div class="notification-content">
+                                        <div
+                                             class="notification-title"
+                                             th:text="${notification.title}"
+                                        >
+                                             Tiêu đề thông báo
+                                        </div>
+                                        <div
+                                             class="notification-message"
+                                             th:text="${notification.content}"
+                                        >
+                                             Nội dung thông báo
+                                        </div>
+                                        <div class="notification-time">
+                                             <i class="far fa-clock me-1"></i>
+                                             <span
+                                                  th:text="${#temporals.format(notification.createdAt, 'dd/MM/yyyy HH:mm')}"
+                                                  >01/01/2024 10:00</span
+                                             >
+                                        </div>
+                                   </div>
+                                   <div class="notification-actions">
+                                        <span
+                                             class="unread-dot"
+                                             th:if="${!notification.isRead}"
+                                        ></span>
+                                        <button
+                                             class="btn btn-sm btn-link mark-read-btn"
+                                             th:if="${!notification.isRead}"
+                                             th:attr="data-id=${notification.id}"
+                                        >
+                                             <i class="fas fa-check"></i>
+                                        </button>
+                                   </div>
+                              </div>
+                         </div>
+                    </div>
+               </div>
+          </div>
+
+          <th:block th:replace="~{fragments/footer :: footer}"></th:block>
+
+          <script th:src="@{/js/notifications.js}"></script>
+     </body>
+</html>

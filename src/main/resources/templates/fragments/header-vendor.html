@@ -1,131 +1,428 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
-<head>
-    <title>Vendor Header</title>
-    <!-- Vendor specific CSS -->
-    <link rel="stylesheet" th:href="@{/css/vendor-style.css}" />
-</head>
-<body>
-<header th:fragment="header-vendor">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-success">
-        <div class="container-fluid">
-            <a class="navbar-brand d-flex align-items-center" th:href="@{/vendor/dashboard}">
-                <i class="fas fa-store fa-lg me-2"></i>
-                <span><strong>VENDOR</strong> Dashboard</span>
-            </a>
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+>
+     <head>
+          <title>Vendor Header</title>
+          <!-- Vendor specific CSS -->
+          <link rel="stylesheet" th:href="@{/css/vendor-style.css}" />
+     </head>
+     <body>
+          <header th:fragment="header-vendor">
+               <nav class="navbar navbar-expand-lg navbar-dark bg-success">
+                    <div class="container-fluid">
+                         <a
+                              class="navbar-brand d-flex align-items-center"
+                              th:href="@{/vendor/dashboard}"
+                         >
+                              <i class="fas fa-store fa-lg me-2"></i>
+                              <span><strong>VENDOR</strong> Dashboard</span>
+                         </a>
 
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarVendor">
-                <span class="navbar-toggler-icon"></span>
-            </button>
+                         <button
+                              class="navbar-toggler"
+                              type="button"
+                              data-bs-toggle="collapse"
+                              data-bs-target="#navbarVendor"
+                         >
+                              <span class="navbar-toggler-icon"></span>
+                         </button>
 
-            <div class="collapse navbar-collapse" id="navbarVendor">
-                <ul class="navbar-nav me-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/vendor/dashboard}">
-                            <i class="fas fa-tachometer-alt me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/vendor/store}">
-                            <i class="fas fa-store-alt me-1"></i>Cửa hàng của tôi
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/vendor/products}">
-                            <i class="fas fa-box-open me-1"></i>Sản phẩm
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/vendor/orders}">
-                            <i class="fas fa-shopping-bag me-1"></i>Đơn hàng
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/vendor/revenue}">
-                            <i class="fas fa-dollar-sign me-1"></i>Doanh thu
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/vendor/wallet}">
-                            <i class="fas fa-wallet me-1"></i>Ví tiền
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarChatDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-comments me-1"></i>Tin nhắn
-                        </a>
-                        <ul class="dropdown-menu" aria-labelledby="navbarChatDropdown">
-                            <li>
-                                <a class="dropdown-item" th:href="@{/vendor/chat}">
-                                    <i class="fas fa-store me-2 text-success"></i>Tin nhắn từ khách hàng
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" th:href="@{/user/chat}">
-                                    <i class="fas fa-shopping-cart me-2 text-primary"></i>Tin nhắn với Shop khác
-                                </a>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
+                         <div class="collapse navbar-collapse" id="navbarVendor">
+                              <ul class="navbar-nav me-auto">
+                                   <li class="nav-item">
+                                        <a class="nav-link" th:href="@{/vendor/dashboard}">
+                                             <i class="fas fa-tachometer-alt me-1"></i>Dashboard
+                                        </a>
+                                   </li>
+                                   <li class="nav-item">
+                                        <a class="nav-link" th:href="@{/vendor/store}">
+                                             <i class="fas fa-store-alt me-1"></i>Cửa hàng của tôi
+                                        </a>
+                                   </li>
+                                   <li class="nav-item">
+                                        <a class="nav-link" th:href="@{/vendor/products}">
+                                             <i class="fas fa-box-open me-1"></i>Sản phẩm
+                                        </a>
+                                   </li>
+                                   <li class="nav-item">
+                                        <a class="nav-link" th:href="@{/vendor/orders}">
+                                             <i class="fas fa-shopping-bag me-1"></i>Đơn hàng
+                                        </a>
+                                   </li>
+                                   <li class="nav-item">
+                                        <a class="nav-link" th:href="@{/vendor/revenue}">
+                                             <i class="fas fa-dollar-sign me-1"></i>Doanh thu
+                                        </a>
+                                   </li>
+                                   <li class="nav-item">
+                                        <a class="nav-link" th:href="@{/vendor/wallet}">
+                                             <i class="fas fa-wallet me-1"></i>Ví tiền
+                                        </a>
+                                   </li>
+                                   <li class="nav-item dropdown">
+                                        <a
+                                             class="nav-link dropdown-toggle"
+                                             href="#"
+                                             id="navbarChatDropdown"
+                                             role="button"
+                                             data-bs-toggle="dropdown"
+                                             aria-expanded="false"
+                                        >
+                                             <i class="fas fa-comments me-1"></i>Tin nhắn
+                                        </a>
+                                        <ul
+                                             class="dropdown-menu"
+                                             aria-labelledby="navbarChatDropdown"
+                                        >
+                                             <li>
+                                                  <a
+                                                       class="dropdown-item"
+                                                       th:href="@{/vendor/chat}"
+                                                  >
+                                                       <i class="fas fa-store me-2 text-success"></i
+                                                       >Tin nhắn từ khách hàng
+                                                  </a>
+                                             </li>
+                                             <li>
+                                                  <a class="dropdown-item" th:href="@{/user/chat}">
+                                                       <i
+                                                            class="fas fa-shopping-cart me-2 text-primary"
+                                                       ></i
+                                                       >Tin nhắn với Shop khác
+                                                  </a>
+                                             </li>
+                                        </ul>
+                                   </li>
+                              </ul>
 
-                <ul class="navbar-nav">
-                    <li class="nav-item">
-                        <a class="nav-link" th:href="@{/}">
-                            <i class="fas fa-home me-1"></i>Về trang chủ
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="vendorDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-tie me-2"></i>
-                            <span sec:authentication="name">Vendor</span>
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="vendorDropdown" style="min-width: 280px;">
-                            <li class="px-3 py-2">
-                                <div class="d-flex align-items-center mb-2">
-                                    <div class="rounded-circle bg-light p-2 me-2">
-                                        <i class="fas fa-store fa-2x text-success"></i>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-0 fw-bold" sec:authentication="name">Vendor</h6>
-                                        <small class="text-muted">Nhà cung cấp</small>
-                                    </div>
-                                </div>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item py-2" th:href="@{/vendor/profile}">
-                                    <i class="fas fa-id-card me-2 text-primary"></i>
-                                    <span>Xem thông tin chi tiết</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item py-2" th:href="@{/vendor/settings}">
-                                    <i class="fas fa-cog me-2 text-secondary"></i>
-                                    <span>Cài đặt</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item py-2" th:href="@{/vendor/chat}">
-                                    <i class="fas fa-comments me-2 text-info"></i>
-                                    <span>Tin nhắn khách hàng</span>
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form th:action="@{/logout}" method="post" class="px-2">
-                                    <button type="submit" class="dropdown-item py-2 text-danger">
-                                        <i class="fas fa-sign-out-alt me-2"></i>
-                                        <span>Đăng xuất</span>
-                                    </button>
-                                </form>
-                            </li>
-                        </ul>
-                    </li>
-                </ul>
-            </div>
-        </div>
-    </nav>
-</header>
-</body>
+                              <ul class="navbar-nav">
+                                   <!-- Notification Bell -->
+                                   <li class="nav-item dropdown">
+                                        <a
+                                             class="nav-link position-relative"
+                                             href="#"
+                                             id="notificationDropdownVendor"
+                                             role="button"
+                                             data-bs-toggle="dropdown"
+                                             aria-expanded="false"
+                                        >
+                                             <i class="fas fa-bell fa-lg"></i>
+                                             <span
+                                                  id="notificationBadgeVendor"
+                                                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                                  style="display: none"
+                                             >
+                                                  0
+                                             </span>
+                                        </a>
+                                        <div
+                                             class="dropdown-menu dropdown-menu-end shadow"
+                                             aria-labelledby="notificationDropdownVendor"
+                                             style="
+                                                  width: 350px;
+                                                  max-height: 500px;
+                                                  overflow-y: auto;
+                                             "
+                                        >
+                                             <div
+                                                  class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom"
+                                             >
+                                                  <h6 class="mb-0">Thông báo</h6>
+                                                  <button
+                                                       id="markAllReadBtnVendor"
+                                                       class="btn btn-sm btn-link text-primary p-0"
+                                                  >
+                                                       Đánh dấu đã đọc
+                                                  </button>
+                                             </div>
+                                             <div
+                                                  id="notificationListVendor"
+                                                  class="list-group list-group-flush"
+                                             >
+                                                  <div class="text-center py-4 text-muted">
+                                                       <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                                                       <p class="mb-0">Không có thông báo mới</p>
+                                                  </div>
+                                             </div>
+                                             <div class="text-center border-top p-2">
+                                                  <a
+                                                       th:href="@{/notifications}"
+                                                       class="btn btn-sm btn-link"
+                                                       >Xem tất cả</a
+                                                  >
+                                             </div>
+                                        </div>
+                                   </li>
+
+                                   <li class="nav-item">
+                                        <a class="nav-link" th:href="@{/}">
+                                             <i class="fas fa-home me-1"></i>Về trang chủ
+                                        </a>
+                                   </li>
+                                   <li class="nav-item dropdown">
+                                        <a
+                                             class="nav-link dropdown-toggle d-flex align-items-center"
+                                             href="#"
+                                             id="vendorDropdown"
+                                             role="button"
+                                             data-bs-toggle="dropdown"
+                                             aria-expanded="false"
+                                        >
+                                             <i class="fas fa-user-tie me-2"></i>
+                                             <span sec:authentication="name">Vendor</span>
+                                        </a>
+                                        <ul
+                                             class="dropdown-menu dropdown-menu-end shadow"
+                                             aria-labelledby="vendorDropdown"
+                                             style="min-width: 280px"
+                                        >
+                                             <li class="px-3 py-2">
+                                                  <div class="d-flex align-items-center mb-2">
+                                                       <div
+                                                            class="rounded-circle bg-light p-2 me-2"
+                                                       >
+                                                            <i
+                                                                 class="fas fa-store fa-2x text-success"
+                                                            ></i>
+                                                       </div>
+                                                       <div>
+                                                            <h6
+                                                                 class="mb-0 fw-bold"
+                                                                 sec:authentication="name"
+                                                            >
+                                                                 Vendor
+                                                            </h6>
+                                                            <small class="text-muted"
+                                                                 >Nhà cung cấp</small
+                                                            >
+                                                       </div>
+                                                  </div>
+                                             </li>
+                                             <li><hr class="dropdown-divider" /></li>
+                                             <li>
+                                                  <a
+                                                       class="dropdown-item py-2"
+                                                       th:href="@{/vendor/profile}"
+                                                  >
+                                                       <i
+                                                            class="fas fa-id-card me-2 text-primary"
+                                                       ></i>
+                                                       <span>Xem thông tin chi tiết</span>
+                                                  </a>
+                                             </li>
+                                             <li>
+                                                  <a
+                                                       class="dropdown-item py-2"
+                                                       th:href="@{/vendor/settings}"
+                                                  >
+                                                       <i
+                                                            class="fas fa-cog me-2 text-secondary"
+                                                       ></i>
+                                                       <span>Cài đặt</span>
+                                                  </a>
+                                             </li>
+                                             <li>
+                                                  <a
+                                                       class="dropdown-item py-2"
+                                                       th:href="@{/vendor/chat}"
+                                                  >
+                                                       <i
+                                                            class="fas fa-comments me-2 text-info"
+                                                       ></i>
+                                                       <span>Tin nhắn khách hàng</span>
+                                                  </a>
+                                             </li>
+                                             <li><hr class="dropdown-divider" /></li>
+                                             <li>
+                                                  <form
+                                                       th:action="@{/logout}"
+                                                       method="post"
+                                                       class="px-2"
+                                                  >
+                                                       <button
+                                                            type="submit"
+                                                            class="dropdown-item py-2 text-danger"
+                                                       >
+                                                            <i class="fas fa-sign-out-alt me-2"></i>
+                                                            <span>Đăng xuất</span>
+                                                       </button>
+                                                  </form>
+                                             </li>
+                                        </ul>
+                                   </li>
+                              </ul>
+                         </div>
+                    </div>
+               </nav>
+
+               <!-- Notification Script for Vendor -->
+               <script>
+                    // Load notification count on page load
+                    document.addEventListener("DOMContentLoaded", function () {
+                         loadNotificationCountVendor();
+
+                         // Load notifications when dropdown is opened
+                         const notificationDropdown = document.getElementById(
+                              "notificationDropdownVendor"
+                         );
+                         if (notificationDropdown) {
+                              notificationDropdown.addEventListener("click", function () {
+                                   loadRecentNotificationsVendor();
+                              });
+                         }
+
+                         // Mark all as read button
+                         const markAllReadBtn = document.getElementById("markAllReadBtnVendor");
+                         if (markAllReadBtn) {
+                              markAllReadBtn.addEventListener("click", function (e) {
+                                   e.preventDefault();
+                                   markAllNotificationsReadVendor();
+                              });
+                         }
+                    });
+
+                    function loadNotificationCountVendor() {
+                         fetch("/notifications/count")
+                              .then((response) => response.json())
+                              .then((data) => {
+                                   updateBadgeVendor(data.count);
+                              })
+                              .catch((error) =>
+                                   console.error("Error loading notification count:", error)
+                              );
+                    }
+
+                    function loadRecentNotificationsVendor() {
+                         fetch("/notifications/recent")
+                              .then((response) => response.json())
+                              .then((data) => {
+                                   displayNotificationsVendor(data.notifications);
+                                   updateBadgeVendor(data.totalUnread);
+                              })
+                              .catch((error) =>
+                                   console.error("Error loading notifications:", error)
+                              );
+                    }
+
+                    function displayNotificationsVendor(notifications) {
+                         const listContainer = document.getElementById("notificationListVendor");
+
+                         if (!notifications || notifications.length === 0) {
+                              listContainer.innerHTML = `
+                    <div class="text-center py-4 text-muted">
+                        <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                        <p class="mb-0">Không có thông báo mới</p>
+                    </div>`;
+                              return;
+                         }
+
+                         listContainer.innerHTML = notifications
+                              .map(
+                                   (notif) => `
+                <a href="#" class="list-group-item list-group-item-action ${
+                     notif.isRead ? "" : "bg-light"
+                }" 
+                   onclick="markNotificationReadVendor('${notif.id}', event)">
+                    <div class="d-flex w-100 justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <h6 class="mb-1">${getNotificationIconVendor(notif.type)} ${
+                                        notif.title
+                                   }</h6>
+                            <p class="mb-1 small text-muted">${notif.content}</p>
+                            <small class="text-muted">${formatDateVendor(notif.createdAt)}</small>
+                        </div>
+                        ${
+                             !notif.isRead
+                                  ? '<span class="badge bg-primary rounded-pill">Mới</span>'
+                                  : ""
+                        }
+                    </div>
+                </a>
+            `
+                              )
+                              .join("");
+                    }
+
+                    function markNotificationReadVendor(notificationId, event) {
+                         event.preventDefault();
+
+                         fetch(`/notifications/${notificationId}/read`, {
+                              method: "POST",
+                              headers: {
+                                   "Content-Type": "application/json",
+                              },
+                         })
+                              .then((response) => response.json())
+                              .then((data) => {
+                                   if (data.success) {
+                                        updateBadgeVendor(data.unreadCount);
+                                        loadRecentNotificationsVendor(); // Reload to update UI
+                                   }
+                              })
+                              .catch((error) =>
+                                   console.error("Error marking notification as read:", error)
+                              );
+                    }
+
+                    function markAllNotificationsReadVendor() {
+                         fetch("/notifications/read-all", {
+                              method: "POST",
+                              headers: {
+                                   "Content-Type": "application/json",
+                              },
+                         })
+                              .then((response) => response.json())
+                              .then((data) => {
+                                   if (data.success) {
+                                        updateBadgeVendor(0);
+                                        loadRecentNotificationsVendor(); // Reload to update UI
+                                   }
+                              })
+                              .catch((error) => console.error("Error marking all as read:", error));
+                    }
+
+                    function updateBadgeVendor(count) {
+                         const badge = document.getElementById("notificationBadgeVendor");
+                         if (badge) {
+                              if (count > 0) {
+                                   badge.textContent = count > 99 ? "99+" : count;
+                                   badge.style.display = "inline";
+                              } else {
+                                   badge.style.display = "none";
+                              }
+                         }
+                    }
+
+                    function getNotificationIconVendor(type) {
+                         const icons = {
+                              ACCOUNT_LOCKED: '<i class="fas fa-user-lock text-danger"></i>',
+                              STORE_LOCKED: '<i class="fas fa-store-slash text-danger"></i>',
+                              PRODUCT_REJECTED: '<i class="fas fa-times-circle text-warning"></i>',
+                              COMMENT_REMOVED: '<i class="fas fa-comment-slash text-warning"></i>',
+                              ORDER_UPDATE: '<i class="fas fa-box text-info"></i>',
+                              SYSTEM: '<i class="fas fa-info-circle text-primary"></i>',
+                         };
+                         return icons[type] || '<i class="fas fa-bell"></i>';
+                    }
+
+                    function formatDateVendor(dateString) {
+                         const date = new Date(dateString);
+                         const now = new Date();
+                         const diff = Math.floor((now - date) / 1000); // seconds
+
+                         if (diff < 60) return "Vừa xong";
+                         if (diff < 3600) return Math.floor(diff / 60) + " phút trước";
+                         if (diff < 86400) return Math.floor(diff / 3600) + " giờ trước";
+                         if (diff < 604800) return Math.floor(diff / 86400) + " ngày trước";
+
+                         return date.toLocaleDateString("vi-VN");
+                    }
+
+                    // Auto refresh notification count every 30 seconds
+                    setInterval(loadNotificationCountVendor, 30000);
+               </script>
+          </header>
+     </body>
 </html>

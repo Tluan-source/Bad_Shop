@@ -1,332 +1,583 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6">
-<head th:replace="~{fragments/head :: head}">
-    <title>Quản lý cửa hàng - Admin</title>
-</head>
-<body class="admin-page">
-    <div th:replace="~{fragments/header-admin :: header-admin}"></div>
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity6"
+>
+     <head th:replace="~{fragments/head :: head}">
+          <title>Quản lý cửa hàng - Admin</title>
+     </head>
+     <body class="admin-page">
+          <div th:replace="~{fragments/header-admin :: header-admin}"></div>
 
-    <div class="container-fluid mt-4 px-4">
-        <div class="admin-content">
-            <!-- Flash Messages -->
-            <div th:if="${message}" class="alert alert-dismissible fade show" 
-                 th:classappend="${'alert-' + messageType}" role="alert">
-                <i class="fas fa-info-circle me-2"></i>
-                <span th:text="${message}">Message</span>
-                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-            </div>
-            
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h3><i class="fas fa-store text-primary me-2"></i>Quản lý cửa hàng</h3>
-                <div class="d-flex gap-2">
-                    <form action="/admin/stores" method="get" class="d-flex">
-                        <input type="text" name="search" class="form-control me-2" 
-                               placeholder="Tìm kiếm cửa hàng hoặc chủ cửa hàng..." 
-                               th:value="${search}"
-                               style="min-width: 300px;">
-                        <a th:href="@{/admin/stores}" class="btn btn-outline-secondary me-2" 
-                           th:if="${search != null and !search.isEmpty()}">
-                            <i class="fas fa-times"></i> Xóa
-                        </a>
-                    </form>
-                    <button class="btn btn-admin-primary" data-bs-toggle="modal" data-bs-target="#addStoreModal">
-                        <i class="fas fa-plus me-2"></i>Thêm cửa hàng
-                    </button>
-                </div>
-            </div>
-
-            <div class="row g-3 mb-4">
-                <div class="col-md-3">
-                    <div class="mini-stat-card">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-store text-white bg-success p-3 rounded-circle me-3"></i>
-                            <div>
-                                <h6 class="text-muted mb-1">Tổng cửa hàng</h6>
-                                <h4 class="mb-0" th:text="${totalStores != null ? totalStores : 0}">0</h4>
-                            </div>
-                        </div>
+          <div class="container-fluid mt-4 px-4">
+               <div class="admin-content">
+                    <!-- Flash Messages -->
+                    <div
+                         th:if="${message}"
+                         class="alert alert-dismissible fade show"
+                         th:classappend="${'alert-' + messageType}"
+                         role="alert"
+                    >
+                         <i class="fas fa-info-circle me-2"></i>
+                         <span th:text="${message}">Message</span>
+                         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="mini-stat-card">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-check-circle text-white bg-primary p-3 rounded-circle me-3"></i>
-                            <div>
-                                <h6 class="text-muted mb-1">Đang hoạt động</h6>
-                                <h4 class="mb-0" th:text="${activeStores != null ? activeStores : 0}">0</h4>
-                            </div>
-                        </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                         <h3><i class="fas fa-store text-primary me-2"></i>Quản lý cửa hàng</h3>
+                         <div class="d-flex gap-2">
+                              <form action="/admin/stores" method="get" class="d-flex">
+                                   <input
+                                        type="text"
+                                        name="search"
+                                        class="form-control me-2"
+                                        placeholder="Tìm kiếm cửa hàng hoặc chủ cửa hàng..."
+                                        th:value="${search}"
+                                        style="min-width: 300px"
+                                   />
+                                   <a
+                                        th:href="@{/admin/stores}"
+                                        class="btn btn-outline-secondary me-2"
+                                        th:if="${search != null and !search.isEmpty()}"
+                                   >
+                                        <i class="fas fa-times"></i> Xóa
+                                   </a>
+                              </form>
+                              <button
+                                   class="btn btn-admin-primary"
+                                   data-bs-toggle="modal"
+                                   data-bs-target="#addStoreModal"
+                              >
+                                   <i class="fas fa-plus me-2"></i>Thêm cửa hàng
+                              </button>
+                         </div>
                     </div>
-                </div>
-                <div class="col-md-3">
-                    <div class="mini-stat-card">
-                        <div class="d-flex align-items-center">
-                            <i class="fas fa-ban text-white bg-danger p-3 rounded-circle me-3"></i>
-                            <div>
-                                <h6 class="text-muted mb-1">Không hoạt động</h6>
-                                <h4 class="mb-0" th:text="${inactiveStores != null ? inactiveStores : 0}">0</h4>
-                            </div>
-                        </div>
+
+                    <div class="row g-3 mb-4">
+                         <div class="col-md-3">
+                              <div class="mini-stat-card">
+                                   <div class="d-flex align-items-center">
+                                        <i
+                                             class="fas fa-store text-white bg-success p-3 rounded-circle me-3"
+                                        ></i>
+                                        <div>
+                                             <h6 class="text-muted mb-1">Tổng cửa hàng</h6>
+                                             <h4
+                                                  class="mb-0"
+                                                  th:text="${totalStores != null ? totalStores : 0}"
+                                             >
+                                                  0
+                                             </h4>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                         <div class="col-md-3">
+                              <div class="mini-stat-card">
+                                   <div class="d-flex align-items-center">
+                                        <i
+                                             class="fas fa-check-circle text-white bg-primary p-3 rounded-circle me-3"
+                                        ></i>
+                                        <div>
+                                             <h6 class="text-muted mb-1">Đang hoạt động</h6>
+                                             <h4
+                                                  class="mb-0"
+                                                  th:text="${activeStores != null ? activeStores : 0}"
+                                             >
+                                                  0
+                                             </h4>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                         <div class="col-md-3">
+                              <div class="mini-stat-card">
+                                   <div class="d-flex align-items-center">
+                                        <i
+                                             class="fas fa-ban text-white bg-danger p-3 rounded-circle me-3"
+                                        ></i>
+                                        <div>
+                                             <h6 class="text-muted mb-1">Không hoạt động</h6>
+                                             <h4
+                                                  class="mb-0"
+                                                  th:text="${inactiveStores != null ? inactiveStores : 0}"
+                                             >
+                                                  0
+                                             </h4>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
                     </div>
-                </div>
-            </div>
 
-            <div class="row g-4">
-                <div th:if="${stores == null or stores.isEmpty()}" class="col-12">
-                    <div class="text-center text-muted py-5">
-                        <i class="fas fa-store fa-3x mb-3 d-block"></i>
-                        <p>Chưa có cửa hàng nào trong hệ thống</p>
+                    <div class="row g-4">
+                         <div th:if="${stores == null or stores.isEmpty()}" class="col-12">
+                              <div class="text-center text-muted py-5">
+                                   <i class="fas fa-store fa-3x mb-3 d-block"></i>
+                                   <p>Chưa có cửa hàng nào trong hệ thống</p>
+                              </div>
+                         </div>
+                         <div
+                              class="col-md-6 col-lg-4"
+                              th:each="store : ${stores}"
+                              th:if="${store != null}"
+                         >
+                              <div class="card border-0 shadow-sm h-100">
+                                   <div class="card-body">
+                                        <div
+                                             class="d-flex justify-content-between align-items-start mb-3"
+                                        >
+                                             <h5 class="mb-0">
+                                                  <i class="fas fa-store text-primary me-2"></i>
+                                                  <span
+                                                       th:text="${store.name != null ? store.name : 'N/A'}"
+                                                       >Cửa hàng</span
+                                                  >
+                                             </h5>
+                                             <span
+                                                  class="badge-admin"
+                                                  th:classappend="${store.isActive != null and store.isActive ? 'bg-success' : 'bg-danger'}"
+                                                  th:text="${store.isActive != null and store.isActive ? 'Active' : 'Inactive'}"
+                                                  >Active</span
+                                             >
+                                        </div>
+                                        <p
+                                             class="text-muted mb-3"
+                                             th:text="${store.bio != null ? store.bio : 'Chưa có mô tả'}"
+                                        >
+                                             Mô tả cửa hàng
+                                        </p>
+                                        <div class="mb-2">
+                                             <small class="text-muted"
+                                                  ><i class="fas fa-user me-1"></i>Chủ sở
+                                                  hữu:</small
+                                             >
+                                             <strong
+                                                  class="ms-2"
+                                                  th:text="${store.owner != null and store.owner.fullName != null ? store.owner.fullName : 'N/A'}"
+                                                  >Tên chủ</strong
+                                             >
+                                        </div>
+                                        <div class="mb-2">
+                                             <small class="text-muted"
+                                                  ><i class="fas fa-box me-1"></i>Sản phẩm:</small
+                                             >
+                                             <strong
+                                                  class="ms-2"
+                                                  th:text="${store.products != null ? store.products.size() : 0}"
+                                                  >0</strong
+                                             >
+                                        </div>
+                                        <div class="mb-3">
+                                             <small class="text-muted"
+                                                  ><i class="fas fa-star me-1"></i>Đánh giá:</small
+                                             >
+                                             <strong
+                                                  class="ms-2 text-warning"
+                                                  th:text="${store.rating != null ? store.rating + '/5' : '0/5'}"
+                                                  >0/5</strong
+                                             >
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                             <a
+                                                  th:href="@{/admin/stores/{id}/details(id=${store.id})}"
+                                                  class="btn btn-sm btn-primary flex-fill"
+                                             >
+                                                  <i class="fas fa-eye me-1"></i>Chi tiết
+                                             </a>
+                                             <button
+                                                  type="button"
+                                                  class="btn btn-sm btn-warning flex-fill"
+                                                  th:if="${store.isActive != null and store.isActive}"
+                                                  th:data-store-name="${store.name}"
+                                                  th:data-store-id="${store.id}"
+                                                  onclick="showLockStoreModal(this.dataset.storeId, this.dataset.storeName)"
+                                                  title="Vô hiệu hóa cửa hàng"
+                                             >
+                                                  <i class="fas fa-ban me-1"></i>Khóa
+                                             </button>
+                                             <form
+                                                  th:if="${store.isActive == null or !store.isActive}"
+                                                  th:id="'activateForm-' + ${store.id}"
+                                                  th:action="@{/admin/stores/{id}/toggle-status(id=${store.id})}"
+                                                  method="post"
+                                                  style="display: inline"
+                                             >
+                                                  <input
+                                                       type="hidden"
+                                                       th:name="${_csrf.parameterName}"
+                                                       th:value="${_csrf.token}"
+                                                  />
+                                                  <button
+                                                       type="submit"
+                                                       class="btn btn-sm btn-success flex-fill"
+                                                       title="Kích hoạt cửa hàng"
+                                                  >
+                                                       <i class="fas fa-check me-1"></i>Mở
+                                                  </button>
+                                             </form>
+                                             <button
+                                                  class="btn btn-sm btn-danger flex-fill"
+                                                  th:data-store-name="${store.name}"
+                                                  th:data-store-id="${store.id}"
+                                                  onclick="confirmDeleteStore(this.dataset.storeName, this.dataset.storeId)"
+                                             >
+                                                  <i class="fas fa-trash"></i>
+                                             </button>
+                                             <!-- Hidden delete form for each store -->
+                                             <form
+                                                  th:id="'deleteForm-' + ${store.id}"
+                                                  th:action="@{/admin/stores/{id}/delete(id=${store.id})}"
+                                                  method="post"
+                                                  style="display: none"
+                                             ></form>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
                     </div>
-                </div>
-                <div class="col-md-6 col-lg-4" th:each="store : ${stores}" th:if="${store != null}">
-                    <div class="card border-0 shadow-sm h-100">
-                        <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-3">
-                                <h5 class="mb-0">
-                                    <i class="fas fa-store text-primary me-2"></i>
-                                    <span th:text="${store.name != null ? store.name : 'N/A'}">Cửa hàng</span>
-                                </h5>
-                                <span class="badge-admin" 
-                                      th:classappend="${store.isActive != null and store.isActive ? 'bg-success' : 'bg-danger'}"
-                                      th:text="${store.isActive != null and store.isActive ? 'Active' : 'Inactive'}">Active</span>
-                            </div>
-                            <p class="text-muted mb-3" th:text="${store.bio != null ? store.bio : 'Chưa có mô tả'}">Mô tả cửa hàng</p>
-                            <div class="mb-2">
-                                <small class="text-muted"><i class="fas fa-user me-1"></i>Chủ sở hữu:</small>
-                                <strong class="ms-2" th:text="${store.owner != null and store.owner.fullName != null ? store.owner.fullName : 'N/A'}">Tên chủ</strong>
-                            </div>
-                            <div class="mb-2">
-                                <small class="text-muted"><i class="fas fa-box me-1"></i>Sản phẩm:</small>
-                                <strong class="ms-2" th:text="${store.products != null ? store.products.size() : 0}">0</strong>
-                            </div>
-                            <div class="mb-3">
-                                <small class="text-muted"><i class="fas fa-star me-1"></i>Đánh giá:</small>
-                                <strong class="ms-2 text-warning" th:text="${store.rating != null ? store.rating + '/5' : '0/5'}">0/5</strong>
-                            </div>
-                            <div class="d-flex gap-2">
-                                <a th:href="@{/admin/stores/{id}/details(id=${store.id})}"
-                                   class="btn btn-sm btn-primary flex-fill">
-                                    <i class="fas fa-eye me-1"></i>Chi tiết
-                                </a>
-                                <button type="submit" th:form="'toggleForm-' + ${store.id}" class="btn btn-sm btn-warning flex-fill"
-                                        th:title="${store.isActive != null and store.isActive ? 'Vô hiệu hóa' : 'Kích hoạt'}">
-                                    <i class="fas" th:classappend="${store.isActive != null and store.isActive ? 'fa-ban me-1' : 'fa-check me-1'}"></i>
-                                    <span th:text="${store.isActive != null and store.isActive ? 'Khóa' : 'Mở'}">Toggle</span>
-                                </button>
-                                <form th:id="'toggleForm-' + ${store.id}" th:action="@{/admin/stores/{id}/toggle-status(id=${store.id})}" 
-                                      method="post" style="display: none;">
-                                </form>
-                                <button class="btn btn-sm btn-danger flex-fill" 
-                                        th:data-store-name="${store.name}"
-                                        th:data-store-id="${store.id}"
-                                        onclick="confirmDeleteStore(this.dataset.storeName, this.dataset.storeId)">
-                                    <i class="fas fa-trash"></i>
-                                </button>
-                                <!-- Hidden delete form for each store -->
-                                <form th:id="'deleteForm-' + ${store.id}" 
-                                      th:action="@{/admin/stores/{id}/delete(id=${store.id})}" 
-                                      method="post" style="display: none;">
-                                </form>
-                            </div>
-                        </div>
+
+                    <nav class="mt-4" th:if="${stores != null and !stores.isEmpty()}">
+                         <ul class="pagination justify-content-center">
+                              <!-- Pagination will be generated by JavaScript -->
+                         </ul>
+                    </nav>
+               </div>
+          </div>
+
+          <!-- Add Store Modal -->
+          <div class="modal fade" id="addStoreModal" tabindex="-1">
+               <div class="modal-dialog">
+                    <div class="modal-content">
+                         <div class="modal-header bg-success text-white">
+                              <h5 class="modal-title">
+                                   <i class="fas fa-store me-2"></i>Thêm cửa hàng mới
+                              </h5>
+                              <button
+                                   type="button"
+                                   class="btn-close btn-close-white"
+                                   data-bs-dismiss="modal"
+                              ></button>
+                         </div>
+                         <form th:action="@{/admin/stores/create}" method="post">
+                              <div class="modal-body">
+                                   <div class="mb-3">
+                                        <label class="form-label"
+                                             ><i class="fas fa-store me-1"></i>Tên cửa hàng *</label
+                                        >
+                                        <input
+                                             type="text"
+                                             name="name"
+                                             class="form-control"
+                                             placeholder="Nhập tên cửa hàng"
+                                             required
+                                        />
+                                   </div>
+                                   <div class="mb-3">
+                                        <label class="form-label"
+                                             ><i class="fas fa-envelope me-1"></i>Email cửa hàng
+                                             *</label
+                                        >
+                                        <input
+                                             type="email"
+                                             name="email"
+                                             class="form-control"
+                                             placeholder="contact@cuahang.com"
+                                             required
+                                        />
+                                        <small class="text-muted">Email liên hệ của cửa hàng</small>
+                                   </div>
+                                   <div class="mb-3">
+                                        <label class="form-label"
+                                             ><i class="fas fa-phone me-1"></i>Số điện thoại</label
+                                        >
+                                        <input
+                                             type="tel"
+                                             name="phone"
+                                             class="form-control"
+                                             placeholder="0123456789"
+                                        />
+                                   </div>
+                                   <div class="mb-3">
+                                        <label class="form-label"
+                                             ><i class="fas fa-user me-1"></i>Chủ cửa hàng *</label
+                                        >
+                                        <select name="ownerId" class="form-select" required>
+                                             <option value="">-- Chọn chủ cửa hàng --</option>
+                                             <option
+                                                  th:each="vendor : ${vendors}"
+                                                  th:value="${vendor.id}"
+                                                  th:text="${vendor.fullName + ' (' + vendor.email + ')'}"
+                                             >
+                                                  Vendor Name
+                                             </option>
+                                        </select>
+                                   </div>
+                                   <div class="mb-3">
+                                        <label class="form-label"
+                                             ><i class="fas fa-link me-1"></i>Slug (URL) *</label
+                                        >
+                                        <input
+                                             type="text"
+                                             name="slug"
+                                             class="form-control"
+                                             placeholder="vd: cua-hang-cau-long"
+                                             required
+                                        />
+                                        <small class="text-muted"
+                                             >Slug sẽ được dùng trong URL</small
+                                        >
+                                   </div>
+                                   <div class="mb-3">
+                                        <label class="form-label"
+                                             ><i class="fas fa-align-left me-1"></i>Mô tả cửa
+                                             hàng</label
+                                        >
+                                        <textarea
+                                             name="bio"
+                                             class="form-control"
+                                             rows="3"
+                                             placeholder="Mô tả chi tiết về cửa hàng"
+                                        ></textarea>
+                                   </div>
+                              </div>
+                              <div class="modal-footer">
+                                   <button
+                                        type="button"
+                                        class="btn btn-secondary"
+                                        data-bs-dismiss="modal"
+                                   >
+                                        <i class="fas fa-times me-1"></i>Hủy
+                                   </button>
+                                   <button type="submit" class="btn btn-success">
+                                        <i class="fas fa-save me-2"></i>Tạo cửa hàng
+                                   </button>
+                              </div>
+                         </form>
                     </div>
-                </div>
-            </div>
+               </div>
+          </div>
 
-            <nav class="mt-4" th:if="${stores != null and !stores.isEmpty()}">
-                <ul class="pagination justify-content-center">
-                    <!-- Pagination will be generated by JavaScript -->
-                </ul>
-            </nav>
-        </div>
-    </div>
+          <div th:replace="~{fragments/footer-admin :: footer-admin}"></div>
+          <link rel="stylesheet" th:href="@{/css/admin-style.css}" />
 
-    <!-- Add Store Modal -->
-    <div class="modal fade" id="addStoreModal" tabindex="-1">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header bg-success text-white">
-                    <h5 class="modal-title">
-                        <i class="fas fa-store me-2"></i>Thêm cửa hàng mới
-                    </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-                </div>
-                <form th:action="@{/admin/stores/create}" method="post">
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label"><i class="fas fa-store me-1"></i>Tên cửa hàng *</label>
-                            <input type="text" name="name" class="form-control" 
-                                   placeholder="Nhập tên cửa hàng" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label"><i class="fas fa-envelope me-1"></i>Email cửa hàng *</label>
-                            <input type="email" name="email" class="form-control" 
-                                   placeholder="contact@cuahang.com" required>
-                            <small class="text-muted">Email liên hệ của cửa hàng</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label"><i class="fas fa-phone me-1"></i>Số điện thoại</label>
-                            <input type="tel" name="phone" class="form-control" 
-                                   placeholder="0123456789">
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label"><i class="fas fa-user me-1"></i>Chủ cửa hàng *</label>
-                            <select name="ownerId" class="form-select" required>
-                                <option value="">-- Chọn chủ cửa hàng --</option>
-                                <option th:each="vendor : ${vendors}" 
-                                        th:value="${vendor.id}" 
-                                        th:text="${vendor.fullName + ' (' + vendor.email + ')'}">
-                                    Vendor Name
-                                </option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label"><i class="fas fa-link me-1"></i>Slug (URL) *</label>
-                            <input type="text" name="slug" class="form-control" 
-                                   placeholder="vd: cua-hang-cau-long" required>
-                            <small class="text-muted">Slug sẽ được dùng trong URL</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label"><i class="fas fa-align-left me-1"></i>Mô tả cửa hàng</label>
-                            <textarea name="bio" class="form-control" rows="3" 
-                                      placeholder="Mô tả chi tiết về cửa hàng"></textarea>
-                        </div>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                            <i class="fas fa-times me-1"></i>Hủy
-                        </button>
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save me-2"></i>Tạo cửa hàng
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+          <script>
+               // Card-based pagination for stores
+               let currentPage = 1;
+               const itemsPerPage = 6;
 
-    <div th:replace="~{fragments/footer-admin :: footer-admin}"></div>
-    <link rel="stylesheet" th:href="@{/css/admin-style.css}">
-    
-    <script>
-        // Card-based pagination for stores
-        let currentPage = 1;
-        const itemsPerPage = 6;
+               function paginateCards() {
+                    const cards = Array.from(document.querySelectorAll(".row.g-4 > .col-md-6"));
+                    const totalItems = cards.filter(
+                         (card) => !card.querySelector(".text-center.text-muted")
+                    ).length;
+                    const totalPages = Math.ceil(totalItems / itemsPerPage);
 
-        function paginateCards() {
-            const cards = Array.from(document.querySelectorAll('.row.g-4 > .col-md-6'));
-            const totalItems = cards.filter(card => !card.querySelector('.text-center.text-muted')).length;
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
-            
-            if (totalPages <= 1) {
-                document.querySelector('nav.mt-4')?.style.setProperty('display', 'none');
-                return;
-            }
-            
-            document.querySelector('nav.mt-4')?.style.removeProperty('display');
+                    if (totalPages <= 1) {
+                         document.querySelector("nav.mt-4")?.style.setProperty("display", "none");
+                         return;
+                    }
 
-            // Hide all cards
-            cards.forEach(card => {
-                if (!card.querySelector('.text-center.text-muted')) {
-                    card.classList.add('d-none');
-                }
-            });
+                    document.querySelector("nav.mt-4")?.style.removeProperty("display");
 
-            // Show only current page cards
-            const start = (currentPage - 1) * itemsPerPage;
-            const end = start + itemsPerPage;
-            const visibleCards = cards.filter(card => !card.querySelector('.text-center.text-muted'));
-            visibleCards.slice(start, end).forEach(card => card.classList.remove('d-none'));
-
-            // Update pagination
-            updatePagination(totalPages);
-        }
-
-        function updatePagination(totalPages) {
-            const pagination = document.querySelector('.pagination');
-            if (!pagination) return;
-
-            let html = '';
-            
-            // Previous button
-            html += `<li class="page-item ${currentPage === 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" onclick="changePage(${currentPage - 1}); return false;">Trước</a>
-            </li>`;
-
-            // Page numbers
-            for (let i = 1; i <= totalPages; i++) {
-                if (i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)) {
-                    html += `<li class="page-item ${i === currentPage ? 'active' : ''}">
-                        <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
-                    </li>`;
-                } else if (i === currentPage - 3 || i === currentPage + 3) {
-                    html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
-                }
-            }
-
-            // Next button
-            html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}">
-                <a class="page-link" href="#" onclick="changePage(${currentPage + 1}); return false;">Sau</a>
-            </li>`;
-
-            pagination.innerHTML = html;
-        }
-
-        function changePage(page) {
-            const cards = Array.from(document.querySelectorAll('.row.g-4 > .col-md-6'));
-            const totalItems = cards.filter(card => !card.querySelector('.text-center.text-muted')).length;
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-            if (page < 1 || page > totalPages) return;
-
-            currentPage = page;
-            paginateCards();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        // Search functionality for cards
-        document.addEventListener('DOMContentLoaded', function() {
-            const searchInput = document.querySelector('.admin-search');
-            if (searchInput) {
-                searchInput.addEventListener('keyup', function() {
-                    const searchValue = this.value.toLowerCase();
-                    const cards = document.querySelectorAll('.row.g-4 > .col-md-6');
-                    
-                    cards.forEach(card => {
-                        if (card.querySelector('.text-center.text-muted')) return;
-
-                        const storeName = card.querySelector('h5 span').innerText.toLowerCase();
-                        const ownerName = card.querySelector('.mb-2 strong').innerText.toLowerCase();
-                        
-                        if (storeName.includes(searchValue) || ownerName.includes(searchValue)) {
-                            card.classList.remove('d-none');
-                        } else {
-                            card.classList.add('d-none');
-                        }
+                    // Hide all cards
+                    cards.forEach((card) => {
+                         if (!card.querySelector(".text-center.text-muted")) {
+                              card.classList.add("d-none");
+                         }
                     });
 
-                    // Update pagination after search
-                    const visibleCards = Array.from(document.querySelectorAll('.row.g-4 > .col-md-6:not(.d-none)'));
-                    const totalPages = Math.ceil(visibleCards.length / itemsPerPage);
+                    // Show only current page cards
+                    const start = (currentPage - 1) * itemsPerPage;
+                    const end = start + itemsPerPage;
+                    const visibleCards = cards.filter(
+                         (card) => !card.querySelector(".text-center.text-muted")
+                    );
+                    visibleCards
+                         .slice(start, end)
+                         .forEach((card) => card.classList.remove("d-none"));
+
+                    // Update pagination
                     updatePagination(totalPages);
+               }
 
-                    // Reset to first page
-                    currentPage = 1;
+               function updatePagination(totalPages) {
+                    const pagination = document.querySelector(".pagination");
+                    if (!pagination) return;
+
+                    let html = "";
+
+                    // Previous button
+                    html += `<li class="page-item ${currentPage === 1 ? "disabled" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${
+                     currentPage - 1
+                }); return false;">Trước</a>
+            </li>`;
+
+                    // Page numbers
+                    for (let i = 1; i <= totalPages; i++) {
+                         if (
+                              i === 1 ||
+                              i === totalPages ||
+                              (i >= currentPage - 2 && i <= currentPage + 2)
+                         ) {
+                              html += `<li class="page-item ${i === currentPage ? "active" : ""}">
+                        <a class="page-link" href="#" onclick="changePage(${i}); return false;">${i}</a>
+                    </li>`;
+                         } else if (i === currentPage - 3 || i === currentPage + 3) {
+                              html += `<li class="page-item disabled"><span class="page-link">...</span></li>`;
+                         }
+                    }
+
+                    // Next button
+                    html += `<li class="page-item ${currentPage === totalPages ? "disabled" : ""}">
+                <a class="page-link" href="#" onclick="changePage(${
+                     currentPage + 1
+                }); return false;">Sau</a>
+            </li>`;
+
+                    pagination.innerHTML = html;
+               }
+
+               function changePage(page) {
+                    const cards = Array.from(document.querySelectorAll(".row.g-4 > .col-md-6"));
+                    const totalItems = cards.filter(
+                         (card) => !card.querySelector(".text-center.text-muted")
+                    ).length;
+                    const totalPages = Math.ceil(totalItems / itemsPerPage);
+
+                    if (page < 1 || page > totalPages) return;
+
+                    currentPage = page;
                     paginateCards();
-                });
-            }
-        });
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+               }
 
-        function confirmDeleteStore(storeName, storeId) {
-            const confirmed = confirm(`Bạn có chắc chắn muốn xóa cửa hàng "${storeName}"?`);
-            if (confirmed) {
-                // Submit the hidden delete form for this store
-                const form = document.getElementById('deleteForm-' + storeId);
-                if (form) {
-                    form.submit();
-                }
-            }
-        }
-    </script>
-</body>
+               // Search functionality for cards
+               document.addEventListener("DOMContentLoaded", function () {
+                    const searchInput = document.querySelector(".admin-search");
+                    if (searchInput) {
+                         searchInput.addEventListener("keyup", function () {
+                              const searchValue = this.value.toLowerCase();
+                              const cards = document.querySelectorAll(".row.g-4 > .col-md-6");
+
+                              cards.forEach((card) => {
+                                   if (card.querySelector(".text-center.text-muted")) return;
+
+                                   const storeName = card
+                                        .querySelector("h5 span")
+                                        .innerText.toLowerCase();
+                                   const ownerName = card
+                                        .querySelector(".mb-2 strong")
+                                        .innerText.toLowerCase();
+
+                                   if (
+                                        storeName.includes(searchValue) ||
+                                        ownerName.includes(searchValue)
+                                   ) {
+                                        card.classList.remove("d-none");
+                                   } else {
+                                        card.classList.add("d-none");
+                                   }
+                              });
+
+                              // Update pagination after search
+                              const visibleCards = Array.from(
+                                   document.querySelectorAll(".row.g-4 > .col-md-6:not(.d-none)")
+                              );
+                              const totalPages = Math.ceil(visibleCards.length / itemsPerPage);
+                              updatePagination(totalPages);
+
+                              // Reset to first page
+                              currentPage = 1;
+                              paginateCards();
+                         });
+                    }
+               });
+
+               function confirmDeleteStore(storeName, storeId) {
+                    const confirmed = confirm(`Bạn có chắc chắn muốn xóa cửa hàng "${storeName}"?`);
+                    if (confirmed) {
+                         // Submit the hidden delete form for this store
+                         const form = document.getElementById("deleteForm-" + storeId);
+                         if (form) {
+                              form.submit();
+                         }
+                    }
+               }
+
+               function showLockStoreModal(storeId, storeName) {
+                    document.getElementById("lockStoreName").textContent = storeName;
+                    document.getElementById("lockStoreForm").action =
+                         "/admin/stores/" + storeId + "/toggle-status";
+                    const modal = new bootstrap.Modal(document.getElementById("lockStoreModal"));
+                    modal.show();
+               }
+          </script>
+
+          <!-- Lock Store Modal -->
+          <div class="modal fade" id="lockStoreModal" tabindex="-1">
+               <div class="modal-dialog">
+                    <div class="modal-content">
+                         <div class="modal-header bg-warning text-dark">
+                              <h5 class="modal-title">
+                                   <i class="fas fa-ban me-2"></i>Vô Hiệu Hóa Cửa Hàng
+                              </h5>
+                              <button
+                                   type="button"
+                                   class="btn-close"
+                                   data-bs-dismiss="modal"
+                              ></button>
+                         </div>
+                         <form id="lockStoreForm" method="post">
+                              <div class="modal-body">
+                                   <p>
+                                        Bạn đang vô hiệu hóa cửa hàng:
+                                        <strong id="lockStoreName"></strong>
+                                   </p>
+                                   <p class="text-muted small">
+                                        Chủ cửa hàng sẽ nhận được thông báo về việc này.
+                                   </p>
+
+                                   <div class="mb-3">
+                                        <label class="form-label"
+                                             >Lý do vô hiệu hóa
+                                             <span class="text-danger">*</span></label
+                                        >
+                                        <textarea
+                                             name="reason"
+                                             class="form-control"
+                                             rows="3"
+                                             placeholder="Nhập lý do vô hiệu hóa cửa hàng (tối thiểu 10 ký tự)..."
+                                             required
+                                             minlength="10"
+                                        ></textarea>
+                                        <div class="form-text">
+                                             Lý do này sẽ được gửi cho chủ cửa hàng
+                                        </div>
+                                   </div>
+
+                                   <input
+                                        type="hidden"
+                                        th:name="${_csrf.parameterName}"
+                                        th:value="${_csrf.token}"
+                                   />
+                              </div>
+                              <div class="modal-footer">
+                                   <button
+                                        type="button"
+                                        class="btn btn-secondary"
+                                        data-bs-dismiss="modal"
+                                   >
+                                        Hủy
+                                   </button>
+                                   <button type="submit" class="btn btn-warning">
+                                        <i class="fas fa-ban me-1"></i>Xác Nhận Vô Hiệu Hóa
+                                   </button>
+                              </div>
+                         </form>
+                    </div>
+               </div>
+          </div>
+     </body>
 </html>

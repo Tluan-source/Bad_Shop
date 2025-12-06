@@ -1,0 +1,476 @@
+﻿<!DOCTYPE html>
+<html
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
+     <head>
+          <meta charset="UTF-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>Quản Lý Bình Luận - Admin</title>
+          <link
+               href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+               rel="stylesheet"
+          />
+          <link
+               rel="stylesheet"
+               href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+          />
+          <link rel="stylesheet" th:href="@{/css/admin-style.css}" />
+          <style>
+               .stats-card {
+                    border-radius: 10px;
+                    border: none;
+                    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+                    transition: transform 0.2s;
+               }
+               .stats-card:hover {
+                    transform: translateY(-5px);
+               }
+               .stats-icon {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 24px;
+               }
+               .review-card {
+                    border-radius: 8px;
+                    border: 1px solid #e0e0e0;
+                    margin-bottom: 15px;
+                    transition: box-shadow 0.2s;
+               }
+               .review-card:hover {
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+               }
+               .review-card.removed {
+                    background-color: #fff3f3;
+                    border-color: #ffcccb;
+               }
+               .badge-removed {
+                    background-color: #dc3545;
+               }
+               .badge-active {
+                    background-color: #28a745;
+               }
+               .rating-stars {
+                    color: #ffc107;
+               }
+               .filter-btn.active {
+                    background-color: #0d6efd;
+                    color: white;
+               }
+          </style>
+     </head>
+     <body>
+          <div th:replace="~{fragments/header-admin :: header-admin}"></div>
+
+          <div class="container-fluid">
+               <div class="row">
+                    <main class="col-md-12 ms-sm-auto px-md-4 py-4">
+                         <!-- Header -->
+                         <div class="d-flex justify-content-between align-items-center mb-4">
+                              <h2><i class="fas fa-comments me-2"></i>Quản Lý Bình Luận</h2>
+                         </div>
+
+                         <!-- Alert Messages -->
+                         <div
+                              th:if="${message}"
+                              th:class="'alert alert-' + ${messageType} + ' alert-dismissible fade show'"
+                              role="alert"
+                         >
+                              <span th:text="${message}"></span>
+                              <button
+                                   type="button"
+                                   class="btn-close"
+                                   data-bs-dismiss="alert"
+                              ></button>
+                         </div>
+
+                         <!-- Statistics Cards -->
+                         <div class="row mb-4">
+                              <div class="col-md-3">
+                                   <div class="card stats-card">
+                                        <div class="card-body d-flex align-items-center">
+                                             <div class="stats-icon bg-primary text-white me-3">
+                                                  <i class="fas fa-comments"></i>
+                                             </div>
+                                             <div>
+                                                  <h6 class="text-muted mb-1">Tổng Bình Luận</h6>
+                                                  <h3 class="mb-0" th:text="${stats.totalReviews}">
+                                                       0
+                                                  </h3>
+                                             </div>
+                                        </div>
+                                   </div>
+                              </div>
+                              <div class="col-md-3">
+                                   <div class="card stats-card">
+                                        <div class="card-body d-flex align-items-center">
+                                             <div class="stats-icon bg-success text-white me-3">
+                                                  <i class="fas fa-check-circle"></i>
+                                             </div>
+                                             <div>
+                                                  <h6 class="text-muted mb-1">Đang Hiển Thị</h6>
+                                                  <h3 class="mb-0" th:text="${stats.activeReviews}">
+                                                       0
+                                                  </h3>
+                                             </div>
+                                        </div>
+                                   </div>
+                              </div>
+                              <div class="col-md-3">
+                                   <div class="card stats-card">
+                                        <div class="card-body d-flex align-items-center">
+                                             <div class="stats-icon bg-danger text-white me-3">
+                                                  <i class="fas fa-trash"></i>
+                                             </div>
+                                             <div>
+                                                  <h6 class="text-muted mb-1">Đã Xóa</h6>
+                                                  <h3
+                                                       class="mb-0"
+                                                       th:text="${stats.removedReviews}"
+                                                  >
+                                                       0
+                                                  </h3>
+                                             </div>
+                                        </div>
+                                   </div>
+                              </div>
+                              <div class="col-md-3">
+                                   <div class="card stats-card">
+                                        <div class="card-body d-flex align-items-center">
+                                             <div class="stats-icon bg-warning text-white me-3">
+                                                  <i class="fas fa-percent"></i>
+                                             </div>
+                                             <div>
+                                                  <h6 class="text-muted mb-1">Tỷ Lệ Xóa</h6>
+                                                  <h3 class="mb-0">
+                                                       <span
+                                                            th:text="${#numbers.formatDecimal(stats.removalRate, 1, 1)}"
+                                                            >0</span
+                                                       >%
+                                                  </h3>
+                                             </div>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+
+                         <!-- Filters and Search -->
+                         <div class="card mb-4">
+                              <div class="card-body">
+                                   <div class="row align-items-center">
+                                        <div class="col-md-6 mb-3 mb-md-0">
+                                             <div class="btn-group" role="group">
+                                                  <a
+                                                       th:href="@{/admin/reviews}"
+                                                       th:class="${currentStatus == 'all' || currentStatus == null} ? 'btn btn-outline-primary filter-btn active' : 'btn btn-outline-primary filter-btn'"
+                                                  >
+                                                       <i class="fas fa-list me-1"></i>Tất Cả
+                                                  </a>
+                                                  <a
+                                                       th:href="@{/admin/reviews(status='active')}"
+                                                       th:class="${currentStatus == 'active'} ? 'btn btn-outline-success filter-btn active' : 'btn btn-outline-success filter-btn'"
+                                                  >
+                                                       <i class="fas fa-check-circle me-1"></i>Đang
+                                                       Hiển Thị
+                                                  </a>
+                                                  <a
+                                                       th:href="@{/admin/reviews(status='removed')}"
+                                                       th:class="${currentStatus == 'removed'} ? 'btn btn-outline-danger filter-btn active' : 'btn btn-outline-danger filter-btn'"
+                                                  >
+                                                       <i class="fas fa-trash me-1"></i>Đã Xóa
+                                                  </a>
+                                             </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                             <form
+                                                  th:action="@{/admin/reviews}"
+                                                  method="get"
+                                                  class="d-flex"
+                                             >
+                                                  <input
+                                                       type="text"
+                                                       name="search"
+                                                       class="form-control me-2"
+                                                       placeholder="Tìm theo người dùng, sản phẩm hoặc nội dung..."
+                                                       th:value="${searchQuery}"
+                                                  />
+                                                  <button type="submit" class="btn btn-primary">
+                                                       <i class="fas fa-search"></i> Tìm
+                                                  </button>
+                                             </form>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+
+                         <!-- Reviews List -->
+                         <div class="card">
+                              <div class="card-body">
+                                   <div th:if="${#lists.isEmpty(reviews)}" class="text-center py-5">
+                                        <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                                        <p class="text-muted">Không tìm thấy bình luận nào</p>
+                                   </div>
+
+                                   <div
+                                        th:each="review : ${reviews}"
+                                        th:class="${review.isRemoved != null && review.isRemoved} ? 'review-card removed p-3' : 'review-card p-3'"
+                                   >
+                                        <div class="row">
+                                             <div class="col-md-8">
+                                                  <!-- User Info -->
+                                                  <div class="d-flex align-items-center mb-2">
+                                                       <img
+                                                            th:src="${review.user.avatar}"
+                                                            class="rounded-circle me-2"
+                                                            style="
+                                                                 width: 40px;
+                                                                 height: 40px;
+                                                                 object-fit: cover;
+                                                            "
+                                                            onerror="this.src='https://ui-avatars.com/api/?name=User&background=6c757d&color=fff&size=40'"
+                                                       />
+                                                       <div>
+                                                            <strong
+                                                                 th:text="${review.user.fullName}"
+                                                                 >Tên người dùng</strong
+                                                            >
+                                                            <span
+                                                                 th:if="${review.isRemoved != null && review.isRemoved}"
+                                                                 class="badge badge-removed ms-2"
+                                                                 >Đã Xóa</span
+                                                            >
+                                                            <span
+                                                                 th:unless="${review.isRemoved != null && review.isRemoved}"
+                                                                 class="badge badge-active ms-2"
+                                                                 >Đang Hiển Thị</span
+                                                            >
+                                                            <br />
+                                                            <small
+                                                                 class="text-muted"
+                                                                 th:text="${review.user.email}"
+                                                                 >email@example.com</small
+                                                            >
+                                                       </div>
+                                                  </div>
+
+                                                  <!-- Product Info -->
+                                                  <div class="mb-2">
+                                                       <i class="fas fa-box text-muted me-1"></i>
+                                                       <strong>Sản phẩm:</strong>
+                                                       <a
+                                                            th:href="@{/products/{id}(id=${review.product.id})}"
+                                                            th:text="${review.product.name}"
+                                                            target="_blank"
+                                                            class="text-decoration-none"
+                                                       >
+                                                            Tên sản phẩm
+                                                       </a>
+                                                  </div>
+
+                                                  <!-- Rating -->
+                                                  <div class="mb-2 rating-stars">
+                                                       <i
+                                                            th:each="i : ${#numbers.sequence(1, 5)}"
+                                                            th:class="${i <= review.rating} ? 'fas fa-star' : 'far fa-star'"
+                                                       ></i>
+                                                       <span
+                                                            class="text-muted ms-2"
+                                                            th:text="${review.rating} + '/5'"
+                                                            >5/5</span
+                                                       >
+                                                  </div>
+
+                                                  <!-- Comment -->
+                                                  <div class="mb-2">
+                                                       <p class="mb-1" th:text="${review.comment}">
+                                                            Nội dung bình luận...
+                                                       </p>
+                                                  </div>
+
+                                                  <!-- Created Date -->
+                                                  <small class="text-muted">
+                                                       <i class="far fa-clock me-1"></i>
+                                                       <span
+                                                            th:text="${#temporals.format(review.createdAt, 'dd/MM/yyyy HH:mm')}"
+                                                            >01/01/2024 10:00</span
+                                                       >
+                                                  </small>
+
+                                                  <!-- Removal Info -->
+                                                  <div
+                                                       th:if="${review.isRemoved != null && review.isRemoved}"
+                                                       class="alert alert-danger mt-3 mb-0"
+                                                  >
+                                                       <strong
+                                                            ><i
+                                                                 class="fas fa-exclamation-triangle me-1"
+                                                            ></i
+                                                            >Lý do xóa:</strong
+                                                       >
+                                                       <p
+                                                            class="mb-1"
+                                                            th:text="${review.removedReason}"
+                                                       >
+                                                            Lý do xóa bình luận
+                                                       </p>
+                                                       <small>
+                                                            Xóa bởi:
+                                                            <strong th:text="${review.removedBy}"
+                                                                 >admin</strong
+                                                            >
+                                                            | Thời gian:
+                                                            <span
+                                                                 th:text="${#temporals.format(review.removedAt, 'dd/MM/yyyy HH:mm')}"
+                                                                 >01/01/2024 10:00</span
+                                                            >
+                                                       </small>
+                                                  </div>
+                                             </div>
+
+                                             <div class="col-md-4 text-end">
+                                                  <!-- Actions -->
+                                                  <div class="btn-group-vertical w-100">
+                                                       <a
+                                                            th:href="@{/products/{id}(id=${review.product.id})}"
+                                                            class="btn btn-sm btn-outline-primary mb-2"
+                                                            target="_blank"
+                                                       >
+                                                            <i class="fas fa-eye me-1"></i>Xem Sản
+                                                            Phẩm
+                                                       </a>
+
+                                                       <div
+                                                            th:if="${review.isRemoved == null || !review.isRemoved}"
+                                                       >
+                                                            <button
+                                                                 type="button"
+                                                                 class="btn btn-sm btn-outline-danger w-100"
+                                                                 onclick="showRemoveModal(this)"
+                                                                 th:data-review-id="${review.id}"
+                                                                 th:data-user-name="${review.user.fullName}"
+                                                            >
+                                                                 <i class="fas fa-trash me-1"></i
+                                                                 >Xóa Bình Luận
+                                                            </button>
+                                                       </div>
+
+                                                       <div
+                                                            th:if="${review.isRemoved != null && review.isRemoved}"
+                                                       >
+                                                            <form
+                                                                 th:action="@{/admin/reviews/{id}/restore(id=${review.id})}"
+                                                                 method="post"
+                                                                 class="d-inline"
+                                                            >
+                                                                 <input
+                                                                      type="hidden"
+                                                                      th:name="${_csrf.parameterName}"
+                                                                      th:value="${_csrf.token}"
+                                                                 />
+                                                                 <button
+                                                                      type="submit"
+                                                                      class="btn btn-sm btn-outline-success w-100"
+                                                                      onclick="return confirm('Bạn có chắc muốn khôi phục bình luận này?')"
+                                                                 >
+                                                                      <i
+                                                                           class="fas fa-undo me-1"
+                                                                      ></i
+                                                                      >Khôi Phục
+                                                                 </button>
+                                                            </form>
+                                                       </div>
+                                                  </div>
+                                             </div>
+                                        </div>
+                                   </div>
+                              </div>
+                         </div>
+                    </main>
+               </div>
+          </div>
+
+          <!-- Remove Review Modal -->
+          <div class="modal fade" id="removeReviewModal" tabindex="-1">
+               <div class="modal-dialog">
+                    <div class="modal-content">
+                         <div class="modal-header bg-danger text-white">
+                              <h5 class="modal-title">
+                                   <i class="fas fa-exclamation-triangle me-2"></i>Xóa Bình Luận
+                              </h5>
+                              <button
+                                   type="button"
+                                   class="btn-close btn-close-white"
+                                   data-bs-dismiss="modal"
+                              ></button>
+                         </div>
+                         <form id="removeReviewForm" method="post">
+                              <div class="modal-body">
+                                   <p>
+                                        Bạn đang xóa bình luận của:
+                                        <strong id="reviewUserName"></strong>
+                                   </p>
+                                   <p class="text-muted small">
+                                        Người dùng sẽ nhận được thông báo về việc xóa bình luận này.
+                                   </p>
+
+                                   <div class="mb-3">
+                                        <label class="form-label"
+                                             >Lý do xóa <span class="text-danger">*</span></label
+                                        >
+                                        <textarea
+                                             name="reason"
+                                             class="form-control"
+                                             rows="3"
+                                             placeholder="Nhập lý do xóa bình luận (tối thiểu 10 ký tự)..."
+                                             required
+                                             minlength="10"
+                                        ></textarea>
+                                        <div class="form-text">
+                                             Lý do này sẽ được gửi cho người dùng
+                                        </div>
+                                   </div>
+
+                                   <input type="hidden" name="redirectUrl" value="/admin/reviews" />
+                                   <input
+                                        type="hidden"
+                                        th:name="${_csrf.parameterName}"
+                                        th:value="${_csrf.token}"
+                                   />
+                              </div>
+                              <div class="modal-footer">
+                                   <button
+                                        type="button"
+                                        class="btn btn-secondary"
+                                        data-bs-dismiss="modal"
+                                   >
+                                        Hủy
+                                   </button>
+                                   <button type="submit" class="btn btn-danger">
+                                        <i class="fas fa-trash me-1"></i>Xác Nhận Xóa
+                                   </button>
+                              </div>
+                         </form>
+                    </div>
+               </div>
+          </div>
+
+          <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+          <script>
+               function showRemoveModal(button) {
+                    const reviewId = button.getAttribute("data-review-id");
+                    const userName = button.getAttribute("data-user-name");
+
+                    document.getElementById("reviewUserName").textContent = userName;
+                    document.getElementById("removeReviewForm").action =
+                         "/admin/reviews/" + reviewId + "/remove";
+
+                    const modal = new bootstrap.Modal(document.getElementById("removeReviewModal"));
+                    modal.show();
+               }
+          </script>
+     </body>
+</html>

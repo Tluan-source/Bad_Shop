@@ -29,6 +29,7 @@ import vn.iotstar.entity.ActivityLog;
 import vn.iotstar.entity.Category;
 import vn.iotstar.entity.Order;
 import vn.iotstar.entity.Product;
+import vn.iotstar.entity.Review;
 import vn.iotstar.entity.Store;
 import vn.iotstar.entity.User;
 import vn.iotstar.repository.CategoryRepository;
@@ -354,6 +355,88 @@ public class AdminController {
         }
         
         return "redirect:/admin/products";
+    }
+    
+    /**
+     * Remove review/comment with reason
+     */
+    @PostMapping("/reviews/{id}/remove")
+    public String removeReview(@PathVariable String id,
+                              @RequestParam(required = false) String reason,
+                              @RequestParam(required = false) String redirectUrl,
+                              RedirectAttributes redirectAttributes,
+                              Authentication authentication) {
+        try {
+            String adminUserId = authentication.getName();
+            String removeReason = (reason != null && !reason.trim().isEmpty()) 
+                ? reason.trim() 
+                : "Vi phạm quy tắc cộng đồng";
+            
+            adminService.removeReview(id, adminUserId, removeReason);
+            
+            redirectAttributes.addFlashAttribute("messageType", "warning");
+            redirectAttributes.addFlashAttribute("message", "Đã xóa bình luận và gửi thông báo cho người dùng!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
+        }
+        
+        // Redirect back to where they came from or default to products
+        if (redirectUrl != null && !redirectUrl.trim().isEmpty()) {
+            return "redirect:" + redirectUrl;
+        }
+        return "redirect:/admin/products";
+    }
+    
+    /**
+     * Reviews management page
+     */
+    @GetMapping("/reviews")
+    public String reviews(@RequestParam(required = false) String status,
+                         @RequestParam(required = false) String search,
+                         Model model,
+                         Authentication authentication) {
+        model.addAttribute("username", authentication.getName());
+        
+        // Get statistics
+        Map<String, Object> stats = adminService.getReviewStatistics();
+        model.addAttribute("stats", stats);
+        
+        // Get reviews based on filter
+        List<Review> reviews;
+        if (search != null && !search.trim().isEmpty()) {
+            reviews = adminService.searchReviews(search);
+            model.addAttribute("searchQuery", search);
+        } else if ("removed".equals(status)) {
+            reviews = adminService.getRemovedReviews();
+            model.addAttribute("currentStatus", "removed");
+        } else if ("active".equals(status)) {
+            reviews = adminService.getActiveReviews();
+            model.addAttribute("currentStatus", "active");
+        } else {
+            reviews = adminService.getAllReviews();
+            model.addAttribute("currentStatus", "all");
+        }
+        
+        model.addAttribute("reviews", reviews);
+        return "admin/reviews";
+    }
+    
+    /**
+     * Restore a removed review
+     */
+    @PostMapping("/reviews/{id}/restore")
+    public String restoreReview(@PathVariable String id,
+                               RedirectAttributes redirectAttributes) {
+        try {
+            adminService.restoreReview(id);
+            redirectAttributes.addFlashAttribute("messageType", "success");
+            redirectAttributes.addFlashAttribute("message", "Đã khôi phục bình luận!");
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("messageType", "danger");
+            redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());
+        }
+        return "redirect:/admin/reviews";
     }
     
     @GetMapping("/stores")
@@ -1071,7 +1154,10 @@ public class AdminController {
      * Toggle store status (active/inactive)
      */
     @PostMapping("/stores/{id}/toggle-status")
-    public String toggleStoreStatus(@PathVariable String id, RedirectAttributes redirectAttributes) {
+    public String toggleStoreStatus(@PathVariable String id, 
+                                    @RequestParam(required = false) String reason,
+                                    Authentication authentication,
+                                    RedirectAttributes redirectAttributes) {
         try {
             Optional<Store> storeOpt = storeRepository.findById(id);
             if (!storeOpt.isPresent()) {
@@ -1081,16 +1167,29 @@ public class AdminController {
             }
             
             Store store = storeOpt.get();
-            // Handle null isActive value - treat null as false
             Boolean currentStatus = store.getIsActive();
             if (currentStatus == null) {
                 currentStatus = false;
             }
+            
+            boolean willLock = currentStatus; // If currently active, will lock
             store.setIsActive(!currentStatus);
             storeRepository.save(store);
             
+            // Send notification to store owner if locking
+            if (willLock && store.getOwner() != null && reason != null && !reason.trim().isEmpty()) {
+                String adminEmail = authentication.getName();
+                adminService.notifyStoreLocked(
+                    store.getOwner(), 
+                    store.getName(), 
+                    store.getId(),
+                    reason.trim(), 
+                    adminEmail
+                );
+            }
+            
             redirectAttributes.addFlashAttribute("message", 
-                store.getIsActive() ? "Đã kích hoạt cửa hàng!" : "Đã vô hiệu hóa cửa hàng!");
+                store.getIsActive() ? "Đã kích hoạt cửa hàng!" : "Đã vô hiệu hóa cửa hàng và gửi thông báo!");
             redirectAttributes.addFlashAttribute("messageType", "success");
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("message", "Lỗi: " + e.getMessage());

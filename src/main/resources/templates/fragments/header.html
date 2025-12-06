@@ -23,7 +23,7 @@
                     <div class="container">
                          <a class="navbar-brand d-flex align-items-center" th:href="@{/}">
                               <i class="fas fa-badminton fa-lg me-2"></i>
-                             <span>Bad Shop</span>
+                              <span>Bad Shop</span>
                          </a>
 
                          <button
@@ -86,6 +86,68 @@
                                         </a>
                                    </li>
 
+                                   <!-- Notification Bell -->
+                                   <li
+                                        class="nav-item dropdown me-2"
+                                        sec:authorize="isAuthenticated()"
+                                   >
+                                        <a
+                                             class="nav-link d-flex align-items-center position-relative"
+                                             href="#"
+                                             id="notificationDropdown"
+                                             role="button"
+                                             data-bs-toggle="dropdown"
+                                             aria-expanded="false"
+                                             style="position: relative; top: 13px"
+                                        >
+                                             <i class="fas fa-bell fa-lg"></i>
+                                             <span
+                                                  id="notificationBadge"
+                                                  class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
+                                                  style="display: none; font-size: 0.7rem"
+                                             >
+                                                  0
+                                             </span>
+                                        </a>
+                                        <div
+                                             class="dropdown-menu dropdown-menu-end shadow"
+                                             aria-labelledby="notificationDropdown"
+                                             style="
+                                                  width: 350px;
+                                                  max-height: 500px;
+                                                  overflow-y: auto;
+                                             "
+                                        >
+                                             <div
+                                                  class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom"
+                                             >
+                                                  <h6 class="mb-0">Thông báo</h6>
+                                                  <button
+                                                       id="markAllReadBtn"
+                                                       class="btn btn-sm btn-link text-primary p-0"
+                                                  >
+                                                       Đánh dấu đã đọc
+                                                  </button>
+                                             </div>
+                                             <div
+                                                  id="notificationList"
+                                                  class="list-group list-group-flush"
+                                             >
+                                                  <div class="text-center py-4 text-muted">
+                                                       <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                                                       <p class="mb-0">Không có thông báo mới</p>
+                                                  </div>
+                                             </div>
+                                             <div class="text-center border-top p-2">
+                                                  <a
+                                                       th:href="@{/notifications}"
+                                                       class="btn btn-sm btn-link"
+                                                       >Xem tất cả</a
+                                                  >
+                                             </div>
+                                        </div>
+                                   </li>
+
                                    <!-- Cart for guest -->
                                    <li class="nav-item me-2" sec:authorize="!isAuthenticated()">
                                         <a
@@ -112,43 +174,87 @@
                                                   th:src="${currentUser.avatar}"
                                                   alt="Avatar"
                                                   class="rounded-circle me-2"
-                                                  style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(255,255,255,0.3);"
+                                                  style="
+                                                       width: 32px;
+                                                       height: 32px;
+                                                       object-fit: cover;
+                                                       border: 2px solid rgba(255, 255, 255, 0.3);
+                                                  "
                                              />
                                              <img
                                                   th:if="${currentUser == null or currentUser.avatar == null or #strings.isEmpty(currentUser.avatar)}"
                                                   src="/images/default-avatar.png"
                                                   alt="Avatar"
                                                   class="rounded-circle me-2"
-                                                  style="width: 32px; height: 32px; object-fit: cover; border: 2px solid rgba(255,255,255,0.3);"
+                                                  style="
+                                                       width: 32px;
+                                                       height: 32px;
+                                                       object-fit: cover;
+                                                       border: 2px solid rgba(255, 255, 255, 0.3);
+                                                  "
                                              />
-                                             <span th:if="${currentUser != null and currentUser.fullName != null}" th:text="${currentUser.fullName}">Tài khoản</span>
-                                             <span th:if="${currentUser == null or currentUser.fullName == null}" sec:authentication="name">Tài khoản</span>
+                                             <span
+                                                  th:if="${currentUser != null and currentUser.fullName != null}"
+                                                  th:text="${currentUser.fullName}"
+                                                  >Tài khoản</span
+                                             >
+                                             <span
+                                                  th:if="${currentUser == null or currentUser.fullName == null}"
+                                                  sec:authentication="name"
+                                                  >Tài khoản</span
+                                             >
                                         </a>
                                         <ul
                                              class="dropdown-menu dropdown-menu-end"
                                              aria-labelledby="accountDropdown"
                                         >
                                              <li>
-                                                  <div class="dropdown-header d-flex align-items-center">
+                                                  <div
+                                                       class="dropdown-header d-flex align-items-center"
+                                                  >
                                                        <img
                                                             th:if="${currentUser != null and currentUser.avatar != null and !#strings.isEmpty(currentUser.avatar)}"
                                                             th:src="${currentUser.avatar}"
                                                             alt="Avatar"
                                                             class="rounded-circle me-2"
-                                                            style="width: 40px; height: 40px; object-fit: cover;"
+                                                            style="
+                                                                 width: 40px;
+                                                                 height: 40px;
+                                                                 object-fit: cover;
+                                                            "
                                                        />
                                                        <img
                                                             th:if="${currentUser == null or currentUser.avatar == null or #strings.isEmpty(currentUser.avatar)}"
                                                             src="/images/default-avatar.png"
                                                             alt="Avatar"
                                                             class="rounded-circle me-2"
-                                                            style="width: 40px; height: 40px; object-fit: cover;"
+                                                            style="
+                                                                 width: 40px;
+                                                                 height: 40px;
+                                                                 object-fit: cover;
+                                                            "
                                                        />
                                                        <div>
-                                                            <div class="fw-bold" th:if="${currentUser != null and currentUser.fullName != null}" th:text="${currentUser.fullName}"></div>
-                                                            <div class="fw-bold" th:if="${currentUser == null or currentUser.fullName == null}" sec:authentication="name"></div>
-                                                            <small class="text-muted" th:if="${currentUser != null and currentUser.email != null}" th:text="${currentUser.email}"></small>
-                                                            <small class="text-muted" th:if="${currentUser == null or currentUser.email == null}" sec:authentication="name"></small>
+                                                            <div
+                                                                 class="fw-bold"
+                                                                 th:if="${currentUser != null and currentUser.fullName != null}"
+                                                                 th:text="${currentUser.fullName}"
+                                                            ></div>
+                                                            <div
+                                                                 class="fw-bold"
+                                                                 th:if="${currentUser == null or currentUser.fullName == null}"
+                                                                 sec:authentication="name"
+                                                            ></div>
+                                                            <small
+                                                                 class="text-muted"
+                                                                 th:if="${currentUser != null and currentUser.email != null}"
+                                                                 th:text="${currentUser.email}"
+                                                            ></small>
+                                                            <small
+                                                                 class="text-muted"
+                                                                 th:if="${currentUser == null or currentUser.email == null}"
+                                                                 sec:authentication="name"
+                                                            ></small>
                                                        </div>
                                                   </div>
                                              </li>
@@ -189,14 +295,78 @@
                                              </li>
                                              <li><hr class="dropdown-divider" /></li>
 
-                                             <!-- Vendor/Shop Management Menu -->
-                                             <li>
-                                                  <h6 class="dropdown-header text-primary">
-                                                       <i class="fas fa-store"></i>
-                                                       Quản lý Shop
-                                                  </h6>
-                                             </li>
-                                             <!-- Chỉ hiển thị "Đăng ký Shop" khi chưa có role VENDOR -->
+                                             <!-- Vendor/Shop Management Menu - Chỉ hiển thị khi store active -->
+                                             <th:block
+                                                  sec:authorize="hasAnyRole('VENDOR', 'ADMIN')"
+                                                  th:if="${isStoreActive}"
+                                             >
+                                                  <li>
+                                                       <h6 class="dropdown-header text-primary">
+                                                            <i class="fas fa-store"></i>
+                                                            Quản lý Shop
+                                                       </h6>
+                                                  </li>
+                                                  <li>
+                                                       <a
+                                                            class="dropdown-item"
+                                                            th:href="@{/vendor/dashboard}"
+                                                       >
+                                                            <i
+                                                                 class="fas fa-tachometer-alt me-2"
+                                                            ></i
+                                                            >Trang quản lý Shop
+                                                       </a>
+                                                  </li>
+                                                  <li>
+                                                       <a
+                                                            class="dropdown-item"
+                                                            th:href="@{/vendor/store}"
+                                                       >
+                                                            <i class="fas fa-cog me-2"></i>Thông tin
+                                                            Shop
+                                                       </a>
+                                                  </li>
+                                                  <li>
+                                                       <a
+                                                            class="dropdown-item"
+                                                            th:href="@{/vendor/products}"
+                                                       >
+                                                            <i class="fas fa-box me-2"></i>Sản phẩm
+                                                            của tôi
+                                                       </a>
+                                                  </li>
+                                                  <li>
+                                                       <a
+                                                            class="dropdown-item"
+                                                            th:href="@{/vendor/orders}"
+                                                       >
+                                                            <i class="fas fa-shopping-cart me-2"></i
+                                                            >Đơn hàng Shop
+                                                       </a>
+                                                  </li>
+                                                  <li>
+                                                       <a
+                                                            class="dropdown-item"
+                                                            th:href="@{/vendor/promotions}"
+                                                       >
+                                                            <i class="fas fa-tags me-2"></i>Khuyến
+                                                            mãi
+                                                       </a>
+                                                  </li>
+                                                  <li>
+                                                       <a
+                                                            class="dropdown-item"
+                                                            th:href="@{/vendor/analytics}"
+                                                       >
+                                                            <i class="fas fa-chart-line me-2"></i
+                                                            >Doanh thu
+                                                       </a>
+                                                  </li>
+
+                                                  <li><hr class="dropdown-divider" /></li>
+                                             </th:block>
+
+                                             <!-- Đăng ký làm người bán - Chỉ hiển thị khi chưa có role VENDOR -->
                                              <li sec:authorize="!hasRole('VENDOR')">
                                                   <a
                                                        class="dropdown-item"
@@ -204,59 +374,6 @@
                                                   >
                                                        <i class="fas fa-store-alt me-2"></i>Đăng ký
                                                        làm người bán
-                                                  </a>
-                                             </li>
-                                             <!-- Các menu quản lý shop chỉ hiển thị khi có role VENDOR -->
-                                             <li sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                                                  <a
-                                                       class="dropdown-item"
-                                                       th:href="@{/vendor/dashboard}"
-                                                  >
-                                                       <i class="fas fa-tachometer-alt me-2"></i
-                                                       >Trang quản lý Shop
-                                                  </a>
-                                             </li>
-                                             <li sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                                                  <a
-                                                       class="dropdown-item"
-                                                       th:href="@{/vendor/store}"
-                                                  >
-                                                       <i class="fas fa-cog me-2"></i>Thông tin Shop
-                                                  </a>
-                                             </li>
-                                             <li sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                                                  <a
-                                                       class="dropdown-item"
-                                                       th:href="@{/vendor/products}"
-                                                  >
-                                                       <i class="fas fa-box me-2"></i>Sản phẩm của
-                                                       tôi
-                                                  </a>
-                                             </li>
-                                             <li sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                                                  <a
-                                                       class="dropdown-item"
-                                                       th:href="@{/vendor/orders}"
-                                                  >
-                                                       <i class="fas fa-shopping-cart me-2"></i>Đơn
-                                                       hàng Shop
-                                                  </a>
-                                             </li>
-                                             <li sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                                                  <a
-                                                       class="dropdown-item"
-                                                       th:href="@{/vendor/promotions}"
-                                                  >
-                                                       <i class="fas fa-tags me-2"></i>Khuyến mãi
-                                                  </a>
-                                             </li>
-                                             <li sec:authorize="hasAnyRole('VENDOR', 'ADMIN')">
-                                                  <a
-                                                       class="dropdown-item"
-                                                       th:href="@{/vendor/analytics}"
-                                                  >
-                                                       <i class="fas fa-chart-line me-2"></i>Doanh
-                                                       thu
                                                   </a>
                                              </li>
 
@@ -322,7 +439,171 @@
                               .catch((error) =>
                                    console.error("Error fetching favorite count:", error)
                               );
+
+                         // Load notification count
+                         loadNotificationCount();
+
+                         // Load notifications when dropdown is opened
+                         const notificationDropdown =
+                              document.getElementById("notificationDropdown");
+                         if (notificationDropdown) {
+                              notificationDropdown.addEventListener("click", function () {
+                                   loadRecentNotifications();
+                              });
+                         }
+
+                         // Mark all as read button
+                         const markAllReadBtn = document.getElementById("markAllReadBtn");
+                         if (markAllReadBtn) {
+                              markAllReadBtn.addEventListener("click", function (e) {
+                                   e.preventDefault();
+                                   markAllNotificationsRead();
+                              });
+                         }
                     });
+
+                    function loadNotificationCount() {
+                         fetch("/notifications/count")
+                              .then((response) => response.json())
+                              .then((data) => {
+                                   updateBadge(data.count);
+                              })
+                              .catch((error) =>
+                                   console.error("Error loading notification count:", error)
+                              );
+                    }
+
+                    function loadRecentNotifications() {
+                         fetch("/notifications/recent")
+                              .then((response) => response.json())
+                              .then((data) => {
+                                   displayNotifications(data.notifications);
+                                   updateBadge(data.totalUnread);
+                              })
+                              .catch((error) =>
+                                   console.error("Error loading notifications:", error)
+                              );
+                    }
+
+                    function displayNotifications(notifications) {
+                         const listContainer = document.getElementById("notificationList");
+
+                         if (!notifications || notifications.length === 0) {
+                              listContainer.innerHTML = `
+                                   <div class="text-center py-4 text-muted">
+                                        <i class="fas fa-bell-slash fa-2x mb-2"></i>
+                                        <p class="mb-0">Không có thông báo mới</p>
+                                   </div>`;
+                              return;
+                         }
+
+                         listContainer.innerHTML = notifications
+                              .map(
+                                   (notif) => `
+                              <a href="#" class="list-group-item list-group-item-action ${
+                                   notif.isRead ? "" : "bg-light"
+                              }" 
+                                   onclick="markNotificationRead('${notif.id}', event)">
+                                   <div class="d-flex w-100 justify-content-between align-items-start">
+                                        <div class="flex-grow-1">
+                                             <h6 class="mb-1">${getNotificationIcon(notif.type)} ${
+                                        notif.title
+                                   }</h6>
+                                             <p class="mb-1 small text-muted">${notif.content}</p>
+                                             <small class="text-muted">${formatDate(
+                                                  notif.createdAt
+                                             )}</small>
+                                        </div>
+                                        ${
+                                             !notif.isRead
+                                                  ? '<span class="badge bg-primary rounded-pill">Mới</span>'
+                                                  : ""
+                                        }
+                                   </div>
+                              </a>
+                         `
+                              )
+                              .join("");
+                    }
+
+                    function markNotificationRead(notificationId, event) {
+                         event.preventDefault();
+
+                         fetch(`/notifications/${notificationId}/read`, {
+                              method: "POST",
+                              headers: {
+                                   "Content-Type": "application/json",
+                              },
+                         })
+                              .then((response) => response.json())
+                              .then((data) => {
+                                   if (data.success) {
+                                        updateBadge(data.unreadCount);
+                                        // Redirect to notifications page
+                                        window.location.href = "/notifications";
+                                   }
+                              })
+                              .catch((error) =>
+                                   console.error("Error marking notification as read:", error)
+                              );
+                    }
+
+                    function markAllNotificationsRead() {
+                         fetch("/notifications/read-all", {
+                              method: "POST",
+                              headers: {
+                                   "Content-Type": "application/json",
+                              },
+                         })
+                              .then((response) => response.json())
+                              .then((data) => {
+                                   if (data.success) {
+                                        updateBadge(0);
+                                        loadRecentNotifications();
+                                   }
+                              })
+                              .catch((error) => console.error("Error marking all as read:", error));
+                    }
+
+                    function updateBadge(count) {
+                         const badge = document.getElementById("notificationBadge");
+                         if (badge) {
+                              if (count > 0) {
+                                   badge.textContent = count > 99 ? "99+" : count;
+                                   badge.style.display = "inline";
+                              } else {
+                                   badge.style.display = "none";
+                              }
+                         }
+                    }
+
+                    function getNotificationIcon(type) {
+                         const icons = {
+                              ACCOUNT_LOCKED: '<i class="fas fa-user-lock text-danger"></i>',
+                              STORE_LOCKED: '<i class="fas fa-store-slash text-danger"></i>',
+                              PRODUCT_REJECTED: '<i class="fas fa-times-circle text-warning"></i>',
+                              COMMENT_REMOVED: '<i class="fas fa-comment-slash text-warning"></i>',
+                              ORDER_UPDATE: '<i class="fas fa-box text-info"></i>',
+                              SYSTEM: '<i class="fas fa-info-circle text-primary"></i>',
+                         };
+                         return icons[type] || '<i class="fas fa-bell"></i>';
+                    }
+
+                    function formatDate(dateString) {
+                         const date = new Date(dateString);
+                         const now = new Date();
+                         const diff = Math.floor((now - date) / 1000);
+
+                         if (diff < 60) return "Vừa xong";
+                         if (diff < 3600) return Math.floor(diff / 60) + " phút trước";
+                         if (diff < 86400) return Math.floor(diff / 3600) + " giờ trước";
+                         if (diff < 604800) return Math.floor(diff / 86400) + " ngày trước";
+
+                         return date.toLocaleDateString("vi-VN");
+                    }
+
+                    // Auto refresh notification count every 30 seconds
+                    setInterval(loadNotificationCount, 30000);
                </script>
           </header>
      </body>

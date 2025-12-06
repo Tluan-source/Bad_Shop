@@ -14,11 +14,39 @@ import vn.iotstar.entity.Product;
 
 @Repository
 public interface ProductRepository extends JpaRepository<Product, String> {
-    // ===== PUBLIC USER METHODS (EXISTING) =====
-    List<Product> findByIsActiveTrueAndIsSellingTrue();
-    List<Product> findByStoreIdAndIsActiveTrue(String storeId);
-    List<Product> findByCategoryIdAndIsActiveTrueAndIsSellingTrue(String categoryId);
+    // ===== PUBLIC USER METHODS - Only show APPROVED and SELLING products =====
     
+    // Find approved and selling products
+    @Query("SELECT p FROM Product p WHERE p.approvalStatus = 1 AND p.isSelling = true")
+    List<Product> findApprovedAndSellingProducts();
+    
+    // Find by category (approved and selling)
+    @Query("SELECT p FROM Product p WHERE p.category.id = :categoryId " +
+           "AND p.approvalStatus = 1 AND p.isSelling = true")
+    List<Product> findByCategoryAndApprovedAndSelling(@Param("categoryId") String categoryId);
+    
+    // Search by name (approved and selling)
+    @Query("SELECT p FROM Product p WHERE LOWER(p.name) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+           "AND p.approvalStatus = 1 AND p.isSelling = true")
+    List<Product> searchApprovedAndSellingByName(@Param("keyword") String keyword);
+    
+    // Find top selling approved products
+    @Query("SELECT p FROM Product p WHERE p.approvalStatus = 1 AND p.isSelling = true ORDER BY p.sold DESC")
+    List<Product> findTopSellingApprovedProducts(Pageable pageable);
+    
+    // Find approved and selling products by store (for public store view)
+    @Query("SELECT p FROM Product p WHERE p.store.id = :storeId " +
+           "AND p.approvalStatus = 1 AND p.isSelling = true")
+    List<Product> findByStoreIdAndApprovedAndSelling(@Param("storeId") String storeId);
+    
+    // OLD METHODS - Deprecated
+    @Deprecated
+    List<Product> findByIsActiveTrueAndIsSellingTrue();
+    @Deprecated
+    List<Product> findByStoreIdAndIsActiveTrue(String storeId);
+    @Deprecated
+    List<Product> findByCategoryIdAndIsActiveTrueAndIsSellingTrue(String categoryId);
+    @Deprecated
     List<Product> findByNameContainingIgnoreCaseAndIsActiveTrueAndIsSellingTrue(String name);
     
     // ===== VENDOR METHODS - Added 2025-10-24 =====
@@ -69,8 +97,8 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     List<Product> findByNameContainingIgnoreCase(String keyword);
 
-    // RAG helper: get active/selling products by category and max effective price (promo or price)
-    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.isSelling = true " +
+    // RAG helper: get approved/selling products by category and max effective price (promo or price)
+    @Query("SELECT p FROM Product p WHERE p.approvalStatus = 1 AND p.isSelling = true " +
            "AND p.category.id = :categoryId AND COALESCE(p.promotionalPrice, p.price) <= :maxPrice " +
            "ORDER BY COALESCE(p.promotionalPrice, p.price) ASC")
     List<Product> findTopByCategoryAndMaxPrice(@Param("categoryId") String categoryId,
@@ -78,7 +106,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
                                                org.springframework.data.domain.Pageable pageable);
 
     // Exact-or-under budget ordered by closeness to budget
-    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.isSelling = true " +
+    @Query("SELECT p FROM Product p WHERE p.approvalStatus = 1 AND p.isSelling = true " +
            "AND p.category.id = :categoryId AND COALESCE(p.promotionalPrice, p.price) <= :budget " +
            "ORDER BY (:budget - COALESCE(p.promotionalPrice, p.price)) ASC, p.sold DESC")
     List<Product> findTopClosestUnderBudget(@Param("categoryId") String categoryId,
@@ -86,7 +114,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
                                             org.springframework.data.domain.Pageable pageable);
 
     // Nearest within [min, max] around budget
-    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.isSelling = true " +
+    @Query("SELECT p FROM Product p WHERE p.approvalStatus = 1 AND p.isSelling = true " +
            "AND p.category.id = :categoryId AND COALESCE(p.promotionalPrice, p.price) BETWEEN :min AND :max " +
            "ORDER BY CASE WHEN COALESCE(p.promotionalPrice, p.price) >= :budget " +
            "THEN COALESCE(p.promotionalPrice, p.price) - :budget ELSE :budget - COALESCE(p.promotionalPrice, p.price) END ASC, p.sold DESC")
@@ -97,7 +125,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
                                          org.springframework.data.domain.Pageable pageable);
 
     // Cheapest in category
-    @Query("SELECT p FROM Product p WHERE p.isActive = true AND p.isSelling = true " +
+    @Query("SELECT p FROM Product p WHERE p.approvalStatus = 1 AND p.isSelling = true " +
            "AND p.category.id = :categoryId ORDER BY COALESCE(p.promotionalPrice, p.price) ASC")
     List<Product> findCheapestByCategory(@Param("categoryId") String categoryId,
                                          org.springframework.data.domain.Pageable pageable);
